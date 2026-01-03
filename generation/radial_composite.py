@@ -2,6 +2,7 @@ from typing import List
 
 import numpy as np
 import pandas as pd
+from tqdm import tqdm
 
 from conversion.radial_composite_converter import RadialCompositeDualPorosityConverter
 from generation.generator import ParamGenerator, DataGenerator
@@ -221,7 +222,9 @@ class InfiniteRadialCompositeGenerator(DataGenerator):
     def generate(self):
         params, converter = self.param_gen.generate()
 
-        for param in params:
+        params_list = list(params)
+
+        for param in tqdm(params_list, desc="Generating dual radial composite infinite reservoir data"):
             t_D_array = self.generate_search_time(converter)
 
             C_D = param['C_D']

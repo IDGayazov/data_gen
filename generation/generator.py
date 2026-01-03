@@ -97,4 +97,4 @@ class DataGenerator(ABC):
 
         DataGenerator.num += 1
 
-        print(f"Сохранено: {file_name1}, {file_name2}")
+        # print(f"Сохранено: {file_name1}, {file_name2}")

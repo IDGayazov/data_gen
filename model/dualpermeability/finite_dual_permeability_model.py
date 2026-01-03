@@ -1,3 +1,5 @@
+from functools import lru_cache
+
 import numpy as np
 
 from scipy.special import k0, k1, i0, i1
@@ -27,7 +29,7 @@ class FiniteDualPermeabilityReservoirModel(ReservoirModel):
         self.kappa = kappa
         self.R_D_E = R_D_E
 
-
+    @lru_cache(maxsize=1000)
     def delta(self, s):
         """
         Вычисляет функцию Δ(s) согласно уравнению.
@@ -50,6 +52,7 @@ class FiniteDualPermeabilityReservoirModel(ReservoirModel):
 
         return delta_s
 
+    @lru_cache(maxsize=1000)
     def sigma1_squared(self, s):
         """
         Вычисляет функцию σ₁²(s) согласно уравнению.
@@ -68,6 +71,7 @@ class FiniteDualPermeabilityReservoirModel(ReservoirModel):
 
         return sigma1_sq
 
+    @lru_cache(maxsize=1000)
     def sigma2_squared(self, s):
         """
         Вычисляет функцию σ₂²(s) согласно уравнению.
@@ -86,6 +90,7 @@ class FiniteDualPermeabilityReservoirModel(ReservoirModel):
 
         return sigma2_sq
 
+    @lru_cache(maxsize=1000)
     def a1(self, s):
         """
         Вычисляет функцию a₁(s) согласно уравнению.
@@ -122,6 +127,7 @@ class FiniteDualPermeabilityReservoirModel(ReservoirModel):
 
         return a2_value
 
+    @lru_cache(maxsize=1000)
     def b(self, s):
         """
         Вычисляет функцию b(s) согласно уравнению.
@@ -148,6 +154,7 @@ class FiniteDualPermeabilityReservoirModel(ReservoirModel):
 
         return term1 - term2
 
+    @lru_cache(maxsize=1000)
     def B1(self, s):
         """
         Вычисляет функцию B_1(s) согласно уравнению.
@@ -164,6 +171,7 @@ class FiniteDualPermeabilityReservoirModel(ReservoirModel):
 
         return -(1 - a2_val) * k0(sigma2) / self.b(s)
 
+    @lru_cache(maxsize=1000)
     def B2(self, s):
         """
         Вычисляет функцию B_2(s) согласно уравнению.
@@ -232,7 +240,7 @@ class FiniteDualPermeabilityReservoirModel(ReservoirModel):
 if __name__ == "__main__":
     model = FiniteDualPermeabilityReservoirModel(C_D=20, S=1, R_D_E=200, omega=0.5, lam=7e-6, kappa=0.5)
 
-    t_D_array = np.logspace(0, 9, 1000)
+    t_D_array = np.logspace(0, 6, 128)
     alg = ShtefestAlgorithm(N=16)
 
     model.pressure(t_D_array, alg) \

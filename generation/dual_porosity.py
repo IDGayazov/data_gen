@@ -2,6 +2,7 @@ from typing import List, Dict
 
 import numpy as np
 import pandas as pd
+from tqdm import tqdm
 
 from conversion.dual_porosity_converter import DualPorosityDimensionConverter
 from generation.generator import ParamGenerator, DataGenerator
@@ -162,7 +163,9 @@ class InfiniteDualPorosityGenerator(DataGenerator):
     def generate(self):
         params, converter = self.param_gen.generate()
 
-        for param in params:
+        params_list = list(params)
+
+        for param in tqdm(params_list, desc="Generating dual porosity infinite reservoir data"):
             param.drop('R_eD', axis=1, inplace=True) # убираем информацию о радиусе границы
 
             t_D_array = self.generate_search_time(converter)
@@ -199,7 +202,9 @@ class FiniteDualPorosityGenerator(DataGenerator):
     def generate(self):
         params, converter = self.param_gen.generate()
 
-        for param in params:
+        params_list = list(params)
+
+        for param in tqdm(params_list, desc="Generating dual porosity finite reservoir data"):
             t_D_array = self.generate_search_time(converter)
 
             C_D = param['C_D']

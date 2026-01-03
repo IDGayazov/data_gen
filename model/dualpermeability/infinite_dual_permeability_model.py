@@ -1,3 +1,5 @@
+from functools import lru_cache
+
 import numpy as np
 
 from scipy.special import k0, k1
@@ -26,7 +28,7 @@ class InfiniteDualPermeabilityReservoirModel(ReservoirModel):
         self.lam = lam
         self.kappa = kappa
 
-
+    @lru_cache(maxsize=1000)
     def delta(self, s):
         """
         Вычисляет функцию Δ(s) согласно уравнению.
@@ -49,7 +51,7 @@ class InfiniteDualPermeabilityReservoirModel(ReservoirModel):
 
         return delta_s
 
-
+    @lru_cache(maxsize=1000)
     def sigma1_squared(self, s):
         """
         Вычисляет функцию σ₁²(s) согласно уравнению.
@@ -68,7 +70,7 @@ class InfiniteDualPermeabilityReservoirModel(ReservoirModel):
 
         return sigma1_sq
 
-
+    @lru_cache(maxsize=1000)
     def sigma2_squared(self, s):
         """
         Вычисляет функцию σ₂²(s) согласно уравнению.
@@ -87,7 +89,7 @@ class InfiniteDualPermeabilityReservoirModel(ReservoirModel):
 
         return sigma2_sq
 
-
+    @lru_cache(maxsize=1000)
     def a1(self, s):
         """
         Вычисляет функцию a₁(s) согласно уравнению.
@@ -106,7 +108,7 @@ class InfiniteDualPermeabilityReservoirModel(ReservoirModel):
 
         return a1_value
 
-
+    @lru_cache(maxsize=1000)
     def a2(self, s):
         """
         Вычисляет функцию a₂(s) согласно уравнению.
@@ -125,7 +127,7 @@ class InfiniteDualPermeabilityReservoirModel(ReservoirModel):
 
         return a2_value
 
-
+    @lru_cache(maxsize=1000)
     def b(self, s):
         """
         Вычисляет функцию b(s) согласно уравнению.
@@ -152,7 +154,7 @@ class InfiniteDualPermeabilityReservoirModel(ReservoirModel):
 
         return term1 - term2
 
-
+    @lru_cache(maxsize=1000)
     def B1(self, s):
         """
         Вычисляет функцию B_1(s) согласно уравнению.
@@ -169,7 +171,7 @@ class InfiniteDualPermeabilityReservoirModel(ReservoirModel):
 
         return -(1 - a2_val) * k0(sigma2) / self.b(s)
 
-
+    @lru_cache(maxsize=1000)
     def B2(self, s):
         """
         Вычисляет функцию B_2(s) согласно уравнению.

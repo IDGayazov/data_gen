@@ -2,6 +2,7 @@ from typing import Dict, List
 
 import numpy as np
 import pandas as pd
+from tqdm import tqdm
 
 from generation.generator import DataGenerator, ParamGenerator
 from inversion.shtefest_algorithm import ShtefestAlgorithm
@@ -94,7 +95,9 @@ class InfiniteHomogeneousGenerator(DataGenerator):
     def generate(self):
         params = self.param_gen.generate()
 
-        for param in params:
+        params_list = list(params)
+
+        for param in tqdm(params_list, desc="Generating homogeneous infinite reservoir data"):
             param.drop('r_e', axis=1, inplace=True) # убираем информацию о радиусе границы
 
             converter = self.get_converter(param)
@@ -130,7 +133,9 @@ class FiniteHomogeneousGenerator(DataGenerator):
     def generate(self):
         params = self.param_gen.generate()
 
-        for param in params:
+        params_list = list(params)
+
+        for param in tqdm(params_list, desc="Generating homogeneous finite reservoir data"):
             converter = self.get_converter(param)
             t_D_array = self.generate_search_time(converter)
 
