@@ -31,7 +31,7 @@ class InfiniteDualPorosityReservoirModel(ReservoirModel):
         return (omega * (1 - omega) * u + lam) / ((1 - omega) * u + lam)
 
 
-    def P_wD_laplace_rd(self, u, r_D, omega, lam):
+    def P_wD_laplace_rd(self, u, r_D):
         """
         Вычисляет решение для забойного давления в пространстве Лапласа.
         Аргументы:
@@ -58,7 +58,7 @@ class InfiniteDualPorosityReservoirModel(ReservoirModel):
             P_wD(u): значение безразмерного давления в пространстве Лапласа
         """
 
-        return self.P_wD_laplace_rd(u, r_D, self.omega, self.lam)
+        return self.P_wD_laplace_rd(u, r_D)
 
 
     def F(self, s):
