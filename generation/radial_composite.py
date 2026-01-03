@@ -227,14 +227,14 @@ class InfiniteRadialCompositeGenerator(DataGenerator):
         for param in tqdm(params_list, desc="Generating dual radial composite infinite reservoir data"):
             t_D_array = self.generate_search_time(converter)
 
-            C_D = param['C_D']
-            S = param['S']
+            C_D = param['C_D'][0]
+            S = param['S'][0]
 
-            M1 = param['M1']
-            M2 =  param['M2']
-            omega1 = param['omega1']
-            omega2 = param['omega2']
-            r_fD = param['r_fD']
+            M1 = param['M1'][0]
+            M2 =  param['M2'][0]
+            omega1 = param['omega1'][0]
+            omega2 = param['omega2'][0]
+            r_fD = param['r_fD'][0]
 
             model = InfiniteRadialCompositeReservoirModel(C_D=C_D, S=S, M1=M1, M2=M2, omega1=omega1, omega2=omega2, r_fD=r_fD)
             alg = ShtefestAlgorithm(N=16)

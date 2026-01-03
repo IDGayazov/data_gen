@@ -197,11 +197,11 @@ class InfiniteDualPermeabilityModelGenerator(DataGenerator):
 
             t_D_array = self.generate_search_time(converter)
 
-            C_D = param['C_D']
-            S = param['S1']
-            omega = param['omega']
-            lam = param['lambda']
-            kappa = param['kappa']
+            C_D = param['C_D'][0]
+            S = param['S1'][0]
+            omega = param['omega'][0]
+            lam = param['lambda'][0]
+            kappa = param['kappa'][0]
 
             model = InfiniteDualPermeabilityReservoirModel(C_D=C_D, S=S, omega=omega, lam=lam, kappa=kappa)
             alg = ShtefestAlgorithm(N=16)
@@ -235,12 +235,12 @@ class FiniteDualPermeabilityGenerator(DataGenerator):
         for param in tqdm(params_list, desc="Generating dual permeability finite reservoir data"):
             t_D_array = self.generate_search_time(converter)
 
-            C_D = param['C_D']
-            S = param['S1']
-            r_D_e = param['R_eD']
-            omega = param['omega']
-            lam = param['lambda']
-            kappa = param['kappa']
+            C_D = param['C_D'][0]
+            S = param['S1'][0]
+            r_D_e = param['R_eD'][0]
+            omega = param['omega'][0]
+            lam = param['lambda'][0]
+            kappa = param['kappa'][0]
 
             model = FiniteDualPermeabilityReservoirModel(C_D=C_D, S=S, omega=omega, lam=lam, kappa=kappa, R_D_E=r_D_e)
             alg = ShtefestAlgorithm(N=16)

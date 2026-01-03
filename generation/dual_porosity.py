@@ -207,11 +207,11 @@ class FiniteDualPorosityGenerator(DataGenerator):
         for param in tqdm(params_list, desc="Generating dual porosity finite reservoir data"):
             t_D_array = self.generate_search_time(converter)
 
-            C_D = param['C_D']
-            r_D_e = param['R_eD']
-            omega = param['omega']
-            lam = param['lambda']
-            S = param['S']
+            C_D = param['C_D'][0]
+            r_D_e = param['R_eD'][0]
+            omega = param['omega'][0]
+            lam = param['lambda'][0]
+            S = param['S'][0]
 
             model = FiniteDualPorosityReservoirModel(C_D=C_D, S=S, omega=omega, lam=lam, R_D_e=r_D_e)
             alg = ShtefestAlgorithm(N=16)
