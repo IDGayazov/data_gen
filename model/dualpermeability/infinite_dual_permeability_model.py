@@ -1,6 +1,8 @@
+import warnings
 from functools import lru_cache
 
 import numpy as np
+import pandas as pd
 
 from scipy.special import k0, k1
 
@@ -203,6 +205,8 @@ class InfiniteDualPermeabilityReservoirModel(ReservoirModel):
             P_wD(u): значение безразмерного давления в пространстве Лапласа
         """
 
+        warnings.filterwarnings('ignore', category=RuntimeWarning)
+
         sigma1_sq = self.sigma1_squared(u)
         a1_val = self.a1(u)
         sigma1 = np.sqrt(sigma1_sq)
@@ -240,10 +244,22 @@ class InfiniteDualPermeabilityReservoirModel(ReservoirModel):
 
 
 if __name__ == "__main__":
-    # model = InfiniteDualPermeabilityReservoirModel(C_D=20, S=1, omega=0.9, lam=7e-6, kappa=0.1)
-    model = InfiniteDualPermeabilityReservoirModel(C_D=60, S=0.01, omega=0.097835 , lam=0.000873, kappa=0.005532)
+    params = pd.read_csv('../../dataset/params/8.csv')
 
-    t_D_array = np.logspace(0, 7, 500)
+    # model = InfiniteDualPermeabilityReservoirModel(C_D=20, S=1, omega=0.9, lam=7e-6, kappa=0.1)
+    # model = InfiniteDualPermeabilityReservoirModel(C_D=params['C_D'][0],
+    #                                                S=params['S'][0],
+    #                                                omega=params['omega'][0],
+    #                                                lam=params['lambda'][0],
+    #                                                kappa=params['kappa'][0])
+
+    model = InfiniteDualPermeabilityReservoirModel(C_D=params['C_D'][0],
+                                                   S=params['S'][0],
+                                                   omega=params['omega'][0],
+                                                   lam=params['lambda'][0],
+                                                   kappa=params['kappa'][0])
+
+    t_D_array = np.logspace(0, 7, 128)
     alg = ShtefestAlgorithm(N=16)
 
     model.pressure(t_D_array, alg)\

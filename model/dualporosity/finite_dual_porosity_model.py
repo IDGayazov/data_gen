@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 import pandas as pd
 
@@ -44,6 +46,8 @@ class FiniteDualPorosityReservoirModel(ReservoirModel):
         Возвращает:
             P_wD(u): значение безразмерного давления в пространстве Лапласа
         """
+        warnings.filterwarnings('ignore', category=RuntimeWarning)
+
         f_u = self.f(u, omega, lam)
         sqrt_u_fu = np.sqrt(u * f_u)
         r_sqrt_u_fu = r_D_e * sqrt_u_fu

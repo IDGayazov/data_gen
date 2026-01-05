@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 
 from scipy.special import k0, k1, i0, i1
@@ -67,6 +69,8 @@ class InfiniteRadialCompositeReservoirModel(ReservoirModel):
         Возвращает:
             P_wD(u): значение безразмерного давления в пространстве Лапласа
         """
+        warnings.filterwarnings('ignore', category=RuntimeWarning)
+
         sqrt_u = np.sqrt(u)
         numerator = self.KI(u) * k0(r_D * sqrt_u) + i0(r_D * sqrt_u)
 

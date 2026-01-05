@@ -170,10 +170,10 @@ class InfiniteDualPorosityGenerator(DataGenerator):
 
             t_D_array = self.generate_search_time(converter)
 
-            C_D = param['C_D']
-            S = param['S']
-            omega = param['omega']
-            lam = param['lambda']
+            C_D = param['C_D'][0]
+            S = param['S'][0]
+            omega = param['omega'][0]
+            lam = param['lambda'][0]
 
             model = InfiniteDualPorosityReservoirModel(C_D=C_D, S=S, omega=omega, lam=lam)
             alg = ShtefestAlgorithm(N=16)

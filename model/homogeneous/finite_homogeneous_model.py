@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 
 from scipy.special import k0, k1, i0, i1
@@ -22,7 +24,7 @@ class FiniteHomogeneousReservoirModel(ReservoirModel):
         self.R_D_E = R_D_E
 
 
-    def P_wD_laplace_with_bound(self, u, r_D, r_D_e):
+    def P_wD_laplace_with_bound(self, u, r_D, r_D_e, eps=1e-10):
         """
         Вычисляет решение для забойного давления в пространстве Лапласа.
         Аргументы:
@@ -34,11 +36,32 @@ class FiniteHomogeneousReservoirModel(ReservoirModel):
         Возвращает:
             P_wD(u): значение безразмерного давления в пространстве Лапласа
         """
-        sqrt_u = np.sqrt(u)
-        numerator = k0(r_D * sqrt_u) * i1(r_D_e * sqrt_u) + k1(r_D_e * sqrt_u) * i0(r_D * sqrt_u)
-        denominator = u * sqrt_u * (k1(sqrt_u) * i1(r_D_e * sqrt_u) - k1(r_D_e * sqrt_u) * i1(sqrt_u))
+        warnings.filterwarnings('ignore', category=RuntimeWarning)
 
-        return numerator / denominator
+        u = np.asarray(u, dtype=np.float64)
+        u_safe = np.where(np.abs(u) < eps, np.sign(u) * eps, u)
+
+        sqrt_u = np.sqrt(u_safe)
+
+        k0_rd = k0(r_D * sqrt_u)
+        i0_rd = i0(r_D * sqrt_u)
+        k1_rd_e = k1(r_D_e * sqrt_u)
+        i1_rd_e = i1(r_D_e * sqrt_u)
+        k1_sqrt = k1(sqrt_u)
+        i1_sqrt = i1(sqrt_u)
+
+        numerator = k0_rd * i1_rd_e + k1_rd_e * i0_rd
+        denominator = u_safe * sqrt_u * (k1_sqrt * i1_rd_e - k1_rd_e * i1_sqrt)
+
+        denominator_safe = np.where(
+            np.abs(denominator) < eps,
+            np.sign(denominator) * eps,
+            denominator
+        )
+
+        result = numerator / denominator_safe
+
+        return result
 
 
     def P_wD_laplace(self, u, r_D):
@@ -62,9 +85,9 @@ class FiniteHomogeneousReservoirModel(ReservoirModel):
         return self.agarwal_filter(self.P_wD_laplace, s, 1, self.S, self.C_D)
 
 if __name__ == "__main__":
-    model = FiniteHomogeneousReservoirModel(C_D=100, S=3.0, R_D_E=500)
+    model = FiniteHomogeneousReservoirModel(C_D=100, S=3.0, R_D_E=800)
 
-    t_D_array = np.logspace(0, 7, 1000)
+    t_D_array = np.logspace(1, 7, 1000)
     alg = ShtefestAlgorithm(N=16)
 
     model.pressure(t_D_array, alg)\

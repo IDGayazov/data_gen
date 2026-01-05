@@ -1,3 +1,4 @@
+import warnings
 from functools import lru_cache
 
 import numpy as np
@@ -201,6 +202,7 @@ class FiniteDualPermeabilityReservoirModel(ReservoirModel):
         Возвращает:
             P_wD(u): значение безразмерного давления в пространстве Лапласа
         """
+        warnings.filterwarnings('ignore', category=RuntimeWarning)
 
         sigma1_sq = self.sigma1_squared(u)
         a1_val = self.a1(u)
