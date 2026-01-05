@@ -1,3 +1,10 @@
 /dataset/
 /.venv/
 .idea
+/training_checkpoints/
+/best_welltest_model.h5
+/evaluation_metrics.json
+/my_universal_model.h5
+/my_universal_model_config.json
+/training_metrics.json
+/training_results.png
