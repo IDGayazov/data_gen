@@ -45,11 +45,12 @@ class InfiniteHomogeneousReservoirModel(ReservoirModel):
     def F(self, s):
         return self.P_wD_laplace(s, self.C_D, self.S)
 
-if __name__ == "__main__":
-    model = InfiniteHomogeneousReservoirModel(C_D=100, S=1.0)
 
-    t_D_array = np.logspace(0, 10, 500)
-    alg = ShtefestAlgorithm(N=16)
+if __name__ == "__main__":
+    model = InfiniteHomogeneousReservoirModel(C_D=400, S=-1)
+
+    t_D_array = np.logspace(0, 5, 128)
+    alg = ShtefestAlgorithm(N=4)
 
     model.pressure(t_D_array, alg) \
         .gauss_noize(mu=0, sigma=5e-7) \

@@ -359,18 +359,126 @@ def clean_nan_data(X, y, strategy='zero'):
     print(f"✅ Итоговое количество NaN: {np.isnan(X_clean).sum()}")
     return X_clean, y_clean
 
+
+def analyze_class_separability(X, y, class_names):
+    """Анализ различимости классов"""
+    print("=" * 80)
+    print("АНАЛИЗ РАЗЛИЧИМОСТИ КЛАССОВ")
+    print("=" * 80)
+
+    # Преобразуем one-hot в индексы
+    if len(y.shape) > 1:
+        y_indices = np.argmax(y, axis=1)
+    else:
+        y_indices = y
+
+    # 1. Визуализация примеров из каждого класса
+    import matplotlib.pyplot as plt
+
+    fig, axes = plt.subplots(7, 3, figsize=(15, 20))
+
+    for class_idx, class_name in enumerate(class_names):
+        # Находим примеры этого класса
+        class_samples = np.where(y_indices == class_idx)[0][:3]  # Первые 3
+
+        for i, sample_idx in enumerate(class_samples):
+            ax = axes[class_idx, i]
+
+            # Рисуем оба канала
+            time = np.arange(X.shape[2])
+            ax.plot(time, X[sample_idx, 0], 'b-', label='Pressure', linewidth=2)
+            ax.plot(time, X[sample_idx, 1], 'r-', label='Derivative', linewidth=2)
+
+            ax.set_title(f'{class_name} - Sample {i + 1}')
+            ax.set_xlabel('Time')
+            ax.set_ylabel('Value')
+            ax.legend(fontsize=8)
+            ax.grid(True, alpha=0.3)
+
+    plt.suptitle('Примеры кривых для каждого класса', fontsize=16, y=0.98)
+    plt.tight_layout()
+    plt.savefig('class_examples.png', dpi=150, bbox_inches='tight')
+    plt.show()
+
+    # 2. Статистики по классам
+    print("\n📊 СТАТИСТИКИ ПО КЛАССАМ:")
+    for class_idx, class_name in enumerate(class_names):
+        class_mask = y_indices == class_idx
+        X_class = X[class_mask]
+
+        print(f"\n{class_name}:")
+        for channel in range(X.shape[1]):
+            channel_data = X_class[:, channel, :]
+            print(f"  Канал {channel}:")
+            print(f"    Mean: {channel_data.mean():.4f}, Std: {channel_data.std():.4f}")
+            print(f"    Min: {channel_data.min():.4f}, Max: {channel_data.max():.4f}")
+            print(f"    Range: {channel_data.max() - channel_data.min():.4f}")
+
+    # 3. Проверка корреляции между классами
+    print("\n📈 КОРРЕЛЯЦИЯ МЕЖДУ КЛАССАМИ:")
+
+    # Вычисляем средние кривые для каждого класса
+    class_means = []
+    for class_idx in range(len(class_names)):
+        class_mask = y_indices == class_idx
+        class_mean = X[class_mask].mean(axis=0)  # (channels, time)
+        class_means.append(class_mean)
+
+    # Вычисляем попарную корреляцию
+    from scipy.spatial.distance import cosine
+
+    corr_matrix = np.zeros((len(class_names), len(class_names)))
+
+    for i in range(len(class_names)):
+        for j in range(len(class_names)):
+            # Flatten и вычисляем косинусное расстояние
+            flat_i = class_means[i].flatten()
+            flat_j = class_means[j].flatten()
+            corr_matrix[i, j] = 1 - cosine(flat_i, flat_j)
+
+    # Визуализация матрицы корреляции
+    plt.figure(figsize=(10, 8))
+    im = plt.imshow(corr_matrix, cmap='RdYlBu', vmin=-1, vmax=1)
+    plt.colorbar(im)
+    plt.xticks(range(len(class_names)), class_names, rotation=45, ha='right')
+    plt.yticks(range(len(class_names)), class_names)
+    plt.title('Косинусная схожесть между средними кривыми классов')
+    plt.tight_layout()
+    plt.savefig('class_correlation.png', dpi=150, bbox_inches='tight')
+    plt.show()
+
+    # Выводим самые похожие пары классов
+    print("\n🔍 САМЫЕ ПОХОЖИЕ КЛАССЫ:")
+    for i in range(len(class_names)):
+        for j in range(i + 1, len(class_names)):
+            similarity = corr_matrix[i, j]
+            if similarity > 0.95:  # Очень похожи
+                print(f"  ⚠️ {class_names[i]} и {class_names[j]}: {similarity:.3f}")
+            elif similarity > 0.8:  # Похожи
+                print(f"  ⚠️ {class_names[i]} и {class_names[j]}: {similarity:.3f}")
+
 if __name__ == "__main__":
     data_preprocess = PressureDataClassificationPreprocessor1D(debug=False)
     X_train, X_val, X_test, y_train, y_val, y_test = data_preprocess.get_dataset()
-    check_data_quality(X_train, y_train)
 
-    X_train, y_train = clean_nan_data(X_train, y_train, strategy='interpolate')
-    check_data_quality(X_train, y_train)
+    class_names = ['dual_permeability_inf',
+                    'radial_composite_inf',
+                    'homogeneous_inf',
+                    'homogeneous_fin',
+                    'dual_porosity_inf',
+                    'dual_porosity_fin',
+                    'dual_permeability_fin']
+    analyze_class_separability(X_train, y_train, class_names)
 
-    X_val, y_val = clean_nan_data(X_val, y_val, strategy='interpolate')
-    check_data_quality(X_val, y_val)
+    # check_data_quality(X_train, y_train)
+    #
+    # X_train, y_train = clean_nan_data(X_train, y_train, strategy='interpolate')
+    # check_data_quality(X_train, y_train)
+    #
+    # X_val, y_val = clean_nan_data(X_val, y_val, strategy='interpolate')
+    # check_data_quality(X_val, y_val)
+    #
+    # X_test, y_test = clean_nan_data(X_test, y_test, strategy='interpolate')
+    # check_data_quality(X_test, y_test)
 
-    X_test, y_test = clean_nan_data(X_test, y_test, strategy='interpolate')
-    check_data_quality(X_test, y_test)
-
-    # data_preprocess.stats()
+    data_preprocess.stats()

@@ -85,9 +85,9 @@ class FiniteHomogeneousReservoirModel(ReservoirModel):
         return self.agarwal_filter(self.P_wD_laplace, s, 1, self.S, self.C_D)
 
 if __name__ == "__main__":
-    model = FiniteHomogeneousReservoirModel(C_D=100, S=3.0, R_D_E=800)
+    model = FiniteHomogeneousReservoirModel(C_D=100, S=3, R_D_E=800)
 
-    t_D_array = np.logspace(1, 7, 1000)
+    t_D_array = np.logspace(0, 7, 128)
     alg = ShtefestAlgorithm(N=16)
 
     model.pressure(t_D_array, alg)\
