@@ -16,7 +16,7 @@ class PressureDataClassificationPreprocessor1D:
         self.test_size = test_size
         self.val_size = val_size
         self.random_state = random_state
-        self.data_dir = '../dataset/curve/'
+        self.data_dir = './dataset/curve/'
 
         self.label_encoder = LabelEncoder()
         self.onehot_encoder = OneHotEncoder(sparse_output=False)
@@ -43,7 +43,7 @@ class PressureDataClassificationPreprocessor1D:
             t_D = np.array(df['t_D'])
             dP_wD = np.array(df['dP_wD'])
 
-            X.append([t_D, dP_wD])
+            X.append([dP_wD, t_D])
 
             label = self._get_label_from_filename(item)
             target = self._encode_new_sample(label)[0]
@@ -458,19 +458,32 @@ def analyze_class_separability(X, y, class_names):
                 print(f"  ⚠️ {class_names[i]} и {class_names[j]}: {similarity:.3f}")
 
 if __name__ == "__main__":
-    data_preprocess = PressureDataClassificationPreprocessor1D(debug=False)
-    X_train, X_val, X_test, y_train, y_val, y_test = data_preprocess.get_dataset()
+    count_omega = 0
+    count_lambda = 0
 
-    class_names = [
-        # 'dual_permeability_inf',
-                    # 'radial_composite_inf',
-                    'homogeneous_inf',
-                    # 'homogeneous_fin',
-                    'dual_porosity_inf',
-                    # 'dual_porosity_fin',
-                    # 'dual_permeability_fin'
-                    ]
-    analyze_class_separability(X_train, y_train, class_names)
+    for item in os.listdir('./dataset/params'):
+        file_path = os.path.join('./dataset/params', item)
+        df = pd.read_csv(file_path)
+
+        count_omega += df['omega'].between(0.01, 0.5).sum()
+        count_lambda += df['lambda'].between(1e-8, 1e-5).sum()
+
+    print('omega cnt: ', count_omega)
+    print('lambda cnt: ', count_lambda)
+
+    # data_preprocess = PressureDataClassificationPreprocessor1D(debug=False)
+    # X_train, X_val, X_test, y_train, y_val, y_test = data_preprocess.get_dataset()
+
+    # class_names = [
+    #     # 'dual_permeability_inf',
+    #                 # 'radial_composite_inf',
+    #                 'homogeneous_inf',
+    #                 # 'homogeneous_fin',
+    #                 'dual_porosity_inf',
+    #                 # 'dual_porosity_fin',
+    #                 # 'dual_permeability_fin'
+    #                 ]
+    # analyze_class_separability(X_train, y_train, class_names)
 
     # check_data_quality(X_train, y_train)
     #
@@ -483,4 +496,4 @@ if __name__ == "__main__":
     # X_test, y_test = clean_nan_data(X_test, y_test, strategy='interpolate')
     # check_data_quality(X_test, y_test)
 
-    data_preprocess.stats()
+    # data_preprocess.stats()

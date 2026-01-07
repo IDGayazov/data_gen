@@ -135,8 +135,8 @@ class DataGenerator(ABC):
             nan_cols = params.columns[params.isna().any()].tolist()
             raise ValueError(f"Params data contains NaN values in columns: {nan_cols}")
         
-        curve_dir = '../dataset/curve'
-        params_dir = '../dataset/params'
+        curve_dir = './dataset/curve'
+        params_dir = './dataset/params'
 
         os.makedirs(curve_dir, exist_ok=True)
         os.makedirs(params_dir, exist_ok=True)

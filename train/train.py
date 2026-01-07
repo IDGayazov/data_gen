@@ -134,13 +134,13 @@ class UniversalWellTestTrainer:
             ),
 
             # Ранняя остановка
-            keras.callbacks.EarlyStopping(
-                monitor=monitor,
-                patience=patience,
-                restore_best_weights=True,
-                verbose=1,
-                mode='max' if 'accuracy' in monitor else 'min'
-            ),
+            # keras.callbacks.EarlyStopping(
+            #     monitor=monitor,
+            #     patience=patience,
+            #     restore_best_weights=True,
+            #     verbose=1,
+            #     mode='max' if 'accuracy' in monitor else 'min'
+            # ),
 
             # Уменьшение learning rate
             keras.callbacks.ReduceLROnPlateau(
@@ -324,7 +324,6 @@ class UniversalWellTestTrainer:
         start_time = time.time()
 
         try:
-            # Обучение модели - УДАЛЕНЫ workers и use_multiprocessing
             self.history = self.model.fit(
                 X_train, y_train,
                 validation_data=(X_val, y_val),
@@ -334,8 +333,7 @@ class UniversalWellTestTrainer:
                 verbose=1,
                 shuffle=True,
                 class_weight=class_weight,
-                validation_freq=validation_freq,
-                # workers и use_multiprocessing удалены для совместимости с Keras 3.0
+                validation_freq=validation_freq
             )
 
             # Время обучения

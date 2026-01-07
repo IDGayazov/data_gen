@@ -1,22 +1,92 @@
+import numpy as np
+
 from train.data_preprocess_1d import PressureDataClassificationPreprocessor1D
-from train.model import WellTest1DCNN
+from train.model import WellTest1DCNN, ImprovedWellTest1DCNN
 from train.train import UniversalWellTestTrainer
 
+
+def normalize(X):
+    """
+    Parameters:
+    -----------
+    X : numpy array, shape (samples, timesteps, channels)
+        Входные данные, где:
+        X[:, :, 0] = p_D (безразмерная производная давления)
+        X[:, :, 1] = t_D (безразмерное время)
+
+    Returns:
+    --------
+    X_norm : numpy array, shape (samples, timesteps, channels)
+        Нормализованные данные
+    """
+    X_norm = X.copy()
+
+    for i in range(X.shape[2]):  # По каналам (0 и 1)
+        # Берем данные канала
+        channel = X[:, :, i]
+
+        # Нормализация каждого образца отдельно
+        # p_min = np.min(p_Dk, axis=1, keepdims=True) для всего датасета сразу
+        channel_min = np.min(channel, axis=1, keepdims=True)  # Минимум для каждого образца
+        channel_max = np.max(channel, axis=1, keepdims=True)  # Максимум для каждого образца
+        channel_range = channel_max - channel_min
+
+        # Избегаем деления на 0
+        # Создаем маску где range очень маленький
+        small_range_mask = channel_range < 1e-10
+
+        # Нормализуем: (x - min) / (max - min)
+        channel_norm = (channel - channel_min) / channel_range
+
+        # Для образцов с очень маленьким range, просто вычитаем min
+        if np.any(small_range_mask):
+            # Находим индексы где нужно исправить
+            sample_indices = np.where(small_range_mask.flatten())[0]
+            for sample_idx in sample_indices:
+                channel_norm[sample_idx, :] = channel[sample_idx, :] - channel_min[sample_idx, 0]
+
+        X_norm[:, :, i] = channel_norm
+
+    return X_norm
+
+
+def fix_data_shape(X):
+    """
+    Приводит данные к правильной форме для Conv1D
+    Conv1D ожидает: (batch_size, timesteps, features)
+    """
+    # Если данные приходят как (batch, channels, timesteps)
+    if X.shape[1] == 2 and X.shape[2] == 128:
+        # Транспонируем в (batch, timesteps, channels)
+        return np.transpose(X, (0, 2, 1))
+    else:
+        # Уже правильная форма или другая
+        return X
+
 if __name__ == "__main__":
-    model = WellTest1DCNN(num_classes=2, input_shape=(2, 128))
+    model = WellTest1DCNN(num_classes=2, input_shape=(128, 2))
+    # model = ImprovedWellTest1DCNN(num_classes=2, input_shape=(128, 2))
     model.compile_model(learning_rate=0.01)
 
     trainer = UniversalWellTestTrainer(model.model)
 
-    data_preprocess = PressureDataClassificationPreprocessor1D(debug=False)
+    data_preprocess = PressureDataClassificationPreprocessor1D(debug=True)
     X_train, X_val, X_test, y_train, y_val, y_test = data_preprocess.get_dataset()
+
+    X_train = fix_data_shape(X_train)
+    X_val = fix_data_shape(X_val)
+    X_test = fix_data_shape(X_test)
+
+    X_train = normalize(X_train)
+    X_val = normalize(X_val)
+    X_test = normalize(X_test)
 
     history = trainer.train(
         X_train, y_train,
         X_val, y_val,
         batch_size=32,
-        epochs=300,
-        initial_lr=0.01
+        epochs=30,
+        initial_lr=0.00001
     )
 
     metrics = trainer.evaluate(X_test, y_test)

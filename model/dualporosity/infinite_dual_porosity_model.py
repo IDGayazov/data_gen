@@ -2,6 +2,7 @@ import warnings
 
 import numpy as np
 import matplotlib
+import pandas as pd
 
 from scipy.special import k0, k1
 from model.reservoir_model import ReservoirModel
@@ -70,7 +71,12 @@ class InfiniteDualPorosityReservoirModel(ReservoirModel):
 
 
 if __name__ == "__main__":
-    model = InfiniteDualPorosityReservoirModel(C_D=20, S=2, omega=0.1, lam=7e-6)
+    df = pd.read_csv('./dataset/params/1300.csv')
+
+    model = InfiniteDualPorosityReservoirModel(C_D=df['C_D'][0],
+                                               S=df['S'][0],
+                                               omega=df['omega'][0],
+                                               lam=df['lambda'][0])
 
     t_D_array = np.logspace(0, 7, 1000)
     alg = ShtefestAlgorithm(N=16)

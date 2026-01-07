@@ -63,7 +63,6 @@ class DualPorosityModelParamGenerator(ParamGenerator):
             # Вариация геометрических параметров
             params['h'] *= np.random.uniform(0.5, 2.0)  # толщина
             params['q'] *= np.random.uniform(0.2, 3.0)  # дебит
-            params['r_w'] *= np.random.uniform(0.8, 1.2)  # радиус скважины
             params['r_e'] = np.random.uniform(50, 1000)  # внешний радиус
 
             # Вариация коэффициента влияния ствола
@@ -106,6 +105,17 @@ class DualPorosityModelParamGenerator(ParamGenerator):
 
             # Плотность скин-фактора
             params['S'] = np.clip(params['S'], 0, 100)
+
+            λ_target = 10 ** np.random.uniform(-8, -5)
+            k_ratio = np.random.uniform(1e-6, 1e-3)
+
+            α_needed = λ_target / (k_ratio * params['r_w']**2)
+
+            if 1 <= α_needed <= 100:
+                params['alpha'] = α_needed
+            else:
+                k_ratio = λ_target / (params['alpha'] * params['r_w'] ** 2)
+                params['k_m'] = params['k_f'] * k_ratio
 
             converter = DualPorosityDimensionConverter(
                 k_f=params['k_f'],
