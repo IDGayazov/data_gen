@@ -1,7 +1,7 @@
 import numpy as np
 
 from train.data_preprocess_1d import PressureDataClassificationPreprocessor1D
-from train.model import WellTest1DCNN, ImprovedWellTest1DCNN
+from train.model import WellTest1DCNN
 from train.train import UniversalWellTestTrainer
 
 
@@ -50,32 +50,14 @@ def normalize(X):
     return X_norm
 
 
-def fix_data_shape(X):
-    """
-    Приводит данные к правильной форме для Conv1D
-    Conv1D ожидает: (batch_size, timesteps, features)
-    """
-    # Если данные приходят как (batch, channels, timesteps)
-    if X.shape[1] == 2 and X.shape[2] == 128:
-        # Транспонируем в (batch, timesteps, channels)
-        return np.transpose(X, (0, 2, 1))
-    else:
-        # Уже правильная форма или другая
-        return X
-
 if __name__ == "__main__":
     model = WellTest1DCNN(num_classes=2, input_shape=(128, 2))
-    # model = ImprovedWellTest1DCNN(num_classes=2, input_shape=(128, 2))
     model.compile_model(learning_rate=0.01)
 
     trainer = UniversalWellTestTrainer(model.model)
 
     data_preprocess = PressureDataClassificationPreprocessor1D(debug=True)
     X_train, X_val, X_test, y_train, y_val, y_test = data_preprocess.get_dataset()
-
-    X_train = fix_data_shape(X_train)
-    X_val = fix_data_shape(X_val)
-    X_test = fix_data_shape(X_test)
 
     X_train = normalize(X_train)
     X_val = normalize(X_val)
@@ -85,7 +67,7 @@ if __name__ == "__main__":
         X_train, y_train,
         X_val, y_val,
         batch_size=32,
-        epochs=30,
+        epochs=10,
         initial_lr=0.00001
     )
 

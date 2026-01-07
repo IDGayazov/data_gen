@@ -30,8 +30,8 @@ class PressureDataClassificationPreprocessor1D:
         Загрузка датасета
         :return: np.array(X), np.array(y)
         """
-        X = []
-        y = []
+        X_list = []
+        y_list = []
 
         self._init_target_encoders()
 
@@ -43,13 +43,17 @@ class PressureDataClassificationPreprocessor1D:
             t_D = np.array(df['t_D'])
             dP_wD = np.array(df['dP_wD'])
 
-            X.append([dP_wD, t_D])
+            sample = np.column_stack([dP_wD, t_D])
+            X_list.append(sample)
 
             label = self._get_label_from_filename(item)
             target = self._encode_new_sample(label)[0]
-            y.append(target)
+            y_list.append(target)
 
-        return np.array(X), np.array(y)
+        X = np.array(X_list)
+        y = np.array(y_list)
+
+        return X, y
 
 
     def _encode_new_sample(self, new_label):
@@ -458,21 +462,21 @@ def analyze_class_separability(X, y, class_names):
                 print(f"  ⚠️ {class_names[i]} и {class_names[j]}: {similarity:.3f}")
 
 if __name__ == "__main__":
-    count_omega = 0
-    count_lambda = 0
+    # count_omega = 0
+    # count_lambda = 0
+    #
+    # for item in os.listdir('./dataset/params'):
+    #     file_path = os.path.join('./dataset/params', item)
+    #     df = pd.read_csv(file_path)
+    #
+    #     count_omega += df['omega'].between(0.01, 0.5).sum()
+    #     count_lambda += df['lambda'].between(1e-8, 1e-5).sum()
+    #
+    # print('omega cnt: ', count_omega)
+    # print('lambda cnt: ', count_lambda)
 
-    for item in os.listdir('./dataset/params'):
-        file_path = os.path.join('./dataset/params', item)
-        df = pd.read_csv(file_path)
-
-        count_omega += df['omega'].between(0.01, 0.5).sum()
-        count_lambda += df['lambda'].between(1e-8, 1e-5).sum()
-
-    print('omega cnt: ', count_omega)
-    print('lambda cnt: ', count_lambda)
-
-    # data_preprocess = PressureDataClassificationPreprocessor1D(debug=False)
-    # X_train, X_val, X_test, y_train, y_val, y_test = data_preprocess.get_dataset()
+    data_preprocess = PressureDataClassificationPreprocessor1D(debug=True)
+    X_train, X_val, X_test, y_train, y_val, y_test = data_preprocess.get_dataset()
 
     # class_names = [
     #     # 'dual_permeability_inf',
