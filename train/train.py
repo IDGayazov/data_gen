@@ -25,13 +25,13 @@ class UniversalWellTestTrainer:
         """
         self.model = model
         self.class_names = class_names or [
-            'dual_permeability_inf',
-            'radial_composite_inf',
+            # 'dual_permeability_inf',
+            # 'radial_composite_inf',
             'homogeneous_inf',
-            'homogeneous_fin',
+            # 'homogeneous_fin',
             'dual_porosity_inf',
-            'dual_porosity_fin',
-            'dual_permeability_fin'
+            # 'dual_porosity_fin',
+            # 'dual_permeability_fin'
         ]
 
         # Инициализация устройства

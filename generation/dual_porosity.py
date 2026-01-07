@@ -161,12 +161,29 @@ class InfiniteDualPorosityGenerator(DataGenerator):
 
 
     def generate(self):
-        params, converter = self.param_gen.generate()
+        params, _ = self.param_gen.generate()
 
         params_list = list(params)
 
         for param in tqdm(params_list, desc="Generating dual porosity infinite reservoir data"):
             param.drop('R_eD', axis=1, inplace=True) # убираем информацию о радиусе границы
+
+            # Создаем converter для каждого элемента отдельно
+            converter = DualPorosityDimensionConverter(
+                k_f=param['k_f'].iloc[0],
+                k_m=param['k_m'].iloc[0],
+                h=param['h'].iloc[0],
+                q=param['q'].iloc[0],
+                mu=param['mu'].iloc[0],
+                B=param['B'].iloc[0],
+                p_i=param['p_i'].iloc[0],
+                phi_f=param['phi_f'].iloc[0],
+                phi_m=param['phi_m'].iloc[0],
+                c_tf=param['c_tf'].iloc[0],
+                c_tm=param['c_tm'].iloc[0],
+                r_w=param['r_w'].iloc[0],
+                alpha=param['alpha'].iloc[0]
+            )
 
             t_D_array = self.generate_search_time(converter)
 
@@ -200,11 +217,28 @@ class FiniteDualPorosityGenerator(DataGenerator):
 
 
     def generate(self):
-        params, converter = self.param_gen.generate()
+        params, _ = self.param_gen.generate()
 
         params_list = list(params)
 
         for param in tqdm(params_list, desc="Generating dual porosity finite reservoir data"):
+            # Создаем converter для каждого элемента отдельно
+            converter = DualPorosityDimensionConverter(
+                k_f=param['k_f'].iloc[0],
+                k_m=param['k_m'].iloc[0],
+                h=param['h'].iloc[0],
+                q=param['q'].iloc[0],
+                mu=param['mu'].iloc[0],
+                B=param['B'].iloc[0],
+                p_i=param['p_i'].iloc[0],
+                phi_f=param['phi_f'].iloc[0],
+                phi_m=param['phi_m'].iloc[0],
+                c_tf=param['c_tf'].iloc[0],
+                c_tm=param['c_tm'].iloc[0],
+                r_w=param['r_w'].iloc[0],
+                alpha=param['alpha'].iloc[0]
+            )
+
             t_D_array = self.generate_search_time(converter)
 
             C_D = param['C_D'][0]

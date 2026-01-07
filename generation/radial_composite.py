@@ -196,7 +196,26 @@ class RadialCompositeModelParamGenerator(ParamGenerator):
 
             result_params['k_f1'] = params['k_f1']
             result_params['k_f2'] = params['k_f2']
+            result_params['k_m1'] = params['k_m1']
+            result_params['k_m2'] = params['k_m2']
+            result_params['phi_f1'] = params['phi_f1']
+            result_params['phi_m1'] = params['phi_m1']
+            result_params['phi_f2'] = params['phi_f2']
+            result_params['phi_m2'] = params['phi_m2']
+            result_params['c_tf1'] = params['c_tf1']
+            result_params['c_tm1'] = params['c_tm1']
+            result_params['c_tf2'] = params['c_tf2']
+            result_params['c_tm2'] = params['c_tm2']
+            result_params['alpha1'] = params['alpha1']
+            result_params['alpha2'] = params['alpha2']
             result_params['R_i'] = params['R_i']
+            result_params['r_e'] = params['r_e']
+            result_params['r_w'] = params['r_w']
+            result_params['h'] = params['h']
+            result_params['q'] = params['q']
+            result_params['mu'] = params['mu']
+            result_params['B'] = params['B']
+            result_params['p_i'] = params['p_i']
             result_params['phi_total1'] = params['phi_f1'] + params['phi_m1']
             result_params['phi_total2'] = params['phi_f2'] + params['phi_m2']
 
@@ -220,11 +239,37 @@ class InfiniteRadialCompositeGenerator(DataGenerator):
 
 
     def generate(self):
-        params, converter = self.param_gen.generate()
+        params, _ = self.param_gen.generate()
 
         params_list = list(params)
 
         for param in tqdm(params_list, desc="Generating dual radial composite infinite reservoir data"):
+            # Создаем converter для каждого элемента отдельно
+            converter = RadialCompositeDualPorosityConverter(
+                h=param['h'].iloc[0],
+                q=param['q'].iloc[0],
+                mu=param['mu'].iloc[0],
+                B=param['B'].iloc[0],
+                p_i=param['p_i'].iloc[0],
+                k_f1=param['k_f1'].iloc[0],
+                k_m1=param['k_m1'].iloc[0],
+                phi_f1=param['phi_f1'].iloc[0],
+                phi_m1=param['phi_m1'].iloc[0],
+                c_tf1=param['c_tf1'].iloc[0],
+                c_tm1=param['c_tm1'].iloc[0],
+                alpha1=param['alpha1'].iloc[0],
+                k_f2=param['k_f2'].iloc[0],
+                k_m2=param['k_m2'].iloc[0],
+                phi_f2=param['phi_f2'].iloc[0],
+                phi_m2=param['phi_m2'].iloc[0],
+                c_tf2=param['c_tf2'].iloc[0],
+                c_tm2=param['c_tm2'].iloc[0],
+                alpha2=param['alpha2'].iloc[0],
+                r_w=param['r_w'].iloc[0],
+                R_i=param['R_i'].iloc[0],
+                r_e=param['r_e'].iloc[0]
+            )
+
             t_D_array = self.generate_search_time(converter)
 
             C_D = param['C_D'][0]

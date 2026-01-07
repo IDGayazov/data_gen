@@ -3,7 +3,7 @@ from train.model import WellTest1DCNN
 from train.train import UniversalWellTestTrainer
 
 if __name__ == "__main__":
-    model = WellTest1DCNN(num_classes=7, input_shape=(2, 128))
+    model = WellTest1DCNN(num_classes=2, input_shape=(2, 128))
     model.compile_model(learning_rate=0.01)
 
     trainer = UniversalWellTestTrainer(model.model)

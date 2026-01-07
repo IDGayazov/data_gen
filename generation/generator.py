@@ -8,6 +8,26 @@ from abc import ABC, abstractmethod
 from conversion.homogeneous_converter import DimensionConverter
 
 
+def extract_scalar(value):
+    """
+    Извлекает скалярное значение из pandas Series, numpy array или другого контейнера.
+    
+    Args:
+        value: значение, которое может быть Series, array, list, tuple или скаляром
+        
+    Returns:
+        скалярное значение
+    """
+    if hasattr(value, 'iloc'):
+        return value.iloc[0]
+    elif hasattr(value, 'item'):
+        return value.item()
+    elif isinstance(value, (list, tuple, np.ndarray)):
+        return value[0] if len(value) > 0 else value
+    else:
+        return value
+
+
 def synchronized_method(lock_name):
     """Декоратор для синхронизации метода"""
     def decorator(method):
@@ -54,22 +74,45 @@ class DataGenerator(ABC):
     def generate_search_time(self, converter):
         t_max_seconds = self.t_max_days * 24 * 3600
         t_D_max = converter.time_from_dim_to_dimless(t_max_seconds)
+        
+        # Извлекаем скалярное значение, если это Series
+        t_D_max = extract_scalar(t_D_max)
+        
         t_D_min = 1e-2
+        
+        # Проверка на валидность значений
+        if t_D_max <= 0 or np.isnan(t_D_max) or np.isinf(t_D_max):
+            raise ValueError(f"Invalid t_D_max: {t_D_max}. Check converter parameters.")
+        
+        if t_D_max < t_D_min:
+            # Если максимальное время меньше минимального, расширяем диапазон
+            t_D_min = t_D_max / 100
+        
+        # Проверка на валидность логарифма
+        if t_D_max <= 0 or t_D_min <= 0:
+            raise ValueError(f"Invalid time range: t_D_min={t_D_min}, t_D_max={t_D_max}")
+        
         t_D_array = np.logspace(np.log10(t_D_min), np.log10(t_D_max), self.points_count)
+        
+        # Проверка на NaN в результате
+        if np.any(np.isnan(t_D_array)) or np.any(np.isinf(t_D_array)):
+            raise ValueError(f"Generated time array contains NaN or Inf values. t_D_min={t_D_min}, t_D_max={t_D_max}")
+        
         return t_D_array
 
 
     def get_converter(self, params: DataFrame):
+        # Извлекаем скалярные значения из Series/DataFrame
         return DimensionConverter(
-            params['k'],
-            params['h'],
-            params['q'],
-            params['mu'],
-            params['B'],
-            params['p_i'],
-            params['phi'],
-            params['c_t'],
-            params['r_w']
+            extract_scalar(params['k']),
+            extract_scalar(params['h']),
+            extract_scalar(params['q']),
+            extract_scalar(params['mu']),
+            extract_scalar(params['B']),
+            extract_scalar(params['p_i']),
+            extract_scalar(params['phi']),
+            extract_scalar(params['c_t']),
+            extract_scalar(params['r_w'])
         )
 
     @synchronized_method('save_lock')
@@ -83,6 +126,15 @@ class DataGenerator(ABC):
         - Файл 2: таблица с параметрами пласта
         Название: <num>.csv
         """
+        # Проверка на NaN перед сохранением
+        if curve.isna().any().any():
+            nan_cols = curve.columns[curve.isna().any()].tolist()
+            raise ValueError(f"Curve data contains NaN values in columns: {nan_cols}")
+        
+        if params.isna().any().any():
+            nan_cols = params.columns[params.isna().any()].tolist()
+            raise ValueError(f"Params data contains NaN values in columns: {nan_cols}")
+        
         curve_dir = '../dataset/curve'
         params_dir = '../dataset/params'
 

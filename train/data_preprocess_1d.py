@@ -16,7 +16,7 @@ class PressureDataClassificationPreprocessor1D:
         self.test_size = test_size
         self.val_size = val_size
         self.random_state = random_state
-        self.data_dir = './dataset/curve/'
+        self.data_dir = '../dataset/curve/'
 
         self.label_encoder = LabelEncoder()
         self.onehot_encoder = OneHotEncoder(sparse_output=False)
@@ -134,9 +134,9 @@ class PressureDataClassificationPreprocessor1D:
         self.y_train, self.y_val, self.y_test = y_train, y_val, y_test
         self.X_original, self.y_original = X, y
 
-        X_train, y_train = clean_nan_data(X_train, y_train, strategy='interpolate')
-        X_val, y_val = clean_nan_data(X_val, y_val, strategy='interpolate')
-        X_test, y_test = clean_nan_data(X_test, y_test, strategy='interpolate')
+        # X_train, y_train = clean_nan_data(X_train, y_train, strategy='interpolate')
+        # X_val, y_val = clean_nan_data(X_val, y_val, strategy='interpolate')
+        # X_test, y_test = clean_nan_data(X_test, y_test, strategy='interpolate')
 
         return X_train, X_val, X_test, y_train, y_val, y_test
 
@@ -461,13 +461,15 @@ if __name__ == "__main__":
     data_preprocess = PressureDataClassificationPreprocessor1D(debug=False)
     X_train, X_val, X_test, y_train, y_val, y_test = data_preprocess.get_dataset()
 
-    class_names = ['dual_permeability_inf',
-                    'radial_composite_inf',
+    class_names = [
+        # 'dual_permeability_inf',
+                    # 'radial_composite_inf',
                     'homogeneous_inf',
-                    'homogeneous_fin',
+                    # 'homogeneous_fin',
                     'dual_porosity_inf',
-                    'dual_porosity_fin',
-                    'dual_permeability_fin']
+                    # 'dual_porosity_fin',
+                    # 'dual_permeability_fin'
+                    ]
     analyze_class_separability(X_train, y_train, class_names)
 
     # check_data_quality(X_train, y_train)

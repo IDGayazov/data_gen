@@ -103,8 +103,9 @@ class InfiniteHomogeneousGenerator(DataGenerator):
             converter = self.get_converter(param)
             t_D_array = self.generate_search_time(converter)
 
-            C_D = converter.wellbore_storage_from_dim_to_dimless(param['C'])[0]
-            S = param['S'][0]
+            from generation.generator import extract_scalar
+            C_D = extract_scalar(converter.wellbore_storage_from_dim_to_dimless(extract_scalar(param['C'])))
+            S = extract_scalar(param['S'])
 
             model = InfiniteHomogeneousReservoirModel(C_D=C_D, S=S)
             alg = ShtefestAlgorithm(N=16)
@@ -139,9 +140,10 @@ class FiniteHomogeneousGenerator(DataGenerator):
             converter = self.get_converter(param)
             t_D_array = self.generate_search_time(converter)
 
-            C_D = converter.wellbore_storage_from_dim_to_dimless(param['C'])[0]
-            r_D_e = converter.reservoir_radius_from_dim_to_dimless(param['r_e'])[0]
-            S = param['S'][0]
+            from generation.generator import extract_scalar
+            C_D = extract_scalar(converter.wellbore_storage_from_dim_to_dimless(extract_scalar(param['C'])))
+            r_D_e = extract_scalar(converter.reservoir_radius_from_dim_to_dimless(extract_scalar(param['r_e'])))
+            S = extract_scalar(param['S'])
 
             model = FiniteHomogeneousReservoirModel(C_D=C_D, S=S, R_D_E=r_D_e)
             alg = ShtefestAlgorithm(N=16)

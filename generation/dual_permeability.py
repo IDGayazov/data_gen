@@ -188,12 +188,33 @@ class InfiniteDualPermeabilityModelGenerator(DataGenerator):
 
 
     def generate(self):
-        params, converter = self.param_gen.generate()
+        params, _ = self.param_gen.generate()
 
         params_list = list(params)
 
         for param in tqdm(params_list, desc="Generating dual permeability infinite reservoir data"):
             param.drop('R_eD', axis=1, inplace=True) # убираем информацию о радиусе границы
+
+            # Создаем converter для каждого элемента отдельно
+            converter = DualPermeabilityDimensionConverter(
+                k1=param['k1'].iloc[0],
+                k2=param['k2'].iloc[0],
+                phi1=param['phi1'].iloc[0],
+                phi2=param['phi2'].iloc[0],
+                c_t1=param['c_t1'].iloc[0],
+                c_t2=param['c_t2'].iloc[0],
+                h1=param['h1'].iloc[0],
+                h2=param['h2'].iloc[0],
+                q1=param['q1'].iloc[0],
+                q2=param['q2'].iloc[0],
+                mu=param['mu'].iloc[0],
+                B=param['B'].iloc[0],
+                p_i=param['p_i'].iloc[0],
+                r_w=param['r_w'].iloc[0],
+                sigma=param['sigma'].iloc[0],
+                S1=param['S1'].iloc[0],
+                S2=param['S2'].iloc[0]
+            )
 
             t_D_array = self.generate_search_time(converter)
 
@@ -228,11 +249,32 @@ class FiniteDualPermeabilityGenerator(DataGenerator):
 
 
     def generate(self):
-        params, converter = self.param_gen.generate()
+        params, _ = self.param_gen.generate()
 
         params_list = list(params)
 
         for param in tqdm(params_list, desc="Generating dual permeability finite reservoir data"):
+            # Создаем converter для каждого элемента отдельно
+            converter = DualPermeabilityDimensionConverter(
+                k1=param['k1'].iloc[0],
+                k2=param['k2'].iloc[0],
+                phi1=param['phi1'].iloc[0],
+                phi2=param['phi2'].iloc[0],
+                c_t1=param['c_t1'].iloc[0],
+                c_t2=param['c_t2'].iloc[0],
+                h1=param['h1'].iloc[0],
+                h2=param['h2'].iloc[0],
+                q1=param['q1'].iloc[0],
+                q2=param['q2'].iloc[0],
+                mu=param['mu'].iloc[0],
+                B=param['B'].iloc[0],
+                p_i=param['p_i'].iloc[0],
+                r_w=param['r_w'].iloc[0],
+                sigma=param['sigma'].iloc[0],
+                S1=param['S1'].iloc[0],
+                S2=param['S2'].iloc[0]
+            )
+
             t_D_array = self.generate_search_time(converter)
 
             C_D = param['C_D'][0]
