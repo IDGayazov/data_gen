@@ -5,7 +5,7 @@ from tensorflow.keras import layers
 class WellTest1DCNN:
     def __init__(self, num_classes=2, input_shape=(128, 2)):
         """
-        Инициализация 1D CNN для классификации кривых ГДИ
+        Инициализация 1D CNN для классификации кривых ГДИС
 
         Parameters:
         -----------
@@ -19,7 +19,7 @@ class WellTest1DCNN:
         self.model = self._build_model()
 
     def _build_model(self):
-        """Построение архитектуры сети как в статье"""
+        """Построение архитектуры сети"""
         inputs = keras.Input(shape=self.input_shape)  # (2, 128)
 
         # Первый сверточный блок
@@ -87,27 +87,9 @@ class WellTest1DCNN:
             name='output'
         )(x)
 
-        # Создание модели
         model = keras.Model(inputs=inputs, outputs=outputs, name='WellTest1DCNN')
 
         return model
-
-    def compile_model(self, learning_rate=0.001):
-        """Компиляция модели с оптимайзером Adam"""
-        optimizer = keras.optimizers.Adam(
-            learning_rate=learning_rate,
-            beta_1=0.9,
-            beta_2=0.999,
-            epsilon=1e-8
-        )
-
-        self.model.compile(
-            optimizer=optimizer,
-            loss='categorical_crossentropy',
-            metrics=['accuracy']
-        )
-
-        return self.model
 
     def summary(self):
         """Вывод архитектуры модели"""
