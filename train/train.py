@@ -1,16 +1,14 @@
+import json
+import os
+import time
+
+import numpy as np
 import tensorflow as tf
 from tensorflow import keras
-from tensorflow.keras import layers
-import numpy as np
-import os
-import sys
-from typing import Dict, List, Tuple, Optional, Union
-import json
-import time
 
 
 class UniversalWellTestTrainer:
-    def __init__(self, model, class_names=None, use_mixed_precision=True):
+    def __init__(self, model, class_names, use_mixed_precision=True):
         """
         Универсальный класс для обучения на GPU и CPU
 
@@ -24,15 +22,7 @@ class UniversalWellTestTrainer:
             Использовать mixed precision для ускорения на GPU
         """
         self.model = model
-        self.class_names = class_names or [
-            # 'dual_permeability_inf',
-            # 'radial_composite_inf',
-            'homogeneous_inf',
-            # 'homogeneous_fin',
-            'dual_porosity_inf',
-            # 'dual_porosity_fin',
-            # 'dual_permeability_fin'
-        ]
+        self.class_names = class_names
 
         # Инициализация устройства
         self.device_type = self._setup_device(use_mixed_precision)
@@ -612,63 +602,24 @@ class UniversalWellTestTrainer:
 
         history_dict = self.history.history
 
-        fig, axes = plt.subplots(2, 3, figsize=(18, 12))
+        fig, axes = plt.subplots(1, 2, figsize=(14, 5))
 
-        # 1. Accuracy
-        axes[0, 0].plot(history_dict['accuracy'], label='Train', linewidth=2)
-        axes[0, 0].plot(history_dict['val_accuracy'], label='Validation', linewidth=2)
-        axes[0, 0].set_title(f'Model Accuracy ({self.device_type})', fontsize=14)
-        axes[0, 0].set_xlabel('Epoch')
-        axes[0, 0].set_ylabel('Accuracy')
-        axes[0, 0].legend()
-        axes[0, 0].grid(True, alpha=0.3)
+        axes[0].plot(history_dict['accuracy'], label='Train', linewidth=2)
+        axes[0].plot(history_dict['val_accuracy'], label='Validation', linewidth=2)
+        axes[0].set_title(f'Model Accuracy ({self.device_type})', fontsize=14)
+        axes[0].set_xlabel('Epoch')
+        axes[0].set_ylabel('Accuracy')
+        axes[0].legend()
+        axes[0].grid(True, alpha=0.3)
 
-        # 2. Loss
-        axes[0, 1].plot(history_dict['loss'], label='Train', linewidth=2)
-        axes[0, 1].plot(history_dict['val_loss'], label='Validation', linewidth=2)
-        axes[0, 1].set_title(f'Model Loss ({self.device_type})', fontsize=14)
-        axes[0, 1].set_xlabel('Epoch')
-        axes[0, 1].set_ylabel('Loss')
-        axes[0, 1].legend()
-        axes[0, 1].grid(True, alpha=0.3)
+        axes[1].plot(history_dict['loss'], label='Train', linewidth=2)
+        axes[1].plot(history_dict['val_loss'], label='Validation', linewidth=2)
+        axes[1].set_title(f'Model Loss ({self.device_type})', fontsize=14)
+        axes[1].set_xlabel('Epoch')
+        axes[1].set_ylabel('Loss')
+        axes[1].legend()
+        axes[1].grid(True, alpha=0.3)
 
-        # 3. Learning Rate
-        if 'lr' in history_dict:
-            axes[0, 2].plot(history_dict['lr'], linewidth=2, color='green')
-            axes[0, 2].set_title('Learning Rate Schedule', fontsize=14)
-            axes[0, 2].set_xlabel('Epoch')
-            axes[0, 2].set_ylabel('Learning Rate')
-            axes[0, 2].grid(True, alpha=0.3)
-        else:
-            axes[0, 2].set_visible(False)
-
-        # 4. Training time per epoch (если есть)
-        if hasattr(self, 'training_time'):
-            axes[1, 0].bar(['Total'], [self.training_time], color='skyblue')
-            axes[1, 0].set_title(f'Total Training Time: {self.training_time:.1f}s', fontsize=14)
-            axes[1, 0].set_ylabel('Seconds')
-            axes[1, 0].grid(True, alpha=0.3, axis='y')
-
-        # 5. Пустое место для дополнительной информации
-        info_text = f"Device: {self.device_type}\n"
-        info_text += f"Best Model: {self.best_model_path}\n"
-        info_text += f"Epochs: {len(history_dict['accuracy'])}"
-
-        axes[1, 1].text(0.5, 0.5, info_text, ha='center', va='center', fontsize=12)
-        axes[1, 1].axis('off')
-
-        # 6. Confusion Matrix предварительный (если есть метрики)
-        if self.metrics is not None:
-            cm = np.array(self.metrics['confusion_matrix'])
-            im = axes[1, 2].imshow(cm, cmap='Blues', interpolation='nearest')
-            axes[1, 2].set_title('Confusion Matrix', fontsize=14)
-            plt.colorbar(im, ax=axes[1, 2])
-        else:
-            axes[1, 2].text(0.5, 0.5, 'Для confusion matrix\nвызовите evaluate()',
-                            ha='center', va='center', fontsize=12)
-            axes[1, 2].axis('off')
-
-        plt.suptitle(f'Training Results - {self.device_type}', fontsize=16, y=1.02)
         plt.tight_layout()
 
         if save_path:
