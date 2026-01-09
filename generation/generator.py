@@ -78,7 +78,7 @@ class DataGenerator(ABC):
         # Извлекаем скалярное значение, если это Series
         t_D_max = extract_scalar(t_D_max)
         
-        t_D_min = 1e-2
+        t_D_min = 1e-1
         
         # Проверка на валидность значений
         if t_D_max <= 0 or np.isnan(t_D_max) or np.isinf(t_D_max):
@@ -102,7 +102,6 @@ class DataGenerator(ABC):
 
 
     def get_converter(self, params: DataFrame):
-        # Извлекаем скалярные значения из Series/DataFrame
         return DimensionConverter(
             extract_scalar(params['k']),
             extract_scalar(params['h']),
@@ -126,17 +125,9 @@ class DataGenerator(ABC):
         - Файл 2: таблица с параметрами пласта
         Название: <num>.csv
         """
-        # Проверка на NaN перед сохранением
-        if curve.isna().any().any():
-            nan_cols = curve.columns[curve.isna().any()].tolist()
-            raise ValueError(f"Curve data contains NaN values in columns: {nan_cols}")
         
-        if params.isna().any().any():
-            nan_cols = params.columns[params.isna().any()].tolist()
-            raise ValueError(f"Params data contains NaN values in columns: {nan_cols}")
-        
-        curve_dir = './dataset/curve'
-        params_dir = './dataset/params'
+        curve_dir = './dataset4/curve'
+        params_dir = './dataset4/params'
 
         os.makedirs(curve_dir, exist_ok=True)
         os.makedirs(params_dir, exist_ok=True)
@@ -148,5 +139,3 @@ class DataGenerator(ABC):
         params.to_csv(file_name2, index=False)
 
         DataGenerator.num += 1
-
-        # print(f"Сохранено: {file_name1}, {file_name2}")

@@ -171,7 +171,7 @@ class DualPermeabilityParamGenerator(ParamGenerator):
             result_df = pd.DataFrame([params])
             varied_params_list.append(result_df)
 
-        return varied_params_list, converter
+        return varied_params_list
 
 
 class InfiniteDualPermeabilityModelGenerator(DataGenerator):
@@ -188,14 +188,13 @@ class InfiniteDualPermeabilityModelGenerator(DataGenerator):
 
 
     def generate(self):
-        params, _ = self.param_gen.generate()
+        params = self.param_gen.generate()
 
         params_list = list(params)
 
         for param in tqdm(params_list, desc="Generating dual permeability infinite reservoir data"):
             param.drop('R_eD', axis=1, inplace=True) # убираем информацию о радиусе границы
 
-            # Создаем converter для каждого элемента отдельно
             converter = DualPermeabilityDimensionConverter(
                 k1=param['k1'].iloc[0],
                 k2=param['k2'].iloc[0],
@@ -225,7 +224,7 @@ class InfiniteDualPermeabilityModelGenerator(DataGenerator):
             kappa = param['kappa'][0]
 
             model = InfiniteDualPermeabilityReservoirModel(C_D=C_D, S=S, omega=omega, lam=lam, kappa=kappa)
-            alg = ShtefestAlgorithm(N=16)
+            alg = ShtefestAlgorithm(N=12)
 
             curve = model.pressure(t_D_array, alg) \
                 .gauss_noize(mu=0, sigma=5e-7) \
@@ -249,12 +248,11 @@ class FiniteDualPermeabilityGenerator(DataGenerator):
 
 
     def generate(self):
-        params, _ = self.param_gen.generate()
+        params = self.param_gen.generate()
 
         params_list = list(params)
 
         for param in tqdm(params_list, desc="Generating dual permeability finite reservoir data"):
-            # Создаем converter для каждого элемента отдельно
             converter = DualPermeabilityDimensionConverter(
                 k1=param['k1'].iloc[0],
                 k2=param['k2'].iloc[0],

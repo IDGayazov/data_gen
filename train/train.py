@@ -511,25 +511,25 @@ class WellTestTrainer:
         if format in ['h5', 'all']:
             try:
                 self.model.save_weights(f"{path}.weights.h5")
-                print(f"✅ Веса модели сохранены в H5: {path}.weights.h5")
+                print(f"Веса модели сохранены в H5: {path}.weights.h5")
             except Exception as e:
-                print(f"⚠️ Не удалось сохранить в H5: {e}")
+                print(f"Не удалось сохранить в H5: {e}")
 
         if format in ['keras', 'all']:
             keras_path = f"{path}.keras" if not path.endswith('.keras') else path
             try:
                 self.model.save(keras_path)
-                print(f"✅ Модель сохранена в Keras format: {keras_path}")
+                print(f"Модель сохранена в Keras format: {keras_path}")
             except Exception as e:
-                print(f"⚠️ Не удалось сохранить в Keras format: {e}")
+                print(f"Не удалось сохранить в Keras format: {e}")
 
         if format in ['savedmodel', 'all']:
             savedmodel_path = f"{path}_savedmodel"
             try:
                 tf.saved_model.save(self.model, savedmodel_path)
-                print(f"✅ Модель сохранена в SavedModel: {savedmodel_path}")
+                print(f"Модель сохранена в SavedModel: {savedmodel_path}")
             except Exception as e:
-                print(f"⚠️ Не удалось сохранить в SavedModel: {e}")
+                print(f"Не удалось сохранить в SavedModel: {e}")
 
         config = {
             'class_names': self.class_names,
@@ -542,7 +542,7 @@ class WellTestTrainer:
         config_path = f"{path}_config.json"
         with open(config_path, 'w') as f:
             json.dump(config, f, indent=2)
-        print(f"✅ Конфигурация сохранена: {config_path}")
+        print(f"Конфигурация сохранена: {config_path}")
 
     def load_model(self, path, custom_objects=None):
         """
@@ -586,6 +586,6 @@ class WellTestTrainer:
             with open(metadata_path, 'r') as f:
                 metadata = json.load(f)
             self.class_names = metadata.get('class_names', self.class_names)
-            print(f"✅ Метаданные загружены из {metadata_path}")
+            print(f"Метаданные загружены из {metadata_path}")
 
         return self.model

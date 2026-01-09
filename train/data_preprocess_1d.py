@@ -16,7 +16,7 @@ class PressureDataClassificationPreprocessor1D:
         self.test_size = test_size
         self.val_size = val_size
         self.random_state = random_state
-        self.data_dir = './dataset/curve/'
+        self.data_dir = './dataset4/curve/'
 
         self.label_encoder = LabelEncoder()
         self.onehot_encoder = OneHotEncoder(sparse_output=False)

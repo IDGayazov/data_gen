@@ -23,7 +23,7 @@ if __name__ == "__main__":
         X_train, y_train,
         X_val, y_val,
         batch_size=32,
-        epochs=5,
+        epochs=20,
         initial_lr=0.00001
     )
 

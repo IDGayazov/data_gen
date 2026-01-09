@@ -18,7 +18,6 @@ class HomogeneousModelParamGenerator(ParamGenerator):
     def generate(self) -> List[Dict[str, float]]:
         """
         Вариация параметров с учетом корреляций между ними.
-        Например, проницаемость и пористость часто коррелируют.
         """
         base_params = {
             'k': 5e-13,
@@ -108,7 +107,7 @@ class InfiniteHomogeneousGenerator(DataGenerator):
             S = extract_scalar(param['S'])
 
             model = InfiniteHomogeneousReservoirModel(C_D=C_D, S=S)
-            alg = ShtefestAlgorithm(N=16)
+            alg = ShtefestAlgorithm(N=12)
 
             curve = model.pressure(t_D_array, alg) \
                 .gauss_noize(mu=0, sigma=5e-7) \
@@ -146,7 +145,7 @@ class FiniteHomogeneousGenerator(DataGenerator):
             S = extract_scalar(param['S'])
 
             model = FiniteHomogeneousReservoirModel(C_D=C_D, S=S, R_D_E=r_D_e)
-            alg = ShtefestAlgorithm(N=16)
+            alg = ShtefestAlgorithm(N=12)
 
             curve = model.pressure(t_D_array, alg) \
                 .gauss_noize(mu=0, sigma=5e-7) \

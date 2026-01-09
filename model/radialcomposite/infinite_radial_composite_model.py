@@ -11,12 +11,6 @@ from model.reservoir_model import ReservoirModel
 class InfiniteRadialCompositeReservoirModel(ReservoirModel):
     """
     Класс для радиально-композитной модели пласта с бесконечной границей.
-
-    Атрибуты:
-        C_D:     безразмерная емкость
-        S:       скин-фактор
-        M12:     отношение подвижностей
-        omega12: отношение ёмкостей
     """
 
     def __init__(self, C_D, S, M1, M2, omega1, omega2, r_fD):
@@ -29,60 +23,112 @@ class InfiniteRadialCompositeReservoirModel(ReservoirModel):
         self.omega2 = omega2
         self.r_fD = r_fD
 
+        self.M12 = self.M1 / self.M2
+        self.omega12 = self.omega1 / self.omega2
+        self.M21 = 1.0 / self.M12
+        self.x21 = self.M12 / self.omega12
+
+        # print(f"M12 (M1/M2): {self.M12:.6f}")
+        # print(f"M21 (M2/M1): {self.M21:.6f}")
+        # print(f"ω12 (ω1/ω2): {self.omega12:.6f}")
+        # print(f"x21 (M12/ω12): {self.x21:.6f}")
+        # print(f"r_fD: {self.r_fD:.1f}")
 
     def a(self, s):
+        """
+        a(s) = r_fD * √s
+        """
         return self.r_fD * np.sqrt(s)
 
-
     def b(self, s):
-        M12 = self.M1 / self.M2
-        omega12 = self.omega1 / self.omega2
-        x21 = M12 / omega12
-        return self.r_fD * np.sqrt(x21 * s)
-
+        """
+        b(s) = r_fD * √(x21 * s)
+        где x21 = M12/ω12
+        """
+        return self.r_fD * np.sqrt(self.x21 * s)
 
     def KI(self, s):
+        """
+        Функция KI(s):
+
+        KI(s) = [I₁(a)·K₀(b) + (√x21/M21)·I₀(a)·K₁(b)] /
+                [K₁(a)·K₀(b) - (√x21/M21)·K₀(a)·K₁(b)]
+
+        где:
+        - a = r_fD·√s
+        - b = r_fD·√(x21·s)
+        - x21 = M12/ω12
+        - M21 = 1/M12
+        """
         a_val = self.a(s)
         b_val = self.b(s)
-        M12 = self.M1 / self.M2
-        omega12 = self.omega1 / self.omega2
-        x21 = M12 / omega12
-        coeff = np.sqrt(x21) / M12
 
+        coeff = np.sqrt(self.x21) / self.M21  # √x21 / M21
+
+        # Числитель: I₁(a)·K₀(b) + coeff·I₀(a)·K₁(b)
         numerator = i1(a_val) * k0(b_val) + coeff * i0(a_val) * k1(b_val)
+
+        # Знаменатель: K₁(a)·K₀(b) - coeff·K₀(a)·K₁(b)
         denominator = k1(a_val) * k0(b_val) - coeff * k0(a_val) * k1(b_val)
 
         return numerator / denominator
 
-
     def B(self, s):
+        """
+        Функция B(s) согласно формуле (90) из статьи:
+
+        B(s) = s·√s·[KI(s)·K₁(√s) - I₁(√s)]
+        """
         sqrt_s = np.sqrt(s)
-        return s * sqrt_s * (self.KI(s) * k1(sqrt_s) - i1(sqrt_s))
+        ki_val = self.KI(s)
 
+        return s * sqrt_s * (ki_val * k1(sqrt_s) - i1(sqrt_s))
 
-    def P_wD_laplace(self, u, r_D):
+    def P_wD_laplace(self, u, r_D=1.0):
         """
-        Вычисляет решение для пластового давления в пространстве Лапласа.
+        Решение для безразмерного давления в пространстве Лапласа.
+
+        P_wD(u) = [KI(u)·K₀(r_D·√u) + I₀(r_D·√u)] / B(u)
+
         Аргументы:
-            u:       параметр преобразования Лапласа
-            C_D:     безразмерная емкость
-        Возвращает:
-            P_wD(u): значение безразмерного давления в пространстве Лапласа
+            u: параметр преобразования Лапласа
+            r_D: безразмерный радиус (по умолчанию 1.0 - скважина)
         """
-        warnings.filterwarnings('ignore', category=RuntimeWarning)
+        with warnings.catch_warnings():
+            warnings.filterwarnings('ignore', category=RuntimeWarning)
 
-        sqrt_u = np.sqrt(u)
-        numerator = self.KI(u) * k0(r_D * sqrt_u) + i0(r_D * sqrt_u)
+            sqrt_u = np.sqrt(u)
+            numerator = self.KI(u) * k0(r_D * sqrt_u) + i0(r_D * sqrt_u)
 
-        return numerator / self.B(u)
-
+            return numerator / self.B(u)
 
     def F(self, s):
-        return self.agarwal_filter(self.P_wD_laplace, s, 1, self.S, self.C_D)
+        """
+        Функция фильтра Агарвала для учета скин-фактора и влияния ствола.
+        """
+        return self.agarwal_filter(self.P_wD_laplace, s, 1.0, self.S, self.C_D)
 
 
 if __name__ == "__main__":
-    model = InfiniteRadialCompositeReservoirModel(C_D=20, S=1, M1=5, M2=3, omega1=0.5, omega2=0.3, r_fD=200)
+    # M12(M1 / M2): 0.863334
+    # M21(M2 / M1): 1.158300
+    # ω12(ω1 / ω2): 2.724104
+    # x21(M12 / ω12): 0.316924
+    # r_fD: 50.0
+    C_D = 20
+    S = 2
+    M1 = np.random.uniform(0.5, 2)
+    M2 = np.random.uniform(0.2, 5)
+    omega1 = np.random.uniform(0.05, 0.3)
+    omega2 = np.random.uniform(0.05, 0.3)
+    r_fD = 100
+    model = InfiniteRadialCompositeReservoirModel(C_D=C_D,
+                                                  S=S,
+                                                  M1=M1,
+                                                  M2=M2,
+                                                  omega1=omega1,
+                                                  omega2=omega2,
+                                                  r_fD=r_fD)
 
     t_D_array = np.logspace(0, 10, 3000)
     alg = ShtefestAlgorithm(N=16)

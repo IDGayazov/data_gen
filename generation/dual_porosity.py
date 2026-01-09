@@ -178,7 +178,6 @@ class InfiniteDualPorosityGenerator(DataGenerator):
         for param in tqdm(params_list, desc="Generating dual porosity infinite reservoir data"):
             param.drop('R_eD', axis=1, inplace=True) # убираем информацию о радиусе границы
 
-            # Создаем converter для каждого элемента отдельно
             converter = DualPorosityDimensionConverter(
                 k_f=param['k_f'].iloc[0],
                 k_m=param['k_m'].iloc[0],
@@ -203,7 +202,7 @@ class InfiniteDualPorosityGenerator(DataGenerator):
             lam = param['lambda'][0]
 
             model = InfiniteDualPorosityReservoirModel(C_D=C_D, S=S, omega=omega, lam=lam)
-            alg = ShtefestAlgorithm(N=16)
+            alg = ShtefestAlgorithm(N=12)
 
             curve = model.pressure(t_D_array, alg) \
                 .gauss_noize(mu=0, sigma=5e-7) \
