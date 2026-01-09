@@ -89,21 +89,21 @@ class DualPermeabilityParamGenerator(ParamGenerator):
             # Скин-факторы
             # Система 1 (обычно лучше связь)
             rand1 = np.random.random()
-            if rand1 < 0.2:  # 10% - маленький скин
+            if rand1 < 0.2:
                 params['S1'] = np.random.uniform(0, 0.1)
-            elif rand1 < 0.6:  # 40% - небольшой положительный
+            elif rand1 < 0.6:
                 params['S1'] = np.random.uniform(0.1, 5)
-            else:  # 40% - умеренный положительный
-                params['S1'] = np.random.uniform(5, 20)
+            else:
+                params['S1'] = np.random.uniform(5, 10)
 
             # Система 2 (обычно хуже связь)
             rand2 = np.random.random()
-            if rand2 < 0.1:  # 10% - маленький скин
+            if rand2 < 0.1:
                 params['S2'] = np.random.uniform(0, 0.1)
-            elif rand2 < 0.4:  # 30% - небольшой положительный
+            elif rand2 < 0.4:
                 params['S2'] = np.random.uniform(0.1, 10)
-            else:  # 60% - умеренный/высокий положительный
-                params['S2'] = np.random.uniform(10, 50)
+            else:
+                params['S2'] = np.random.uniform(10, 20)
 
             for group in correlation_groups:
                 group_factor = np.random.uniform(0.5, 2.0)
@@ -283,7 +283,7 @@ class FiniteDualPermeabilityGenerator(DataGenerator):
             kappa = param['kappa'][0]
 
             model = FiniteDualPermeabilityReservoirModel(C_D=C_D, S=S, omega=omega, lam=lam, kappa=kappa, R_D_E=r_D_e)
-            alg = ShtefestAlgorithm(N=16)
+            alg = ShtefestAlgorithm(N=12)
 
             curve = model.pressure(t_D_array, alg) \
                 .gauss_noize(mu=0, sigma=5e-7) \

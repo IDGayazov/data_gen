@@ -14,14 +14,9 @@ from model.dualporosity.infinite_dual_porosity_model import InfiniteDualPorosity
 class DualPorosityModelParamGenerator(ParamGenerator):
     """
     Генерация параметров для модели двойной пористости
-    с использованием DualPorosityDimensionConverter
     """
 
     def generate(self) -> List[pd.DataFrame]:
-        """
-        Генерация реалистичных параметров для модели двойной пористости.
-        Возвращает как размерные параметры, так и безразмерные.
-        """
         base_params = {
             # Параметры трещин (fractures) - высокая проницаемость
             'k_f': 5e-13,  # проницаемость трещин, м²
@@ -73,14 +68,12 @@ class DualPorosityModelParamGenerator(ParamGenerator):
 
             # Скин-фактор
             rand = np.random.random()
-            if rand < 0.1:  # 10% - маленький скин
+            if rand < 0.1:
                 params['S'] = np.random.uniform(0, 0.1)
-            elif rand < 0.3:  # 20% - нулевой или близкий к нулю
+            elif rand < 0.3:
                 params['S'] = np.random.uniform(0.1, 0.5)
-            elif rand < 0.8:  # 50% - положительный, но небольшой
+            else:
                 params['S'] = np.random.uniform(0.5, 10)
-            else:  # 20% - высокий положительный скин
-                params['S'] = np.random.uniform(10, 50)
 
             for group in correlation_groups:
                 group_factor = np.random.uniform(0.5, 2.0)
@@ -154,7 +147,7 @@ class DualPorosityModelParamGenerator(ParamGenerator):
             result_df = pd.DataFrame([params])
             varied_params_list.append(result_df)
 
-        return varied_params_list, converter
+        return varied_params_list
 
 
 class InfiniteDualPorosityGenerator(DataGenerator):
@@ -171,7 +164,7 @@ class InfiniteDualPorosityGenerator(DataGenerator):
 
 
     def generate(self):
-        params, _ = self.param_gen.generate()
+        params = self.param_gen.generate()
 
         params_list = list(params)
 
@@ -226,7 +219,7 @@ class FiniteDualPorosityGenerator(DataGenerator):
 
 
     def generate(self):
-        params, _ = self.param_gen.generate()
+        params = self.param_gen.generate()
 
         params_list = list(params)
 
@@ -257,7 +250,7 @@ class FiniteDualPorosityGenerator(DataGenerator):
             S = param['S'][0]
 
             model = FiniteDualPorosityReservoirModel(C_D=C_D, S=S, omega=omega, lam=lam, R_D_e=r_D_e)
-            alg = ShtefestAlgorithm(N=16)
+            alg = ShtefestAlgorithm(N=12)
 
             curve = model.pressure(t_D_array, alg) \
                 .gauss_noize(mu=0, sigma=5e-7) \

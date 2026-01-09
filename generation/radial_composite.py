@@ -16,11 +16,6 @@ class RadialCompositeParamGenerator(ParamGenerator):
     """
 
     def generate(self) -> List[pd.DataFrame]:
-        """
-        Генерация данных для радиально-композитного пласта
-        с двумя зонами разной проницаемости.
-        """
-        # Базовые параметры
         base_params = {
             # Общие параметры
             'h': 10,  # толщина (м)
@@ -100,7 +95,6 @@ class RadialCompositeParamGenerator(ParamGenerator):
             while params['R_i'] >= params['r_e'] * 0.95:
                 params['R_i'] *= 0.9
 
-            # Клиппинг для реалистичных диапазонов
             # Зона 1
             params['phi1'] = np.clip(params['phi1'], 0.05, 0.35)  # 5-35%
             params['k1'] = np.clip(params['k1'], 1e-14, 1e-11)  # 10 мД - 10 Д
@@ -122,10 +116,6 @@ class RadialCompositeParamGenerator(ParamGenerator):
             params['phi1'] = params['omega1'] / params['c_t1']
             params['phi2'] = params['omega2'] / params['c_t2']
 
-            # Скин-фактор
-            params['S'] = np.clip(params['S'], -10, 100)
-
-            # Создаем конвертер для простой радиально-композитной модели
             converter = RadialCompositeConverter(
                 # Общие параметры
                 h=params['h'],
@@ -150,7 +140,6 @@ class RadialCompositeParamGenerator(ParamGenerator):
                 r_e=params.get('r_e', 1000)
             )
 
-            # Вычисляем безразмерные параметры
             result_params = {
                 # Безразмерные параметры для модели
                 'C_D': converter.wellbore_storage_from_dim_to_dimless(params['C']),
@@ -165,7 +154,7 @@ class RadialCompositeParamGenerator(ParamGenerator):
                 # Пьезопроводности
                 'eta1': converter.eta1,
                 'eta2': converter.eta2,
-                'eta_ratio': converter.eta_ratio,  # eta2/eta1
+                'eta_ratio': converter.eta_ratio,
 
                 # Размерные параметры (для справки)
                 'k1': params['k1'],

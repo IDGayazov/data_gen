@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
+from generation.generator import extract_scalar
 from generation.generator import DataGenerator, ParamGenerator
 from inversion.shtefest_algorithm import ShtefestAlgorithm
 from model.homogeneous.finite_homogeneous_model import FiniteHomogeneousReservoirModel
@@ -50,14 +51,12 @@ class HomogeneousModelParamGenerator(ParamGenerator):
             params['C'] = 10 ** np.random.uniform(-9, -7)  # коэффициент влияния ствола скважины
 
             rand = np.random.random()
-            if rand < 0.1:  # 10% - отрицательный скин (стимулированные скважины)
-                params['S'] = np.random.uniform(-6, -0.5)
-            elif rand < 0.3:  # 20% - нулевой или близкий к нулю
-                params['S'] = np.random.uniform(-0.5, 0.5)
-            elif rand < 0.8:  # 50% - положительный, но небольшой (1-10)
+            if rand < 0.1:
+                params['S'] = np.random.uniform(0, 0.1)
+            elif rand < 0.3:
+                params['S'] = np.random.uniform(0.1, 0.5)
+            else:
                 params['S'] = np.random.uniform(0.5, 10)
-            else:  # 20% - высокий положительный скин (поврежденные скважины)
-                params['S'] = np.random.uniform(10, 50)
 
             for group in correlation_groups:
                 group_factor = np.random.uniform(0.5, 2.0)
@@ -102,7 +101,6 @@ class InfiniteHomogeneousGenerator(DataGenerator):
             converter = self.get_converter(param)
             t_D_array = self.generate_search_time(converter)
 
-            from generation.generator import extract_scalar
             C_D = extract_scalar(converter.wellbore_storage_from_dim_to_dimless(extract_scalar(param['C'])))
             S = extract_scalar(param['S'])
 
@@ -139,7 +137,6 @@ class FiniteHomogeneousGenerator(DataGenerator):
             converter = self.get_converter(param)
             t_D_array = self.generate_search_time(converter)
 
-            from generation.generator import extract_scalar
             C_D = extract_scalar(converter.wellbore_storage_from_dim_to_dimless(extract_scalar(param['C'])))
             r_D_e = extract_scalar(converter.reservoir_radius_from_dim_to_dimless(extract_scalar(param['r_e'])))
             S = extract_scalar(param['S'])
