@@ -1,6 +1,7 @@
 import warnings
 
 import numpy as np
+import pandas as pd
 
 from scipy.special import k0, k1, i0, i1
 
@@ -27,12 +28,6 @@ class InfiniteRadialCompositeReservoirModel(ReservoirModel):
         self.omega12 = self.omega1 / self.omega2
         self.M21 = 1.0 / self.M12
         self.x21 = self.M12 / self.omega12
-
-        # print(f"M12 (M1/M2): {self.M12:.6f}")
-        # print(f"M21 (M2/M1): {self.M21:.6f}")
-        # print(f"ω12 (ω1/ω2): {self.omega12:.6f}")
-        # print(f"x21 (M12/ω12): {self.x21:.6f}")
-        # print(f"r_fD: {self.r_fD:.1f}")
 
     def a(self, s):
         """
@@ -110,25 +105,36 @@ class InfiniteRadialCompositeReservoirModel(ReservoirModel):
 
 
 if __name__ == "__main__":
-    # M12(M1 / M2): 0.863334
-    # M21(M2 / M1): 1.158300
-    # ω12(ω1 / ω2): 2.724104
-    # x21(M12 / ω12): 0.316924
-    # r_fD: 50.0
-    C_D = 20
-    S = 2
-    M1 = np.random.uniform(0.5, 2)
-    M2 = np.random.uniform(0.2, 5)
-    omega1 = np.random.uniform(0.05, 0.3)
-    omega2 = np.random.uniform(0.05, 0.3)
-    r_fD = 100
-    model = InfiniteRadialCompositeReservoirModel(C_D=C_D,
-                                                  S=S,
-                                                  M1=M1,
-                                                  M2=M2,
-                                                  omega1=omega1,
-                                                  omega2=omega2,
-                                                  r_fD=r_fD)
+    
+    params = pd.read_csv('./dataset4/params/26.csv')
+
+    C_D=params['C_D'].iloc[0]
+    S=params['S'].iloc[0]
+    M1=params['M1'].iloc[0]
+    M2=params['M2'].iloc[0]
+    omega1=params['omega1'].iloc[0]
+    omega2=params['omega2'].iloc[0]
+    r_fD=params['r_fD'].iloc[0]
+
+    # print('C_D:', C_D)
+    # print('S:', S)
+    # print('M1:', M1)
+    # print('M2:', M2)
+    # print('omega1:', omega1)
+    # print('omega2:', omega2)
+    # print('r_fD:', r_fD)
+    # print('c_t1:', params['c_t1'].iloc[0])
+    # print('c_t2:', params['c_t2'].iloc[0])
+    # print('phi1:', params['phi1'].iloc[0])
+    # print('phi2:', params['phi2'].iloc[0])
+
+    model = InfiniteRadialCompositeReservoirModel(C_D=params['C_D'][0],
+                                                  S=params['S'][0],
+                                                  M1=params['M1'][0],
+                                                  M2=params['M2'][0],
+                                                  omega1=params['omega1'][0],
+                                                  omega2=params['omega2'][0],
+                                                  r_fD=params['r_fD'][0])
 
     t_D_array = np.logspace(0, 10, 3000)
     alg = ShtefestAlgorithm(N=16)

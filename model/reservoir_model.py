@@ -111,7 +111,7 @@ class ReservoirModel(ABC):
         valid_mask = ~nan_mask
 
         if np.all(nan_mask) or np.sum(valid_mask) < 2:
-            print("❌ Недостаточно валидных точек для интерполяции. Возвращаю нули.")
+            print("Недостаточно валидных точек для интерполяции. Возвращаю нули.")
             return np.zeros_like(p_interp)
 
         # Если нет NaN - возвращаем как есть

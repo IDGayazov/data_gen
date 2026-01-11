@@ -37,22 +37,17 @@ class BourdaisLogarithmicDerivative:
             ln_t = np.log(t)
             t_local_points = self.f[self.f[x_col_name].between(ln_t - delta, ln_t + delta)]
             
-            # Если недостаточно точек, расширяем окно
             if len(t_local_points) < 2:
-                # Пробуем расширить окно в 2 раза
                 t_local_points = self.f[self.f[x_col_name].between(ln_t - 2*delta, ln_t + 2*delta)]
                 if len(t_local_points) < 2:
-                    # Если все еще недостаточно, используем все доступные точки
                     t_local_points = self.f
                     if len(t_local_points) < 2:
                         return np.nan
             
-            # Проверка на NaN в данных
             x_data = t_local_points[x_col_name].to_numpy(dtype=float)
             y_data = t_local_points[y_col_name].to_numpy(dtype=float)
             
             if np.any(np.isnan(x_data)) or np.any(np.isnan(y_data)):
-                # Удаляем NaN значения
                 valid_mask = ~(np.isnan(x_data) | np.isnan(y_data))
                 x_data = x_data[valid_mask]
                 y_data = y_data[valid_mask]
@@ -60,13 +55,11 @@ class BourdaisLogarithmicDerivative:
                 if len(x_data) < 2:
                     return np.nan
             
-            # Проверка на одинаковые значения x (деление на ноль)
             if len(np.unique(x_data)) < 2:
                 return np.nan
             
             try:
                 slope, _ = np.polyfit(x_data, y_data, 1)
-                # Проверка на валидность результата
                 if np.isnan(slope) or np.isinf(slope):
                     return np.nan
                 return slope

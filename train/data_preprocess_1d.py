@@ -257,20 +257,22 @@ class PressureDataClassificationPreprocessor1D:
 
 
 if __name__ == "__main__":
-    # count_omega = 0
-    # count_lambda = 0
-    #
-    # for item in os.listdir('./dataset/params'):
-    #     file_path = os.path.join('./dataset/params', item)
-    #     df = pd.read_csv(file_path)
-    #
-    #     count_omega += df['omega'].between(0.01, 0.5).sum()
-    #     count_lambda += df['lambda'].between(1e-8, 1e-5).sum()
-    #
-    # print('omega cnt: ', count_omega)
-    # print('lambda cnt: ', count_lambda)
+    count_phi1 = 0
+    count_phi2 = 0
+    
+    for item in os.listdir('./dataset4/params'):
+        file_path = os.path.join('./dataset4/params', item)
+        df = pd.read_csv(file_path)
+        
+        print(df['phi2'])
 
-    data_preprocess = PressureDataClassificationPreprocessor1D(debug=True)
-    X_train, X_val, X_test, y_train, y_val, y_test = data_preprocess.get_dataset()
+        count_phi1 += df['phi1'].between(0.05, 0.35).sum()
+        count_phi1 += df['phi2'].between(0.05, 0.35).sum()
+    
+    print('count_phi1 cnt: ', count_phi1)
+    print('count_phi2 cnt: ', count_phi2)
+
+    # data_preprocess = PressureDataClassificationPreprocessor1D(debug=True)
+    # X_train, X_val, X_test, y_train, y_val, y_test = data_preprocess.get_dataset()
 
     # data_preprocess.stats()

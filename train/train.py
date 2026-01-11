@@ -57,21 +57,8 @@ class WellTestTrainer:
         gpus = tf.config.list_physical_devices('GPU')
 
         if gpus:
-            try:
-                for gpu in gpus:
-                    tf.config.experimental.set_memory_growth(gpu, True)
-
-                if use_mixed_precision:
-                    tf.keras.mixed_precision.set_global_policy('mixed_float16')
-                    print("✅ Mixed precision включен для GPU")
-
-                print(f"✅ GPU доступен: {gpus[0].name}")
-                return 'GPU'
-
-            except Exception as e:
-                print(f"Ошибка настройки GPU: {e}")
-                print("Переключаюсь на CPU")
-                return 'CPU'
+            print(f"GPU доступен: {gpus[0].name}")
+            return 'GPU'
         else:
             print("GPU не обнаружен, используется CPU")
             return 'CPU'
@@ -268,20 +255,20 @@ class WellTestTrainer:
 
             self.training_time = time.time() - start_time
 
-            print(f"\n✅ Обучение завершено за {self.training_time:.2f} секунд")
-            print(f"✅ Лучшая модель сохранена в: {self.best_model_path}")
+            print(f"\nОбучение завершено за {self.training_time:.2f} секунд")
+            print(f"Лучшая модель сохранена в: {self.best_model_path}")
 
             self._save_training_info(X_train, X_val)
 
             return self.history
 
         except Exception as e:
-            print(f"\n❌ Ошибка при обучении: {e}")
+            print(f"\nОшибка при обучении: {e}")
             print("Попытка восстановления...")
 
             if os.path.exists(self.best_model_path):
                 self.model = keras.models.load_model(self.best_model_path)
-                print("✅ Загружена лучшая сохраненная модель")
+                print("Загружена лучшая сохраненная модель")
 
             raise
 
@@ -306,7 +293,7 @@ class WellTestTrainer:
         with open(self.metrics_file, 'w') as f:
             json.dump(info, f, indent=2, default=str)
 
-        print(f"✅ Информация об обучении сохранена в {self.metrics_file}")
+        print(f"Информация об обучении сохранена в {self.metrics_file}")
 
     def evaluate(self, X_test, y_test, batch_size=None):
         """
@@ -362,14 +349,14 @@ class WellTestTrainer:
             y_true, y_pred_classes, average=None
         )
 
-        print("\n📊 Classification Report:")
+        print("\nClassification Report:")
         print(classification_report(
             y_true, y_pred_classes,
             target_names=self.class_names,
             digits=4
         ))
 
-        print(f"\n📈 ROC AUC Score: {roc_auc:.4f}" if roc_auc is not None else "")
+        print(f"\nROC AUC Score: {roc_auc:.4f}" if roc_auc is not None else "")
 
         # Сохранение метрик
         self.metrics = {
@@ -429,7 +416,7 @@ class WellTestTrainer:
         --------
         dict : результаты бенчмарка
         """
-        print(f"\n🏃 Бенчмарк инференса на {self.device_type}...")
+        print(f"\nБенчмарк инференса на {self.device_type}...")
 
         X_test = np.repeat(X_sample[np.newaxis, :, :], 100, axis=0)
 
@@ -454,7 +441,7 @@ class WellTestTrainer:
             'samples_per_second': 1 / avg_time_per_sample
         }
 
-        print(f"\n📊 Результаты бенчмарка:")
+        print(f"\nРезультаты бенчмарка:")
         print(f"  Устройство: {results['device']}")
         print(f"  Среднее время на образец: {results['avg_time_per_sample_ms']:.2f} ms")
         print(f"  Образцов в секунду: {results['samples_per_second']:.0f}")
@@ -464,7 +451,7 @@ class WellTestTrainer:
     def plot_training_history(self, save_path=None):
         """Визуализация истории обучения"""
         if self.history is None:
-            print("⚠️ Модель еще не обучена!")
+            print("Модель еще не обучена!")
             return
 
         history_dict = self.history.history
@@ -491,7 +478,7 @@ class WellTestTrainer:
 
         if save_path:
             plt.savefig(save_path, dpi=150, bbox_inches='tight')
-            print(f"📊 График сохранен в {save_path}")
+            print(f"График сохранен в {save_path}")
 
         plt.show()
 

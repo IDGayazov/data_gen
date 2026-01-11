@@ -244,9 +244,15 @@ class InfiniteDualPermeabilityReservoirModel(ReservoirModel):
 
 
 if __name__ == "__main__":
-    params = pd.read_csv('./dataset2/params/5100.csv')
+    params = pd.read_csv('./dataset4/params/50.csv')
 
-    # model = InfiniteDualPermeabilityReservoirModel(C_D=20, S=1, omega=0.9, lam=7e-6, kappa=0.1)
+    print('C_D: ', params['C_D'][0])
+    print('S: ', params['S1'][0])
+    print('omega: ', params['omega'][0])
+    print('lam: ', params['lambda'][0])
+    print('kappa: ', params['kappa'][0])
+    print('alpha: ', params['alpha'][0])
+    print('r_w: ', params['r_w'][0])
 
     model = InfiniteDualPermeabilityReservoirModel(C_D=params['C_D'][0],
                                                    S=params['S1'][0],
@@ -254,8 +260,8 @@ if __name__ == "__main__":
                                                    lam=params['lambda'][0],
                                                    kappa=params['kappa'][0])
 
-    t_D_array = np.logspace(0, 9, 128)
-    alg = ShtefestAlgorithm(N=12)
+    t_D_array = np.logspace(0, 7, 128)
+    alg = ShtefestAlgorithm(N=16)
 
     model.pressure(t_D_array, alg)\
          .gauss_noize(mu=0, sigma=5e-9)\

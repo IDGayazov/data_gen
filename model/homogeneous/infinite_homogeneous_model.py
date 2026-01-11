@@ -47,7 +47,7 @@ class InfiniteHomogeneousReservoirModel(ReservoirModel):
 
 
 if __name__ == "__main__":
-    model = InfiniteHomogeneousReservoirModel(C_D=400, S=-1)
+    model = InfiniteHomogeneousReservoirModel(C_D=100, S=1)
 
     t_D_array = np.logspace(0, 5, 128)
     alg = ShtefestAlgorithm(N=4)

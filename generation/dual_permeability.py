@@ -14,13 +14,9 @@ from model.dualpermeability.infinite_dual_permeability_model import InfiniteDual
 class DualPermeabilityParamGenerator(ParamGenerator):
     """
     Генерация параметров для модели двойной проницаемости
-    с использованием DualPermeabilityDimensionConverter
     """
 
     def generate(self) -> List[pd.DataFrame]:
-        """
-        Генерация реалистичных параметров для модели двойной проницаемости.
-        """
         base_params = {
             # Система 1 (обычно трещины/высокопроницаемая)
             'h1': 10,  # толщина пласта, м
@@ -29,7 +25,7 @@ class DualPermeabilityParamGenerator(ParamGenerator):
             'c_t1': 1e-9,  # сжимаемость системы 1, 1/Па
 
             # Система 2 (обычно матрица/низкопроницаемая)
-            'h2': 20,
+            'h2': 20,  # толщина пласта, м
             'k2': 1e-14,  # проницаемость системы 2, м²
             'phi2': 0.15,  # пористость системы 2 (5-35%)
             'c_t2': 1.5e-9,  # сжимаемость системы 2, 1/Па
@@ -40,21 +36,10 @@ class DualPermeabilityParamGenerator(ParamGenerator):
             'mu': 1e-3,  # вязкость, Па·с
             'B': 1.2,  # объемный коэффициент
             'p_i': 25e6,  # начальное давление, Па
-            'r_w': 0.1,  # радиус скважины, м
-
-            # Параметры взаимодействия систем
-            'sigma': 1e-7,  # коэффициент перетока, 1/(Па·с)
-
-            # Скин-факторы
-            'S1': 0.0,  # скин системы 1
-            'S2': 5.0,  # скин системы 2
-
-            # Коэффициент влияния ствола (общий)
-            'C': 1e-8,  # м³/Па
+            'r_w': 0.1  # радиус скважины, м
         }
 
         correlation_groups = [
-            ['k1', 'phi1'],  # параметры системы 1 коррелируют
             ['k2', 'phi2'],  # параметры системы 2 коррелируют
             ['mu', 'B'],  # вязкость и объемный коэффициент
             ['p_i', 'c_t1', 'c_t2']  # давление и сжимаемости
@@ -83,11 +68,10 @@ class DualPermeabilityParamGenerator(ParamGenerator):
             # Коэффициент влияния ствола
             params['C'] = 10 ** np.random.uniform(-9, -7)  # м³/Па
 
-            # Коэффициент перетока
-            params['sigma'] = 10 ** np.random.uniform(-10, -5)  # 1/(Па·с)
+            # Фактор формы
+            params['alpha'] = np.random.uniform(0.001, 1)
 
             # Скин-факторы
-            # Система 1 (обычно лучше связь)
             rand1 = np.random.random()
             if rand1 < 0.2:
                 params['S1'] = np.random.uniform(0, 0.1)
@@ -96,7 +80,6 @@ class DualPermeabilityParamGenerator(ParamGenerator):
             else:
                 params['S1'] = np.random.uniform(5, 10)
 
-            # Система 2 (обычно хуже связь)
             rand2 = np.random.random()
             if rand2 < 0.1:
                 params['S2'] = np.random.uniform(0, 0.1)
@@ -125,13 +108,11 @@ class DualPermeabilityParamGenerator(ParamGenerator):
             # Флюидные свойства
             params['mu'] = np.clip(params['mu'], 0.5e-3, 50e-3)  # 0.5-50 мПа·с
             params['B'] = np.clip(params['B'], 1.0, 1.8)  # объемный коэффициент
-
-            # Параметры взаимодействия
-            params['sigma'] = np.clip(params['sigma'], 1e-11, 1e-4)  # 1/(Па·с)
-
-            # Скин-факторы
-            params['S1'] = np.clip(params['S1'], -5, 50)
-            params['S2'] = np.clip(params['S2'], -5, 100)
+            
+            # Корректировка параметров для получения характерных графиков двойной проницаемости
+            kappa = np.random.uniform(0.7, 0.99)
+            lam_target = (1 - kappa) * params['alpha'] * params['r_w'] ** 2
+            params['k1'] = params['k2'] * kappa * params['h2'] / (params['h1'] * (1 - kappa))
 
             converter = DualPermeabilityDimensionConverter(
                 k1=params['k1'],
@@ -148,7 +129,7 @@ class DualPermeabilityParamGenerator(ParamGenerator):
                 B=params['B'],
                 p_i=params['p_i'],
                 r_w=params['r_w'],
-                sigma=params['sigma'],
+                alpha=params['alpha'],
                 S1=params['S1'],
                 S2=params['S2']
             )
@@ -210,7 +191,7 @@ class InfiniteDualPermeabilityModelGenerator(DataGenerator):
                 B=param['B'].iloc[0],
                 p_i=param['p_i'].iloc[0],
                 r_w=param['r_w'].iloc[0],
-                sigma=param['sigma'].iloc[0],
+                alpha=param['alpha'].iloc[0],
                 S1=param['S1'].iloc[0],
                 S2=param['S2'].iloc[0]
             )
@@ -268,7 +249,7 @@ class FiniteDualPermeabilityGenerator(DataGenerator):
                 B=param['B'].iloc[0],
                 p_i=param['p_i'].iloc[0],
                 r_w=param['r_w'].iloc[0],
-                sigma=param['sigma'].iloc[0],
+                alpha=param['alpha'].iloc[0],
                 S1=param['S1'].iloc[0],
                 S2=param['S2'].iloc[0]
             )

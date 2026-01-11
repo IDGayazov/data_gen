@@ -92,7 +92,7 @@ class DualPorosityDimensionConverter:
         if use_total_storage:
             # Используем общую ёмкость (трещины + матрица)
             phi_c_t = self.total_storage
-            k = self.k_f  # время определяется проницаемостью трещин
+            k = self.k_f 
         else:
             # Используем только ёмкость трещин (раннее время)
             phi_c_t = self.phi_f * self.c_tf
@@ -144,49 +144,3 @@ class DualPorosityDimensionConverter:
     def radius_from_dimless_to_dim(self, r_D):
         """Преобразование безразмерного радиуса в размерное"""
         return r_D * self.r_w
-
-    def diffusivity_fracture(self):
-        """Коэффициент пьезопроводности трещин"""
-        return self.k_f / (self.phi_f * self.mu * self.c_tf)
-
-    def diffusivity_matrix(self):
-        """Коэффициент пьезопроводности матрицы"""
-        return self.k_m / (self.phi_m * self.mu * self.c_tm)
-
-    def diffusivity_ratio(self):
-        """Отношение пьезопроводностей (матрица/трещины)"""
-        eta_f = self.diffusivity_fracture()
-        eta_m = self.diffusivity_matrix()
-        return eta_m / eta_f if eta_f > 0 else 0.0
-
-
-if __name__ == "__main__":
-    dp_converter = DualPorosityDimensionConverter(
-        k_f=5e-13,  # проницаемость трещин, м²
-        k_m=5e-15,  # проницаемость матрицы, м²
-        h=10,  # толщина, м
-        q=2.31e-3,  # дебит, м³/с
-        mu=1e-3,  # вязкость, Па·с
-        B=1.2,  # объемный коэффициент
-        p_i=25e6,  # начальное давление, Па
-        phi_f=0.02,  # пористость трещин
-        phi_m=0.18,  # пористость матрицы
-        c_tf=1e-9,  # сжимаемость трещин, 1/Па
-        c_tm=1.5e-9,  # сжимаемость матрицы, 1/Па
-        r_w=0.1,  # радиус скважины, м
-        alpha=12.0  # геометрический фактор
-    )
-
-    p = 20e6  # Па
-    t = 3600  # с
-
-    p_D = dp_converter.pressure_from_dim_to_dimless(p)
-    t_D = dp_converter.time_from_dim_to_dimless(t)
-
-    print(f"Безразмерные параметры двойной пористости:")
-    print(f"ω (коэффициент ёмкости) = {dp_converter.omega:.6f}")
-    print(f"λ (коэффициент перетока) = {dp_converter.lambda_param:.2e}")
-    print(f"κ (отношение проницаемостей) = {dp_converter.kappa:.2e}")
-    print(f"\nПреобразования:")
-    print(f"p = {p / 1e6:.2f} МПа → p_D = {p_D:.4f}")
-    print(f"t = {t / 3600:.2f} ч → t_D = {t_D:.2e}")

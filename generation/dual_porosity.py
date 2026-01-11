@@ -35,12 +35,6 @@ class DualPorosityModelParamGenerator(ParamGenerator):
             'B': 1.2,  # объемный коэффициент
             'p_i': 25e6,  # начальное давление, Па
             'r_w': 0.1,  # радиус скважины, м
-
-            # Геометрический фактор
-            'alpha': 12.0,  # shape factor, 1/м²
-
-            # Размерный коэффициент влияния ствола
-            'C': 1e-8,  # м³/Па
         }
 
         correlation_groups = [
@@ -58,7 +52,7 @@ class DualPorosityModelParamGenerator(ParamGenerator):
             # Вариация геометрических параметров
             params['h'] *= np.random.uniform(0.5, 2.0)  # толщина
             params['q'] *= np.random.uniform(0.2, 3.0)  # дебит
-            params['r_e'] = np.random.uniform(50, 1000)  # внешний радиус
+            params['r_e'] = np.random.uniform(100, 1000)  # внешний радиус
 
             # Вариация коэффициента влияния ствола
             params['C'] = 10 ** np.random.uniform(-9, -7)  # м³/Па
@@ -95,9 +89,6 @@ class DualPorosityModelParamGenerator(ParamGenerator):
             # Флюидные свойства
             params['mu'] = np.clip(params['mu'], 0.5e-3, 50e-3)  # 0.5-50 мПа·с
             params['B'] = np.clip(params['B'], 1.0, 1.8)  # объемный коэффициент
-
-            # Плотность скин-фактора
-            params['S'] = np.clip(params['S'], 0, 100)
 
             λ_target = 10 ** np.random.uniform(-8, -5)
             k_ratio = np.random.uniform(1e-6, 1e-3)
@@ -138,10 +129,7 @@ class DualPorosityModelParamGenerator(ParamGenerator):
             # 4. κ (отношение проницаемостей)
             params['kappa'] = converter.kappa
 
-            # 5. Отношение пьезопроводностей
-            params['eta_ratio'] = converter.diffusivity_ratio()
-
-            # 6. Безразмерный внешний радиус
+            # 5. Безразмерный внешний радиус
             params['R_eD'] = converter.radius_from_dim_to_dimless(params['r_e'])
 
             result_df = pd.DataFrame([params])
@@ -224,7 +212,6 @@ class FiniteDualPorosityGenerator(DataGenerator):
         params_list = list(params)
 
         for param in tqdm(params_list, desc="Generating dual porosity finite reservoir data"):
-            # Создаем converter для каждого элемента отдельно
             converter = DualPorosityDimensionConverter(
                 k_f=param['k_f'].iloc[0],
                 k_m=param['k_m'].iloc[0],
