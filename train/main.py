@@ -1,24 +1,33 @@
 from train.data_preprocess_1d import PressureDataClassificationPreprocessor1D
 from train.model import WellTest1DCNN
-from train.train import UniversalWellTestTrainer
+from train.train import WellTestTrainer
+
 
 if __name__ == "__main__":
-    model = WellTest1DCNN(num_classes=7, input_shape=(2, 128))
-    model.compile_model(learning_rate=0.01)
-
-    trainer = UniversalWellTestTrainer(model.model)
-
-    data_preprocess = PressureDataClassificationPreprocessor1D(debug=False)
+    # Подготовка данных
+    data_preprocess = PressureDataClassificationPreprocessor1D(debug=True)
     X_train, X_val, X_test, y_train, y_val, y_test = data_preprocess.get_dataset()
+    class_names = data_preprocess.get_class_names()
+    num_classes = len(class_names)
 
+    X_train = data_preprocess.normalize(X_train)
+    X_val = data_preprocess.normalize(X_val)
+    X_test = data_preprocess.normalize(X_test)
+
+    # Инициализация модели
+    model = WellTest1DCNN(num_classes=num_classes, input_shape=(128, 2))
+
+    # Обучение
+    trainer = WellTestTrainer(model.model, class_names)
     history = trainer.train(
         X_train, y_train,
         X_val, y_val,
         batch_size=32,
-        epochs=300,
-        initial_lr=0.01
+        epochs=20,
+        initial_lr=0.00001
     )
 
+    # Обработка результатов
     metrics = trainer.evaluate(X_test, y_test)
 
     sample = X_test[0]
@@ -30,3 +39,4 @@ if __name__ == "__main__":
 
     pred_class, probs, confidence = trainer.predict_single(X_test[0])
     print(f"Класс: {pred_class}, Уверенность: {confidence:.2%}")
+    print(f"Истинный класс: {y_test[0]}")

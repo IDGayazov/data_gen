@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
+from generation.generator import extract_scalar
 from generation.generator import DataGenerator, ParamGenerator
 from inversion.shtefest_algorithm import ShtefestAlgorithm
 from model.homogeneous.finite_homogeneous_model import FiniteHomogeneousReservoirModel
@@ -16,10 +17,6 @@ class HomogeneousModelParamGenerator(ParamGenerator):
     """
 
     def generate(self) -> List[Dict[str, float]]:
-        """
-        Вариация параметров с учетом корреляций между ними.
-        Например, проницаемость и пористость часто коррелируют.
-        """
         base_params = {
             'k': 5e-13,
             'h': 10,
@@ -46,19 +43,18 @@ class HomogeneousModelParamGenerator(ParamGenerator):
             params['h'] *= np.random.uniform(0.5, 2.0)  # толщина
             params['q'] *= np.random.uniform(0.2, 3.0)  # дебит
             params['r_w'] *= np.random.uniform(0.8, 1.2)  # радиус скважины
-            params['r_e'] = np.random.uniform(50, 1000)  # радиус границ
+            params['r_e'] = np.random.uniform(100, 1000)  # радиус границ
 
             params['C'] = 10 ** np.random.uniform(-9, -7)  # коэффициент влияния ствола скважины
 
+            # скин-фактор
             rand = np.random.random()
-            if rand < 0.1:  # 10% - отрицательный скин (стимулированные скважины)
-                params['S'] = np.random.uniform(-6, -0.5)
-            elif rand < 0.3:  # 20% - нулевой или близкий к нулю
-                params['S'] = np.random.uniform(-0.5, 0.5)
-            elif rand < 0.8:  # 50% - положительный, но небольшой (1-10)
+            if rand < 0.1:
+                params['S'] = np.random.uniform(0, 0.1)
+            elif rand < 0.3:
+                params['S'] = np.random.uniform(0.1, 0.5)
+            else:
                 params['S'] = np.random.uniform(0.5, 10)
-            else:  # 20% - высокий положительный скин (поврежденные скважины)
-                params['S'] = np.random.uniform(10, 50)
 
             for group in correlation_groups:
                 group_factor = np.random.uniform(0.5, 2.0)
@@ -103,11 +99,11 @@ class InfiniteHomogeneousGenerator(DataGenerator):
             converter = self.get_converter(param)
             t_D_array = self.generate_search_time(converter)
 
-            C_D = converter.wellbore_storage_from_dim_to_dimless(param['C'])[0]
-            S = param['S'][0]
+            C_D = extract_scalar(converter.wellbore_storage_from_dim_to_dimless(extract_scalar(param['C'])))
+            S = extract_scalar(param['S'])
 
             model = InfiniteHomogeneousReservoirModel(C_D=C_D, S=S)
-            alg = ShtefestAlgorithm(N=16)
+            alg = ShtefestAlgorithm(N=12)
 
             curve = model.pressure(t_D_array, alg) \
                 .gauss_noize(mu=0, sigma=5e-7) \
@@ -139,12 +135,12 @@ class FiniteHomogeneousGenerator(DataGenerator):
             converter = self.get_converter(param)
             t_D_array = self.generate_search_time(converter)
 
-            C_D = converter.wellbore_storage_from_dim_to_dimless(param['C'])[0]
-            r_D_e = converter.reservoir_radius_from_dim_to_dimless(param['r_e'])[0]
-            S = param['S'][0]
+            C_D = extract_scalar(converter.wellbore_storage_from_dim_to_dimless(extract_scalar(param['C'])))
+            r_D_e = extract_scalar(converter.reservoir_radius_from_dim_to_dimless(extract_scalar(param['r_e'])))
+            S = extract_scalar(param['S'])
 
             model = FiniteHomogeneousReservoirModel(C_D=C_D, S=S, R_D_E=r_D_e)
-            alg = ShtefestAlgorithm(N=16)
+            alg = ShtefestAlgorithm(N=12)
 
             curve = model.pressure(t_D_array, alg) \
                 .gauss_noize(mu=0, sigma=5e-7) \

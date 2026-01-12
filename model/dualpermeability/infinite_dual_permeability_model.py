@@ -244,17 +244,18 @@ class InfiniteDualPermeabilityReservoirModel(ReservoirModel):
 
 
 if __name__ == "__main__":
-    params = pd.read_csv('../../dataset/params/8.csv')
+    params = pd.read_csv('./dataset4/params/50.csv')
 
-    # model = InfiniteDualPermeabilityReservoirModel(C_D=20, S=1, omega=0.9, lam=7e-6, kappa=0.1)
-    # model = InfiniteDualPermeabilityReservoirModel(C_D=params['C_D'][0],
-    #                                                S=params['S'][0],
-    #                                                omega=params['omega'][0],
-    #                                                lam=params['lambda'][0],
-    #                                                kappa=params['kappa'][0])
+    print('C_D: ', params['C_D'][0])
+    print('S: ', params['S1'][0])
+    print('omega: ', params['omega'][0])
+    print('lam: ', params['lambda'][0])
+    print('kappa: ', params['kappa'][0])
+    print('alpha: ', params['alpha'][0])
+    print('r_w: ', params['r_w'][0])
 
     model = InfiniteDualPermeabilityReservoirModel(C_D=params['C_D'][0],
-                                                   S=params['S'][0],
+                                                   S=params['S1'][0],
                                                    omega=params['omega'][0],
                                                    lam=params['lambda'][0],
                                                    kappa=params['kappa'][0])
