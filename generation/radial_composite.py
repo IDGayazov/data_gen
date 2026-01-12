@@ -113,7 +113,6 @@ class RadialCompositeParamGenerator(ParamGenerator):
                 phi2=params['phi2'],
                 c_t2=params['c_t2'],
 
-                # Геометрия
                 R_i=params['R_i'],
                 r_e=params.get('r_e', 1000)
             )
