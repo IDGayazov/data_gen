@@ -16,7 +16,7 @@ class ShtefestAlgorithm(LaplasInversionMethod):
 
     def __init__(self, N):
         self.N = N
-        self._fact_cache = {}  # Кеш для факториалов
+        self._fact_cache = {}
         self.V = self._calculate_coefficients()
 
     def _factorial(self, n):
@@ -35,7 +35,7 @@ class ShtefestAlgorithm(LaplasInversionMethod):
         # Предвычисляем факториалы для часто используемых значений
         max_fact = 2 * N_half
         for i in range(max_fact + 1):
-            self._factorial(i)  # Заполняем кеш
+            self._factorial(i)
 
         for i in range(1, self.N + 1):
             start = (i + 1) // 2
@@ -68,15 +68,3 @@ class ShtefestAlgorithm(LaplasInversionMethod):
             result += self.V[i - 1] * F(s_val)
 
         return ln2_t * result
-
-    def inverse_vectorized(self, F, t_array) -> np.ndarray:
-        """Обращение для массива времен t"""
-        if not isinstance(t_array, np.ndarray):
-            t_array = np.array(t_array)
-
-        results = np.zeros_like(t_array)
-
-        for idx, t in enumerate(t_array):
-            results[idx] = self.inverse(F, t)
-
-        return results

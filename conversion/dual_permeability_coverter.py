@@ -21,13 +21,13 @@ class DualPermeabilityDimensionConverter:
        - B - объемный коэффициент, безразмерно
        - p_i - начальное давление, Па
        - r_w - радиус скважины, м
-       - sigma - коэффициент перетока между системами, 1/(Па·с)
+       - alpha - фактор формы, безразмерно
        - S1 - скин-фактор системы 1
        - S2 - скин-фактор системы 2
     '''
 
     def __init__(self, k1, k2, phi1, phi2, c_t1, c_t2, h1, h2,
-                 q1, q2, mu, B, p_i, r_w, sigma, S1=0.0, S2=0.0):
+                 q1, q2, mu, B, p_i, r_w, alpha, S1=0.0, S2=0.0):
         # Параметры системы 1 (обычно трещины/высокопроницаемая)
         self.k1 = k1
         self.phi1 = phi1
@@ -48,8 +48,8 @@ class DualPermeabilityDimensionConverter:
         self.p_i = p_i
         self.r_w = r_w
 
-        # Параметры взаимодействия систем
-        self.sigma = sigma  # коэффициент перетока
+        # Фактор формы
+        self.alpha = alpha  
 
         self.S1 = S1  # скин системы 1
         self.S2 = S2  # скин системы 2
@@ -84,7 +84,7 @@ class DualPermeabilityDimensionConverter:
 
     def calc_lambda(self):
         """Безразмерный коэффициент перетока между системами"""
-        return self.sigma * self.r_w**2 * (self.k1 * self.h1) / (self.k1 * self.h1 + self.k2 * self.h2)
+        return self.alpha * self.r_w**2 * (self.k2 * self.h2) / (self.k1 * self.h1 + self.k2 * self.h2)
 
     def calc_kappa(self):
         """Отношение проницаемостей"""
@@ -163,18 +163,8 @@ class DualPermeabilityDimensionConverter:
     def wellbore_storage_from_dim_to_dimless(self, C, system='total'):
         """
         Преобразование коэффициента влияния ствола скважины в безразмерное
-        system: 'total' - общая ёмкость, '1' - система 1, '2' - система 2
         """
-        if system == 'total':
-            phi_c_t = self.total_storage
-        elif system == '1':
-            phi_c_t = self.storage1
-        elif system == '2':
-            phi_c_t = self.storage2
-        else:
-            raise ValueError("system must be 'total', '1', or '2'")
-
-        return C / (2 * np.pi * phi_c_t * self.r_w ** 2)
+        return C / (2 * np.pi * self.total_storage * self.r_w ** 2)
 
     def wellbore_storage_from_dimless_to_dim(self, C_D, system='total'):
         """
@@ -213,33 +203,3 @@ class DualPermeabilityDimensionConverter:
         eta1 = self.diffusivity_system1()
         eta2 = self.diffusivity_system2()
         return eta2 / eta1 if eta1 > 0 else 0.0
-
-
-if __name__ == "__main__":
-    # Пример параметров для двойной проницаемости
-    dpk_converter = DualPermeabilityDimensionConverter(
-        # Система 1 (трещины/высокопроницаемая)
-        k1=5e-13,  # проницаемость, м² ≈ 500 мД
-        phi1=0.02,  # пористость
-        c_t1=1e-9,  # сжимаемость, 1/Па
-
-        # Система 2 (матрица/низкопроницаемая)
-        k2=1e-14,  # проницаемость, м² ≈ 10 мД
-        phi2=0.15,  # пористость
-        c_t2=1.5e-9,  # сжимаемость, 1/Па
-
-        # Общие параметры
-        h1=10,  # толщина, м
-        h2=15,  # толщина, м
-        q1=1.85e-3,  # дебит из системы 1, м³/с
-        q2=0.46e-3,  # дебит из системы 2, м³/с
-        mu=1e-3,  # вязкость, Па·с
-        B=1.2,  # объемный коэффициент
-        p_i=25e6,  # начальное давление, Па
-        r_w=0.1,  # радиус скважины, м
-
-        # Параметры взаимодействия
-        sigma=1e-7,  # коэффициент перетока, 1/(Па·с)
-        S1=0.0,  # скин системы 1
-        S2=5.0  # скин системы 2
-    )

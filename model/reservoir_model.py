@@ -63,24 +63,92 @@ class ReservoirModel(ABC):
     def pressure(self, t_D, alg: LaplasInversionMethod):
         """
         Функция вычисления массива давления, по массиву безразмерного времени.
-
-        Получает:
-            F: функция решения уравнения диффузии в пространстве Лапласа.
-            t_D: массив безразмерного времени.
-            alg: численный метод обращения (LaplasInversionMethod).
-            filename: файл для записи данных.
-
-        Возвращает:
-            self
+        С автоматическим восстановлением NaN/Inf значений через интерполяцию.с
+        (в среднем nan значений в выборках немного, обнаруживаются в radial_composite для ранних периодов времени)
         """
-        p_w_d_results = []
-        for t_D_val in t_D:
-            pwd_val = alg.inverse(self.F, t_D_val)
-            p_w_d_results.append(pwd_val)
+        if np.any(t_D <= 0):
+            raise ValueError("Time values must be positive")
 
-        table_data = np.column_stack((t_D, p_w_d_results))
+        p_w_d_results = []
+        nan_count = 0
+        inf_count = 0
+
+        for idx, t_D_val in enumerate(t_D):
+            try:
+                pwd_val = alg.inverse(self.F, t_D_val)
+
+                if np.isnan(pwd_val):
+                    nan_count += 1
+                    pwd_val = np.nan
+                elif np.isinf(pwd_val):
+                    inf_count += 1
+                    pwd_val = np.nan
+
+                p_w_d_results.append(pwd_val)
+            except Exception as e:
+                print(f"Ошибка при t_D={t_D_val:.2e}: {e}")
+                nan_count += 1
+                p_w_d_results.append(np.nan)
+
+        p_w_d_array = np.array(p_w_d_results)
+
+        if np.any(np.isnan(p_w_d_array)):
+            p_w_d_array = self._interpolate_nan_values(t_D, p_w_d_array)
+
+        table_data = np.column_stack((t_D, p_w_d_array))
         self.df = pd.DataFrame(table_data, columns=['t_D', 'P_wD'])
+
         return self
+
+    def _interpolate_nan_values(self, t, p):
+        """
+        Интерполяция NaN значений в массиве давления.
+        Использует линейную интерполяцию в логарифмической шкале.
+        """
+        p_interp = p.copy()
+
+        nan_mask = np.isnan(p_interp)
+        valid_mask = ~nan_mask
+
+        if np.all(nan_mask) or np.sum(valid_mask) < 2:
+            print("Недостаточно валидных точек для интерполяции. Возвращаю нули.")
+            return np.zeros_like(p_interp)
+
+        # Если нет NaN - возвращаем как есть
+        if not np.any(nan_mask):
+            return p_interp
+
+        t_valid = t[valid_mask]
+        p_valid = p_interp[valid_mask]
+
+        try:
+            log_interp = np.interp(
+                np.log(t[nan_mask] + 1e-100),
+                np.log(t_valid),
+                np.log(p_valid + 1e-10)
+            )
+
+            p_interp[nan_mask] = np.exp(log_interp)
+
+        except Exception as e:
+            print(f"Ошибка при логарифмической интерполяции: {e}")
+            print("Пробую линейную интерполяцию в обычной шкале...")
+
+            linear_interp = np.interp(
+                t[nan_mask],
+                t_valid,
+                p_valid
+            )
+            p_interp[nan_mask] = linear_interp
+
+        # Проверка результата интерполяции
+        if np.any(np.isnan(p_interp)) or np.any(np.isinf(p_interp)):
+            for i in np.where(np.isnan(p_interp) | np.isinf(p_interp))[0]:
+                valid_indices = np.where(valid_mask)[0]
+                nearest_idx = valid_indices[np.argmin(np.abs(valid_indices - i))]
+                p_interp[i] = p_valid[np.where(valid_indices == nearest_idx)[0][0]]
+
+        return p_interp
 
     def gauss_noize(self, mu=0, sigma=5e-5):
         """
@@ -94,16 +162,22 @@ class ReservoirModel(ABC):
         Возвращает:
             self
         """
+        
         signal_amplitude = self.df['P_wD'].max() - self.df['P_wD'].min()
+        
         noise = np.random.normal(mu, sigma * signal_amplitude, len(self.df))
         self.df['P_wD_gauss'] = self.df['P_wD'] + noise
+        
         return self
 
     def derivative(self, smoothig_alg='regression', delta=1):
         """
         Добавление в датафрейм столбца с логарифмической производной
         """
+        
         self.df['ln_t_D'] = np.log(self.df['t_D']) # необходимо для последующего сглаживания
+
+        
         div = BourdaisLogarithmicDerivative(self.df)
 
         y_col = 'P_wD'

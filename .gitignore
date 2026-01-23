@@ -5,8 +5,14 @@
 /best_welltest_model.h5
 /evaluation_metrics.json
 /my_universal_model.h5
-/my_universal_model_config.json
 /training_metrics.json
 /training_results.png
+<<<<<<< HEAD
 /class_correlation.png
 /class_examples.png
+=======
+/dataset2/
+/dataset3/
+/dataset4/
+/dataset5/
+>>>>>>> 1412fe723ed7e699e731d875308223a9dbed4ed9

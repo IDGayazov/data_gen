@@ -31,13 +31,40 @@ class BourdaisLogarithmicDerivative:
             Скалярное значение или вектор с вычисленными производными
         """
         if np.isscalar(t):
+            if t <= 0:
+                return np.nan
+            
             ln_t = np.log(t)
             t_local_points = self.f[self.f[x_col_name].between(ln_t - delta, ln_t + delta)]
+            
             if len(t_local_points) < 2:
+                t_local_points = self.f[self.f[x_col_name].between(ln_t - 2*delta, ln_t + 2*delta)]
+                if len(t_local_points) < 2:
+                    t_local_points = self.f
+                    if len(t_local_points) < 2:
+                        return np.nan
+            
+            x_data = t_local_points[x_col_name].to_numpy(dtype=float)
+            y_data = t_local_points[y_col_name].to_numpy(dtype=float)
+            
+            if np.any(np.isnan(x_data)) or np.any(np.isnan(y_data)):
+                valid_mask = ~(np.isnan(x_data) | np.isnan(y_data))
+                x_data = x_data[valid_mask]
+                y_data = y_data[valid_mask]
+                
+                if len(x_data) < 2:
+                    return np.nan
+            
+            if len(np.unique(x_data)) < 2:
                 return np.nan
-            slope, _ = np.polyfit(t_local_points[x_col_name].to_numpy(dtype=float),
-                                  t_local_points[y_col_name].to_numpy(dtype=float), 1)
-            return slope
+            
+            try:
+                slope, _ = np.polyfit(x_data, y_data, 1)
+                if np.isnan(slope) or np.isinf(slope):
+                    return np.nan
+                return slope
+            except (np.linalg.LinAlgError, ValueError):
+                return np.nan
         elif isinstance(t, pd.Series):
             return t.apply(lambda x: self.derivate_with_regression_smoothing(x, delta, x_col_name, y_col_name))
         else:

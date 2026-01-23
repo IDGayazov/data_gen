@@ -16,11 +16,13 @@ class PressureDataClassificationPreprocessor1D:
         self.test_size = test_size
         self.val_size = val_size
         self.random_state = random_state
-        self.data_dir = './dataset/curve/'
+        self.data_dir = './dataset4/curve/'
 
         self.label_encoder = LabelEncoder()
         self.onehot_encoder = OneHotEncoder(sparse_output=False)
         self.scaler = StandardScaler()
+
+        self.class_names = []
 
         self.debug = debug
 
@@ -30,8 +32,8 @@ class PressureDataClassificationPreprocessor1D:
         Загрузка датасета
         :return: np.array(X), np.array(y)
         """
-        X = []
-        y = []
+        X_list = []
+        y_list = []
 
         self._init_target_encoders()
 
@@ -43,13 +45,47 @@ class PressureDataClassificationPreprocessor1D:
             t_D = np.array(df['t_D'])
             dP_wD = np.array(df['dP_wD'])
 
-            X.append([t_D, dP_wD])
+            sample = np.column_stack([dP_wD, t_D])
+            X_list.append(sample)
 
             label = self._get_label_from_filename(item)
             target = self._encode_new_sample(label)[0]
-            y.append(target)
+            y_list.append(target)
 
-        return np.array(X), np.array(y)
+        X = np.array(X_list)
+        y = np.array(y_list)
+
+        return X, y
+
+
+    def normalize(self, X):
+        """
+        Принимает:
+        -----------
+        X : numpy array, shape (samples, timesteps, channels)
+            Входные данные, где:
+            X[:, :, 0] = p_D (безразмерная производная давления)
+            X[:, :, 1] = t_D (безразмерное время)
+
+        Возвращает:
+        --------
+        X_norm : numpy array, shape (samples, timesteps, channels)
+            Нормализованные данные
+        """
+        X_norm = X.copy()
+
+        for i in range(X.shape[2]):
+            channel = X[:, :, i]
+
+            channel_min = np.min(channel, axis=1, keepdims=True)
+            channel_max = np.max(channel, axis=1, keepdims=True)
+            channel_range = channel_max - channel_min
+
+            channel_norm = (channel - channel_min) / channel_range
+
+            X_norm[:, :, i] = channel_norm
+
+        return X_norm
 
 
     def _encode_new_sample(self, new_label):
@@ -69,17 +105,18 @@ class PressureDataClassificationPreprocessor1D:
         Подготовка данных для целевой переменной
         """
         targets = []
-
         for item in os.listdir(self.data_dir):
             if item.endswith('.csv'):
                 label = self._get_label_from_filename(item)
                 targets.append(label)
 
-        if not targets:
+        for label in set(targets):
+            self.class_names.append(label)
+
+        if not self.class_names:
             raise ValueError("В директории не найдено CSV файлов")
 
-        if self.debug:
-            print(f"Найденные метки: {set(targets)}")
+        print(f"Найденные метки: {self.class_names}")
 
         self.label_encoder = LabelEncoder()
         self.one_hot_encoder = OneHotEncoder(sparse_output=False)
@@ -104,8 +141,6 @@ class PressureDataClassificationPreprocessor1D:
 
         if self.debug:
             print('shape X =', X.shape)
-            print('X[0] =', X[0])
-            print('y[0] =', y[0])
 
         X_train_val, X_test, y_train_val, y_test = train_test_split(
             X, y,
@@ -133,10 +168,6 @@ class PressureDataClassificationPreprocessor1D:
         self.X_train, self.X_val, self.X_test = X_train, X_val, X_test
         self.y_train, self.y_val, self.y_test = y_train, y_val, y_test
         self.X_original, self.y_original = X, y
-
-        X_train, y_train = clean_nan_data(X_train, y_train, strategy='interpolate')
-        X_val, y_val = clean_nan_data(X_val, y_val, strategy='interpolate')
-        X_test, y_test = clean_nan_data(X_test, y_test, strategy='interpolate')
 
         return X_train, X_val, X_test, y_train, y_val, y_test
 
@@ -221,264 +252,27 @@ class PressureDataClassificationPreprocessor1D:
             return stats_dict
 
 
-def check_data_quality(X, y, name="Dataset"):
-    """Проверка качества данных"""
-    print(f"\n🔍 Проверка данных: {name}")
-    print(f"  Форма X: {X.shape}")
-    print(f"  Форма y: {y.shape}")
+    def get_class_names(self):
+        return self.class_names
 
-    # Проверка на NaN
-    x_nan_count = np.isnan(X).sum()
-    y_nan_count = np.isnan(y).sum()
-    print(f"  NaN в X: {x_nan_count}")
-    print(f"  NaN в y: {y_nan_count}")
-
-    # Проверка на Inf
-    x_inf_count = np.isinf(X).sum()
-    y_inf_count = np.isinf(y).sum()
-    print(f"  Inf в X: {x_inf_count}")
-    print(f"  Inf в y: {y_inf_count}")
-
-    # Проверка диапазона значений
-    print(f"  X min/max: {X.min():.6f} / {X.max():.6f}")
-    print(f"  X mean/std: {X.mean():.6f} / {X.std():.6f}")
-
-    # Проверка меток
-    if len(y.shape) > 1:
-        print(f"  Распределение меток: {np.sum(y, axis=0)}")
-    else:
-        unique, counts = np.unique(y, return_counts=True)
-        print(f"  Распределение меток: {dict(zip(unique, counts))}")
-
-    return x_nan_count == 0 and y_nan_count == 0 and x_inf_count == 0 and y_inf_count == 0
-
-
-def clean_nan_data(X, y, strategy='zero'):
-    """
-    Очистка данных от NaN значений
-
-    Parameters:
-    -----------
-    X : numpy array
-        Входные данные
-    y : numpy array
-        Метки
-    strategy : str
-        Стратегия замены NaN:
-        - 'zero': замена на 0
-        - 'mean': замена на среднее по каналу
-        - 'median': замена на медиану по каналу
-        - 'interpolate': интерполяция по времени
-
-    Returns:
-    --------
-    tuple : (X_clean, y_clean)
-    """
-    X_clean = X.copy()
-    y_clean = y.copy()
-
-    nan_count = np.isnan(X_clean).sum()
-    print(f"Начальное количество NaN: {nan_count}")
-
-    if nan_count == 0:
-        return X_clean, y_clean
-
-    if strategy == 'zero':
-        # Замена на 0
-        X_clean = np.nan_to_num(X_clean, nan=0.0)
-        print(f"✅ NaN заменены на 0")
-
-    elif strategy == 'mean':
-        # Замена на среднее по каналу
-        for i in range(X_clean.shape[1]):  # По каналам
-            channel = X_clean[:, i, :]
-            channel_mean = np.nanmean(channel)
-            channel_nan_mask = np.isnan(channel)
-            channel[channel_nan_mask] = channel_mean
-            X_clean[:, i, :] = channel
-        print(f"✅ NaN заменены на среднее по каналам")
-
-    elif strategy == 'median':
-        # Замена на медиану по каналу
-        for i in range(X_clean.shape[1]):
-            channel = X_clean[:, i, :]
-            channel_median = np.nanmedian(channel)
-            channel_nan_mask = np.isnan(channel)
-            channel[channel_nan_mask] = channel_median
-            X_clean[:, i, :] = channel
-        print(f"✅ NaN заменены на медиану по каналам")
-
-    elif strategy == 'interpolate':
-        # Линейная интерполяция по времени
-        from scipy import interpolate
-
-        for sample_idx in range(X_clean.shape[0]):
-            for channel_idx in range(X_clean.shape[1]):
-                signal = X_clean[sample_idx, channel_idx, :]
-
-                if np.isnan(signal).any():
-                    # Создаем маску валидных точек
-                    valid_mask = ~np.isnan(signal)
-                    valid_indices = np.where(valid_mask)[0]
-
-                    if len(valid_indices) > 1:
-                        # Интерполируем только если есть хотя бы 2 валидные точки
-                        f = interpolate.interp1d(
-                            valid_indices,
-                            signal[valid_mask],
-                            kind='linear',
-                            fill_value='extrapolate'
-                        )
-                        all_indices = np.arange(len(signal))
-                        signal = f(all_indices)
-                        X_clean[sample_idx, channel_idx, :] = signal
-                    else:
-                        # Если слишком мало валидных точек, заменяем на 0
-                        signal[np.isnan(signal)] = 0.0
-                        X_clean[sample_idx, channel_idx, :] = signal
-
-        print(f"✅ NaN интерполированы по времени")
-
-    # Удаляем образцы, которые все еще содержат NaN после очистки
-    nan_after = np.isnan(X_clean).sum()
-    if nan_after > 0:
-        print(f"⚠️ После очистки осталось {nan_after} NaN")
-        print("Удаляю проблемные образцы...")
-
-        # Находим образцы без NaN
-        valid_samples = []
-        for i in range(len(X_clean)):
-            if not np.isnan(X_clean[i]).any():
-                valid_samples.append(i)
-
-        X_clean = X_clean[valid_samples]
-        y_clean = y_clean[valid_samples]
-
-        print(f"✅ Оставлено {len(X_clean)} валидных образцов из {len(X)}")
-
-    print(f"✅ Итоговое количество NaN: {np.isnan(X_clean).sum()}")
-    return X_clean, y_clean
-
-
-def analyze_class_separability(X, y, class_names):
-    """Анализ различимости классов"""
-    print("=" * 80)
-    print("АНАЛИЗ РАЗЛИЧИМОСТИ КЛАССОВ")
-    print("=" * 80)
-
-    # Преобразуем one-hot в индексы
-    if len(y.shape) > 1:
-        y_indices = np.argmax(y, axis=1)
-    else:
-        y_indices = y
-
-    # 1. Визуализация примеров из каждого класса
-    import matplotlib.pyplot as plt
-
-    fig, axes = plt.subplots(7, 3, figsize=(15, 20))
-
-    for class_idx, class_name in enumerate(class_names):
-        # Находим примеры этого класса
-        class_samples = np.where(y_indices == class_idx)[0][:3]  # Первые 3
-
-        for i, sample_idx in enumerate(class_samples):
-            ax = axes[class_idx, i]
-
-            # Рисуем оба канала
-            time = np.arange(X.shape[2])
-            ax.plot(time, X[sample_idx, 0], 'b-', label='Pressure', linewidth=2)
-            ax.plot(time, X[sample_idx, 1], 'r-', label='Derivative', linewidth=2)
-
-            ax.set_title(f'{class_name} - Sample {i + 1}')
-            ax.set_xlabel('Time')
-            ax.set_ylabel('Value')
-            ax.legend(fontsize=8)
-            ax.grid(True, alpha=0.3)
-
-    plt.suptitle('Примеры кривых для каждого класса', fontsize=16, y=0.98)
-    plt.tight_layout()
-    plt.savefig('class_examples.png', dpi=150, bbox_inches='tight')
-    plt.show()
-
-    # 2. Статистики по классам
-    print("\n📊 СТАТИСТИКИ ПО КЛАССАМ:")
-    for class_idx, class_name in enumerate(class_names):
-        class_mask = y_indices == class_idx
-        X_class = X[class_mask]
-
-        print(f"\n{class_name}:")
-        for channel in range(X.shape[1]):
-            channel_data = X_class[:, channel, :]
-            print(f"  Канал {channel}:")
-            print(f"    Mean: {channel_data.mean():.4f}, Std: {channel_data.std():.4f}")
-            print(f"    Min: {channel_data.min():.4f}, Max: {channel_data.max():.4f}")
-            print(f"    Range: {channel_data.max() - channel_data.min():.4f}")
-
-    # 3. Проверка корреляции между классами
-    print("\n📈 КОРРЕЛЯЦИЯ МЕЖДУ КЛАССАМИ:")
-
-    # Вычисляем средние кривые для каждого класса
-    class_means = []
-    for class_idx in range(len(class_names)):
-        class_mask = y_indices == class_idx
-        class_mean = X[class_mask].mean(axis=0)  # (channels, time)
-        class_means.append(class_mean)
-
-    # Вычисляем попарную корреляцию
-    from scipy.spatial.distance import cosine
-
-    corr_matrix = np.zeros((len(class_names), len(class_names)))
-
-    for i in range(len(class_names)):
-        for j in range(len(class_names)):
-            # Flatten и вычисляем косинусное расстояние
-            flat_i = class_means[i].flatten()
-            flat_j = class_means[j].flatten()
-            corr_matrix[i, j] = 1 - cosine(flat_i, flat_j)
-
-    # Визуализация матрицы корреляции
-    plt.figure(figsize=(10, 8))
-    im = plt.imshow(corr_matrix, cmap='RdYlBu', vmin=-1, vmax=1)
-    plt.colorbar(im)
-    plt.xticks(range(len(class_names)), class_names, rotation=45, ha='right')
-    plt.yticks(range(len(class_names)), class_names)
-    plt.title('Косинусная схожесть между средними кривыми классов')
-    plt.tight_layout()
-    plt.savefig('class_correlation.png', dpi=150, bbox_inches='tight')
-    plt.show()
-
-    # Выводим самые похожие пары классов
-    print("\n🔍 САМЫЕ ПОХОЖИЕ КЛАССЫ:")
-    for i in range(len(class_names)):
-        for j in range(i + 1, len(class_names)):
-            similarity = corr_matrix[i, j]
-            if similarity > 0.95:  # Очень похожи
-                print(f"  ⚠️ {class_names[i]} и {class_names[j]}: {similarity:.3f}")
-            elif similarity > 0.8:  # Похожи
-                print(f"  ⚠️ {class_names[i]} и {class_names[j]}: {similarity:.3f}")
 
 if __name__ == "__main__":
-    data_preprocess = PressureDataClassificationPreprocessor1D(debug=False)
-    X_train, X_val, X_test, y_train, y_val, y_test = data_preprocess.get_dataset()
+    count_phi1 = 0
+    count_phi2 = 0
+    
+    for item in os.listdir('./dataset4/params'):
+        file_path = os.path.join('./dataset4/params', item)
+        df = pd.read_csv(file_path)
+        
+        print(df['phi2'])
 
-    class_names = ['dual_permeability_inf',
-                    'radial_composite_inf',
-                    'homogeneous_inf',
-                    'homogeneous_fin',
-                    'dual_porosity_inf',
-                    'dual_porosity_fin',
-                    'dual_permeability_fin']
-    analyze_class_separability(X_train, y_train, class_names)
+        count_phi1 += df['phi1'].between(0.05, 0.35).sum()
+        count_phi1 += df['phi2'].between(0.05, 0.35).sum()
+    
+    print('count_phi1 cnt: ', count_phi1)
+    print('count_phi2 cnt: ', count_phi2)
 
-    # check_data_quality(X_train, y_train)
-    #
-    # X_train, y_train = clean_nan_data(X_train, y_train, strategy='interpolate')
-    # check_data_quality(X_train, y_train)
-    #
-    # X_val, y_val = clean_nan_data(X_val, y_val, strategy='interpolate')
-    # check_data_quality(X_val, y_val)
-    #
-    # X_test, y_test = clean_nan_data(X_test, y_test, strategy='interpolate')
-    # check_data_quality(X_test, y_test)
+    # data_preprocess = PressureDataClassificationPreprocessor1D(debug=True)
+    # X_train, X_val, X_test, y_train, y_val, y_test = data_preprocess.get_dataset()
 
-    data_preprocess.stats()
+    # data_preprocess.stats()
