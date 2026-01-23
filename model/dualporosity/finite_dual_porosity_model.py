@@ -5,7 +5,7 @@ import pandas as pd
 
 from scipy.special import k0, k1, i0, i1
 
-from conversion.homogeneous_converter import DimensionConverter
+from conversion.homogeneous_converter import HomogeneousConverter
 from inversion.shtefest_algorithm import ShtefestAlgorithm
 from model.reservoir_model import ReservoirModel
 

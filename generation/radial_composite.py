@@ -19,7 +19,6 @@ class RadialCompositeParamGenerator(ParamGenerator):
         base_params = {
             # Общие параметры
             'h': 10,  # толщина (м)
-            'q': 2.31e-3,  # дебит (м³/с)
             'mu': 1e-3,  # вязкость (Па·с)
             'B': 1.2,  # объемный коэффициент
             'p_i': 25e6,  # начальное давление (Па)
@@ -43,7 +42,7 @@ class RadialCompositeParamGenerator(ParamGenerator):
 
             # Вариация основных параметров
             params['h'] *= np.random.uniform(0.5, 2.0)  # толщина: 5-20 м
-            params['q'] *= np.random.uniform(0.2, 3.0)  # дебит
+            params['q'] = np.random.uniform(5, 50)  # дебит
             params['r_e'] = np.random.uniform(100, 1000)  # внешняя граница: 100-1000 м
             params['mu'] *= np.random.uniform(0.5, 50) # вязкость флюида
 
@@ -63,14 +62,7 @@ class RadialCompositeParamGenerator(ParamGenerator):
             params['p_i'] *= np.random.uniform(0.5, 2)
 
             # Скин-фактор
-            rand = np.random.random()
-            if rand < 0.1:
-                params['S'] = np.random.uniform(0, 0.1)
-            elif rand < 0.3:
-                params['S'] = np.random.uniform(0.1, 0.5)
-            else:
-                params['S'] = np.random.uniform(0.5, 10)
-
+            params['S'] = np.random.uniform(0, 10)
 
             # Радиус интерфейса (должен быть между r_w и r_e)
             params['R_i'] = np.random.uniform(5, params['r_e'] * 0.7)

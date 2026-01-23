@@ -5,13 +5,13 @@ from generation.radial_composite import InfiniteRadialCompositeGenerator
 
 
 def main():
-    generator1 = InfiniteHomogeneousGenerator(30, 128,  5000)
-    generator2 = FiniteHomogeneousGenerator(30, 128, 5000)
-    generator3 = InfiniteDualPorosityGenerator(30, 128, 5000)
-    generator4 = FiniteDualPorosityGenerator(30, 128, 5000)
-    generator5 = InfiniteDualPermeabilityModelGenerator(30, 128, 5000)
-    generator6 = FiniteDualPermeabilityGenerator(30, 128, 5000)
-    generator7 = InfiniteRadialCompositeGenerator(30, 128, 5000)
+    generator1 = InfiniteHomogeneousGenerator(30, 128,  10)
+    generator2 = FiniteHomogeneousGenerator(30, 128, 10)
+    generator3 = InfiniteDualPorosityGenerator(30, 128, 10)
+    generator4 = FiniteDualPorosityGenerator(30, 128, 10)
+    generator5 = InfiniteDualPermeabilityModelGenerator(30, 128, 10)
+    generator6 = FiniteDualPermeabilityGenerator(30, 128, 10)
+    generator7 = InfiniteRadialCompositeGenerator(30, 128, 10)
 
     generator1.generate()
     generator2.generate()

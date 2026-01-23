@@ -20,7 +20,6 @@ class HomogeneousModelParamGenerator(ParamGenerator):
         base_params = {
             'k': 5e-13,
             'h': 10,
-            'q': 2.31e-3,
             'mu': 1e-3,
             'B': 1.2,
             'p_i': 25e6,
@@ -41,19 +40,13 @@ class HomogeneousModelParamGenerator(ParamGenerator):
             params = base_params.copy()
 
             params['h'] *= np.random.uniform(0.5, 2.0)  # толщина
-            params['q'] *= np.random.uniform(0.2, 3.0)  # дебит
+            params['q'] = np.random.uniform(5, 50)  # дебит
             params['r_e'] = np.random.uniform(100, 1000)  # радиус границ
 
             params['C'] = 10 ** np.random.uniform(-9, -7)  # коэффициент влияния ствола скважины
 
             # скин-фактор
-            rand = np.random.random()
-            if rand < 0.1:
-                params['S'] = np.random.uniform(0, 0.1)
-            elif rand < 0.3:
-                params['S'] = np.random.uniform(0.1, 0.5)
-            else:
-                params['S'] = np.random.uniform(0.5, 10)
+            params['S'] = np.random.uniform(0, 10)
 
             for group in correlation_groups:
                 group_factor = np.random.uniform(0.5, 2.0)

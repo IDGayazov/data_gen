@@ -5,7 +5,7 @@ import numpy as np
 
 from pandas import DataFrame
 from abc import ABC, abstractmethod
-from conversion.homogeneous_converter import DimensionConverter
+from conversion.homogeneous_converter import HomogeneousConverter
 
 
 def extract_scalar(value):
@@ -102,7 +102,7 @@ class DataGenerator(ABC):
 
 
     def get_converter(self, params: DataFrame):
-        return DimensionConverter(
+        return HomogeneousConverter(
             extract_scalar(params['k']),
             extract_scalar(params['h']),
             extract_scalar(params['q']),
@@ -126,8 +126,8 @@ class DataGenerator(ABC):
         Название: <num>.csv
         """
         
-        curve_dir = './dataset5/curve'
-        params_dir = './dataset5/params'
+        curve_dir = '../dataset5/curve'
+        params_dir = '../dataset5/params'
 
         os.makedirs(curve_dir, exist_ok=True)
         os.makedirs(params_dir, exist_ok=True)

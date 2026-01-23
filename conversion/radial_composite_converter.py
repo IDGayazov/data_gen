@@ -14,7 +14,7 @@ class RadialCompositeConverter:
 
         # Общие параметры
         self.h = h
-        self.q = q
+        self.q = q / 86400 # перевод в м^3 / с
         self.mu = mu
         self.B = B
         self.p_i = p_i

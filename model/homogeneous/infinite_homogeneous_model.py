@@ -1,7 +1,6 @@
 import warnings
 
 import numpy as np
-
 from scipy.special import k0, k1
 
 from inversion.shtefest_algorithm import ShtefestAlgorithm
@@ -47,9 +46,9 @@ class InfiniteHomogeneousReservoirModel(ReservoirModel):
 
 
 if __name__ == "__main__":
-    model = InfiniteHomogeneousReservoirModel(C_D=100, S=1)
+    model = InfiniteHomogeneousReservoirModel(C_D=100, S=-1)
 
-    t_D_array = np.logspace(0, 5, 128)
+    t_D_array = np.logspace(0, 7, 128)
     alg = ShtefestAlgorithm(N=4)
 
     model.pressure(t_D_array, alg) \

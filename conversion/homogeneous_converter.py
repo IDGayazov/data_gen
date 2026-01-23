@@ -1,13 +1,13 @@
 import numpy as np
 
-class DimensionConverter:
+class HomogeneousConverter:
     '''
     Преобразование данных из размерных в безразмерные единицы и наоборот
 
     Атрибуты:
        - k - проницаемость, м^2
        - h - толщина пласта, м
-       - q - дебит скважины, м^3 / c
+       - q - дебит скважины, м^3 / сут
        - mu - вязкость флюида, Па * с
        - B - объемный коэффициент, безразмерно
        - p_i - начальное давление, Па
@@ -19,7 +19,7 @@ class DimensionConverter:
     def __init__(self, k, h, q, mu, B, p_i, phi, c_t, r_w):
         self.k = k
         self.h = h
-        self.q = q
+        self.q = q / 86400 # перевод в м^3 / с
         self.mu = mu
         self.B = B
         self.p_i = p_i

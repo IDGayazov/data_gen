@@ -30,7 +30,6 @@ class DualPorosityModelParamGenerator(ParamGenerator):
 
             # Общие параметры
             'h': 10,  # толщина пласта, м
-            'q': 2.31e-3,  # дебит, м³/с
             'mu': 1e-3,  # вязкость, Па·с
             'B': 1.2,  # объемный коэффициент
             'p_i': 25e6,  # начальное давление, Па
@@ -51,7 +50,7 @@ class DualPorosityModelParamGenerator(ParamGenerator):
 
             # Вариация геометрических параметров
             params['h'] *= np.random.uniform(0.5, 2.0)  # толщина
-            params['q'] *= np.random.uniform(0.2, 3.0)  # дебит
+            params['q'] = np.random.uniform(5, 50)  # дебит
             params['r_e'] = np.random.uniform(100, 1000)  # внешний радиус
 
             # Вариация коэффициента влияния ствола
@@ -61,13 +60,7 @@ class DualPorosityModelParamGenerator(ParamGenerator):
             params['alpha'] = np.random.choice([4, 12, 32])  # 4: сферы, 12: слэбы, 32: кубы
 
             # Скин-фактор
-            rand = np.random.random()
-            if rand < 0.1:
-                params['S'] = np.random.uniform(0, 0.1)
-            elif rand < 0.3:
-                params['S'] = np.random.uniform(0.1, 0.5)
-            else:
-                params['S'] = np.random.uniform(0.5, 10)
+            params['S'] = np.random.uniform(0, 10)
 
             for group in correlation_groups:
                 group_factor = np.random.uniform(0.5, 2.0)

@@ -31,7 +31,6 @@ class DualPermeabilityParamGenerator(ParamGenerator):
             'c_t2': 1.5e-9,  # сжимаемость системы 2, 1/Па
 
             # Общие параметры
-            'q_total': 2.31e-3,  # общий дебит, м³/с
             'q1_frac': 0.8,  # доля дебита из системы 1
             'mu': 1e-3,  # вязкость, Па·с
             'B': 1.2,  # объемный коэффициент
@@ -56,7 +55,7 @@ class DualPermeabilityParamGenerator(ParamGenerator):
             params['r_e'] = np.random.uniform(50, 1000)  # внешний радиус
 
             # Распределение дебита
-            params['q_total'] *= np.random.uniform(0.2, 3.0)  # общий дебит
+            params['q_total'] = np.random.uniform(5, 50)  # дебит
             params['q1_frac'] = np.random.uniform(0.1, 0.9)  # доля из системы 1
             params['q2_frac'] = 1.0 - params['q1_frac']  # доля из системы 2
 
@@ -71,21 +70,8 @@ class DualPermeabilityParamGenerator(ParamGenerator):
             params['alpha'] = np.random.uniform(0.001, 1)
 
             # Скин-факторы
-            rand1 = np.random.random()
-            if rand1 < 0.2:
-                params['S1'] = np.random.uniform(0, 0.1)
-            elif rand1 < 0.6:
-                params['S1'] = np.random.uniform(0.1, 5)
-            else:
-                params['S1'] = np.random.uniform(5, 10)
-
-            rand2 = np.random.random()
-            if rand2 < 0.1:
-                params['S2'] = np.random.uniform(0, 0.1)
-            elif rand2 < 0.4:
-                params['S2'] = np.random.uniform(0.1, 10)
-            else:
-                params['S2'] = np.random.uniform(10, 20)
+            params['S1'] = np.random.uniform(0, 10)
+            params['S2'] = np.random.uniform(0, 20)
 
             for group in correlation_groups:
                 group_factor = np.random.uniform(0.5, 2.0)
@@ -110,7 +96,6 @@ class DualPermeabilityParamGenerator(ParamGenerator):
             
             # Корректировка параметров для получения характерных графиков двойной проницаемости
             kappa = np.random.uniform(0.7, 0.99)
-            lam_target = (1 - kappa) * params['alpha'] * params['r_w'] ** 2
             params['k1'] = params['k2'] * kappa * params['h2'] / (params['h1'] * (1 - kappa))
 
             converter = DualPermeabilityDimensionConverter(
