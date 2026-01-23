@@ -53,7 +53,6 @@ class DualPermeabilityParamGenerator(ParamGenerator):
             # Вариация геометрических параметров
             params['h1'] *= np.random.uniform(0.5, 1.0)  # толщина
             params['h2'] *= np.random.uniform(0.5, 2.0)  # толщина
-            params['r_w'] *= np.random.uniform(0.8, 1.2)  # радиус скважины
             params['r_e'] = np.random.uniform(50, 1000)  # внешний радиус
 
             # Распределение дебита

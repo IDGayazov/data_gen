@@ -44,7 +44,6 @@ class RadialCompositeParamGenerator(ParamGenerator):
             # Вариация основных параметров
             params['h'] *= np.random.uniform(0.5, 2.0)  # толщина: 5-20 м
             params['q'] *= np.random.uniform(0.2, 3.0)  # дебит
-            params['r_w'] *= np.random.uniform(0.8, 1.2)  # радиус скважины: 0.08-0.12 м
             params['r_e'] = np.random.uniform(100, 1000)  # внешняя граница: 100-1000 м
             params['mu'] *= np.random.uniform(0.5, 50) # вязкость флюида
 

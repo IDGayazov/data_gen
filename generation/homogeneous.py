@@ -42,7 +42,6 @@ class HomogeneousModelParamGenerator(ParamGenerator):
 
             params['h'] *= np.random.uniform(0.5, 2.0)  # толщина
             params['q'] *= np.random.uniform(0.2, 3.0)  # дебит
-            params['r_w'] *= np.random.uniform(0.8, 1.2)  # радиус скважины
             params['r_e'] = np.random.uniform(100, 1000)  # радиус границ
 
             params['C'] = 10 ** np.random.uniform(-9, -7)  # коэффициент влияния ствола скважины
