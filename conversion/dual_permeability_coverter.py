@@ -32,13 +32,13 @@ class DualPermeabilityDimensionConverter:
         self.k1 = k1
         self.phi1 = phi1
         self.c_t1 = c_t1
-        self.q1 = q1 / 86400 # перевод в м^3 / с
+        self.q1 = self.convert_debit_on_m3_by_seconds(q1)
 
         # Параметры системы 2 (обычно матрица/низкопроницаемая)
         self.k2 = k2
         self.phi2 = phi2
         self.c_t2 = c_t2
-        self.q2 = q2 / 86400 # перевод в м^3 / с
+        self.q2 = self.convert_debit_on_m3_by_seconds(q2)
 
         # Общие параметры
         self.h1 = h1
@@ -203,3 +203,9 @@ class DualPermeabilityDimensionConverter:
         eta1 = self.diffusivity_system1()
         eta2 = self.diffusivity_system2()
         return eta2 / eta1 if eta1 > 0 else 0.0
+
+    def convert_debit_on_m3_by_seconds(self, q):
+        """
+        Перевод из м^3 / сут в м^3 / с
+        """
+        return q / 86400

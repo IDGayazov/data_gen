@@ -14,7 +14,7 @@ class RadialCompositeConverter:
 
         # Общие параметры
         self.h = h
-        self.q = q / 86400 # перевод в м^3 / с
+        self.q = self.convert_debit_on_m3_by_seconds(q)
         self.mu = mu
         self.B = B
         self.p_i = p_i
@@ -163,5 +163,10 @@ class RadialCompositeConverter:
     def radius_from_dimless_to_dim(self, r_D):
         return r_D * self.r_w
 
+    def convert_debit_on_m3_by_seconds(self, q):
+        """
+        Перевод из м^3 / сут в м^3 / с
+        """
+        return q / 86400
 
 

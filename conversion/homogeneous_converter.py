@@ -19,7 +19,7 @@ class HomogeneousConverter:
     def __init__(self, k, h, q, mu, B, p_i, phi, c_t, r_w):
         self.k = k
         self.h = h
-        self.q = q / 86400 # перевод в м^3 / с
+        self.q = self.convert_debit_on_m3_by_seconds(q)
         self.mu = mu
         self.B = B
         self.p_i = p_i
@@ -47,7 +47,6 @@ class HomogeneousConverter:
     def wellbore_storage_from_dim_to_dimless(self, C):
         return C / (2 * self.phi * self.h * self.phi * self.c_t * self.r_w ** 2)
 
-
     def wellbore_storage_from_dimless_to_dim(self, C_D):
         return (2 * self.phi * self.h * self.phi * self.c_t * self.r_w ** 2) / C_D
 
@@ -56,3 +55,9 @@ class HomogeneousConverter:
 
     def reservoir_radius_from_dimless_to_dim(self, R_eD):
         return R_eD * self.r_w
+
+    def convert_debit_on_m3_by_seconds(self, q):
+        """
+        Перевод из м^3 / сут в м^3 / с
+        """
+        return q / 86400
