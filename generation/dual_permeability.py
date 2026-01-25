@@ -6,6 +6,7 @@ from tqdm import tqdm
 
 from conversion.dual_permeability_coverter import DualPermeabilityDimensionConverter
 from generation.generator import ParamGenerator, DataGenerator
+from generation.utils import extract_scalar
 from inversion.shtefest_algorithm import ShtefestAlgorithm
 from model.dualpermeability.finite_dual_permeability_model import FiniteDualPermeabilityReservoirModel
 from model.dualpermeability.infinite_dual_permeability_model import InfiniteDualPermeabilityReservoirModel
@@ -158,23 +159,23 @@ class InfiniteDualPermeabilityModelGenerator(DataGenerator):
             param.drop('R_eD', axis=1, inplace=True) # убираем информацию о радиусе границы
 
             converter = DualPermeabilityDimensionConverter(
-                k1=param['k1'].iloc[0],
-                k2=param['k2'].iloc[0],
-                phi1=param['phi1'].iloc[0],
-                phi2=param['phi2'].iloc[0],
-                c_t1=param['c_t1'].iloc[0],
-                c_t2=param['c_t2'].iloc[0],
-                h1=param['h1'].iloc[0],
-                h2=param['h2'].iloc[0],
-                q1=param['q1'].iloc[0],
-                q2=param['q2'].iloc[0],
-                mu=param['mu'].iloc[0],
-                B=param['B'].iloc[0],
-                p_i=param['p_i'].iloc[0],
-                r_w=param['r_w'].iloc[0],
-                alpha=param['alpha'].iloc[0],
-                S1=param['S1'].iloc[0],
-                S2=param['S2'].iloc[0]
+                k1=extract_scalar(param['k1']),
+                k2=extract_scalar(param['k2']),
+                phi1=extract_scalar(param['phi1']),
+                phi2=extract_scalar(param['phi2']),
+                c_t1=extract_scalar(param['c_t1']),
+                c_t2=extract_scalar(param['c_t2']),
+                h1=extract_scalar(param['h1']),
+                h2=extract_scalar(param['h2']),
+                q1=extract_scalar(param['q1']),
+                q2=extract_scalar(param['q2']),
+                mu=extract_scalar(param['mu']),
+                B=extract_scalar(param['B']),
+                p_i=extract_scalar(param['p_i']),
+                r_w=extract_scalar(param['r_w']),
+                alpha=extract_scalar(param['alpha']),
+                S1=extract_scalar(param['S1']),
+                S2=extract_scalar(param['S2'])
             )
 
             t_D_array = self.generate_search_time(converter)
@@ -213,23 +214,23 @@ class FiniteDualPermeabilityGenerator(DataGenerator):
 
         for param in tqdm(params_list, desc="Generating dual permeability finite reservoir data"):
             converter = DualPermeabilityDimensionConverter(
-                k1=param['k1'].iloc[0],
-                k2=param['k2'].iloc[0],
-                phi1=param['phi1'].iloc[0],
-                phi2=param['phi2'].iloc[0],
-                c_t1=param['c_t1'].iloc[0],
-                c_t2=param['c_t2'].iloc[0],
-                h1=param['h1'].iloc[0],
-                h2=param['h2'].iloc[0],
-                q1=param['q1'].iloc[0],
-                q2=param['q2'].iloc[0],
-                mu=param['mu'].iloc[0],
-                B=param['B'].iloc[0],
-                p_i=param['p_i'].iloc[0],
-                r_w=param['r_w'].iloc[0],
-                alpha=param['alpha'].iloc[0],
-                S1=param['S1'].iloc[0],
-                S2=param['S2'].iloc[0]
+                k1=extract_scalar(param['k1']),
+                k2=extract_scalar(param['k2']),
+                phi1=extract_scalar(param['phi1']),
+                phi2=extract_scalar(param['phi2']),
+                c_t1=extract_scalar(param['c_t1']),
+                c_t2=extract_scalar(param['c_t2']),
+                h1=extract_scalar(param['h1']),
+                h2=extract_scalar(param['h2']),
+                q1=extract_scalar(param['q1']),
+                q2=extract_scalar(param['q2']),
+                mu=extract_scalar(param['mu']),
+                B=extract_scalar(param['B']),
+                p_i=extract_scalar(param['p_i']),
+                r_w=extract_scalar(param['r_w']),
+                alpha=extract_scalar(param['alpha']),
+                S1=extract_scalar(param['S1']),
+                S2=extract_scalar(param['S2'])
             )
 
             t_D_array = self.generate_search_time(converter)

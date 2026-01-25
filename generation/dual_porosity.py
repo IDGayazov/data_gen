@@ -6,6 +6,7 @@ from tqdm import tqdm
 
 from conversion.dual_porosity_converter import DualPorosityDimensionConverter
 from generation.generator import ParamGenerator, DataGenerator
+from generation.utils import extract_scalar
 from inversion.shtefest_algorithm import ShtefestAlgorithm
 from model.dualporosity.finite_dual_porosity_model import FiniteDualPorosityReservoirModel
 from model.dualporosity.infinite_dual_porosity_model import InfiniteDualPorosityReservoirModel
@@ -150,19 +151,19 @@ class InfiniteDualPorosityGenerator(DataGenerator):
             param.drop('R_eD', axis=1, inplace=True) # убираем информацию о радиусе границы
 
             converter = DualPorosityDimensionConverter(
-                k_f=param['k_f'].iloc[0],
-                k_m=param['k_m'].iloc[0],
-                h=param['h'].iloc[0],
-                q=param['q'].iloc[0],
-                mu=param['mu'].iloc[0],
-                B=param['B'].iloc[0],
-                p_i=param['p_i'].iloc[0],
-                phi_f=param['phi_f'].iloc[0],
-                phi_m=param['phi_m'].iloc[0],
-                c_tf=param['c_tf'].iloc[0],
-                c_tm=param['c_tm'].iloc[0],
-                r_w=param['r_w'].iloc[0],
-                alpha=param['alpha'].iloc[0]
+                k_f=extract_scalar(param['k_f']),
+                k_m=extract_scalar(param['k_m']),
+                h=extract_scalar(param['h']),
+                q=extract_scalar(param['q']),
+                mu=extract_scalar(param['mu']),
+                B=extract_scalar(param['B']),
+                p_i=extract_scalar(param['p_i']),
+                phi_f=extract_scalar(param['phi_f']),
+                phi_m=extract_scalar(param['phi_m']),
+                c_tf=extract_scalar(param['c_tf']),
+                c_tm=extract_scalar(param['c_tm']),
+                r_w=extract_scalar(param['r_w']),
+                alpha=extract_scalar(param['alpha'])
             )
 
             t_D_array = self.generate_search_time(converter)
@@ -200,19 +201,19 @@ class FiniteDualPorosityGenerator(DataGenerator):
 
         for param in tqdm(params_list, desc="Generating dual porosity finite reservoir data"):
             converter = DualPorosityDimensionConverter(
-                k_f=param['k_f'].iloc[0],
-                k_m=param['k_m'].iloc[0],
-                h=param['h'].iloc[0],
-                q=param['q'].iloc[0],
-                mu=param['mu'].iloc[0],
-                B=param['B'].iloc[0],
-                p_i=param['p_i'].iloc[0],
-                phi_f=param['phi_f'].iloc[0],
-                phi_m=param['phi_m'].iloc[0],
-                c_tf=param['c_tf'].iloc[0],
-                c_tm=param['c_tm'].iloc[0],
-                r_w=param['r_w'].iloc[0],
-                alpha=param['alpha'].iloc[0]
+                k_f=extract_scalar(param['k_f']),
+                k_m=extract_scalar(param['k_m']),
+                h=extract_scalar(param['h']),
+                q=extract_scalar(param['q']),
+                mu=extract_scalar(param['mu']),
+                B=extract_scalar(param['B']),
+                p_i=extract_scalar(param['p_i']),
+                phi_f=extract_scalar(param['phi_f']),
+                phi_m=extract_scalar(param['phi_m']),
+                c_tf=extract_scalar(param['c_tf']),
+                c_tm=extract_scalar(param['c_tm']),
+                r_w=extract_scalar(param['r_w']),
+                alpha=extract_scalar(param['alpha'])
             )
 
             t_D_array = self.generate_search_time(converter)

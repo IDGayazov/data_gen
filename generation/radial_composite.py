@@ -6,6 +6,7 @@ from tqdm import tqdm
 
 from conversion.radial_composite_converter import RadialCompositeConverter
 from generation.generator import ParamGenerator, DataGenerator
+from generation.utils import extract_scalar
 from inversion.shtefest_algorithm import ShtefestAlgorithm
 from model.radialcomposite.infinite_radial_composite_model import InfiniteRadialCompositeReservoirModel
 
@@ -168,29 +169,29 @@ class InfiniteRadialCompositeGenerator(DataGenerator):
 
         params_list = list(params)
 
-        for param in tqdm(params_list, desc="Generating dual radial composite infinite reservoir data"):
+        for param in tqdm(params_list, desc="Generating radial composite infinite reservoir data"):
             converter=RadialCompositeConverter(
                 # Общие параметры
-                h=param['h'].iloc[0],
-                q=param['q'].iloc[0],
-                mu=param['mu'].iloc[0],
-                B=param['B'].iloc[0],
-                p_i=param['p_i'].iloc[0],
-                r_w=param['r_w'].iloc[0],
+                h=extract_scalar(param['h']),
+                q=extract_scalar(param['q']),
+                mu=extract_scalar(param['mu']),
+                B=extract_scalar(param['B']),
+                p_i=extract_scalar(param['p_i']),
+                r_w=extract_scalar(param['r_w']),
 
                 # Зона 1
-                k1=param['k1'].iloc[0],
-                phi1=param['phi1'].iloc[0],
-                c_t1=param['c_t1'].iloc[0],
+                k1=extract_scalar(param['k1']),
+                phi1=extract_scalar(param['phi1']),
+                c_t1=extract_scalar(param['c_t1']),
 
                 # Зона 2
-                k2=param['k2'].iloc[0],
-                phi2=param['phi2'].iloc[0],
-                c_t2=param['c_t2'].iloc[0],
+                k2=extract_scalar(param['k2']),
+                phi2=extract_scalar(param['phi2']),
+                c_t2=extract_scalar(param['c_t2']),
 
                 # Геометрия
-                R_i=param['R_i'].iloc[0],
-                r_e=param['r_e'].iloc[0]
+                R_i=extract_scalar(param['R_i']),
+                r_e=extract_scalar(param['r_e'])
             )
 
             t_D_array = self.generate_search_time(converter)
@@ -204,7 +205,13 @@ class InfiniteRadialCompositeGenerator(DataGenerator):
             omega2 = param['omega2'][0]
             r_fD = param['r_fD'][0]
 
-            model = InfiniteRadialCompositeReservoirModel(C_D=C_D, S=S, M1=M1, M2=M2, omega1=omega1, omega2=omega2, r_fD=r_fD)
+            model = InfiniteRadialCompositeReservoirModel(C_D=C_D,
+                                                          S=S,
+                                                          M1=M1,
+                                                          M2=M2,
+                                                          omega1=omega1,
+                                                          omega2=omega2,
+                                                          r_fD=r_fD)
             alg = ShtefestAlgorithm(N=12)
 
             curve = model.pressure(t_D_array, alg) \
