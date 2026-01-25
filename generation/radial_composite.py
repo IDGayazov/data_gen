@@ -158,11 +158,8 @@ class InfiniteRadialCompositeGenerator(DataGenerator):
     Генерация данных для бесконечного пласта радиально-композитной модели
     """
 
-    def __init__(self, t_max_days, points_count, size):
-        self.reservoir_type = 'radial_composite_inf'
-        self.t_max_days = t_max_days
-        self.size = size
-        self.points_count = points_count
+    def __init__(self, t_max_days, points_count, size, output_path):
+        super().__init__('radial_composite_inf', t_max_days, points_count, size, output_path)
         self.param_gen = RadialCompositeParamGenerator(self.size)
 
 

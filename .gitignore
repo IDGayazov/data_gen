@@ -1,4 +1,4 @@
-/dataset/
+/datasets/dataset/
 /.venv/
 .idea
 /training_checkpoints/
@@ -11,8 +11,8 @@
 /class_correlation.png
 /class_examples.png
 =======
-/dataset2/
-/dataset3/
-/dataset4/
-/dataset5/
+/datasets/dataset2/
+/datasets/dataset3/
+/datasets/dataset4/
+/datasets/dataset5/
 >>>>>>> 1412fe723ed7e699e731d875308223a9dbed4ed9

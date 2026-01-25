@@ -144,11 +144,8 @@ class InfiniteDualPermeabilityModelGenerator(DataGenerator):
     Генерация данных для бесконечного пласта модели двойной проницаемости
     """
 
-    def __init__(self, t_max_days, points_count, size):
-        self.reservoir_type = 'dual_permeability_inf'
-        self.t_max_days = t_max_days
-        self.size = size
-        self.points_count = points_count
+    def __init__(self, t_max_days, points_count, size, output_path):
+        super().__init__('dual_permeability_inf', t_max_days, points_count, size, output_path)
         self.param_gen = DualPermeabilityParamGenerator(self.size)
 
 
@@ -204,11 +201,8 @@ class FiniteDualPermeabilityGenerator(DataGenerator):
     Генерация данных для модели двойной проницаемости для круговой границы
     """
 
-    def __init__(self, t_max_days, points_count, size):
-        self.reservoir_type = 'dual_permeability_fin'
-        self.t_max_days = t_max_days
-        self.size = size
-        self.points_count = points_count
+    def __init__(self, t_max_days, points_count, size, output_path):
+        super().__init__('dual_permeability_fin', t_max_days, points_count, size, output_path)
         self.param_gen = DualPermeabilityParamGenerator(self.size)
 
 

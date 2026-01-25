@@ -244,7 +244,7 @@ class InfiniteDualPermeabilityReservoirModel(ReservoirModel):
 
 
 if __name__ == "__main__":
-    params = pd.read_csv('../../dataset5/params/45.csv')
+    params = pd.read_csv('../../datasets/dataset5/params/45.csv')
 
     print('C_D: ', params['C_D'][0])
     print('S: ', params['S1'][0])

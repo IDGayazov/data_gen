@@ -136,11 +136,8 @@ class InfiniteDualPorosityGenerator(DataGenerator):
     Генерация данных для бесконечного пласта модели двойной пористости
     """
 
-    def __init__(self, t_max_days, points_count, size):
-        self.reservoir_type = 'dual_porosity_inf'
-        self.t_max_days = t_max_days
-        self.size = size
-        self.points_count = points_count
+    def __init__(self, t_max_days, points_count, size, output_path):
+        super().__init__('dual_porosity_inf', t_max_days, points_count, size, output_path)
         self.param_gen = DualPorosityModelParamGenerator(self.size)
 
 
@@ -191,11 +188,8 @@ class FiniteDualPorosityGenerator(DataGenerator):
     Генерация данных для модели двойной пористости с круговой границей
     """
 
-    def __init__(self, t_max_days, points_count, size):
-        self.reservoir_type = 'dual_porosity_fin'
-        self.t_max_days = t_max_days
-        self.size = size
-        self.points_count = points_count
+    def __init__(self, t_max_days, points_count, size, output_path):
+        super().__init__('dual_porosity_fin', t_max_days, points_count, size, output_path)
         self.param_gen = DualPorosityModelParamGenerator(self.size)
 
 

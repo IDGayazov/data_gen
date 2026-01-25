@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
+from conversion.homogeneous_converter import HomogeneousConverter
 from generation.generator import extract_scalar
 from generation.generator import DataGenerator, ParamGenerator
 from inversion.shtefest_algorithm import ShtefestAlgorithm
@@ -43,7 +44,8 @@ class HomogeneousModelParamGenerator(ParamGenerator):
             params['q'] = np.random.uniform(5, 50)  # дебит
             params['r_e'] = np.random.uniform(100, 1000)  # радиус границ
 
-            params['C'] = 10 ** np.random.uniform(-9, -7)  # коэффициент влияния ствола скважины
+            # коэффициент влияния ствола скважины
+            params['C'] = 10 ** np.random.uniform(-9, -7)
 
             # скин-фактор
             params['S'] = np.random.uniform(0, 10)
@@ -72,11 +74,8 @@ class InfiniteHomogeneousGenerator(DataGenerator):
     Генерация данных для бесконечного гомогенного пласта
     """
 
-    def __init__(self, t_max_days, points_count, size):
-        self.reservoir_type = 'homogeneous_inf'
-        self.t_max_days = t_max_days
-        self.size = size
-        self.points_count = points_count
+    def __init__(self, t_max_days, points_count, size, output_path):
+        super().__init__('homogeneous_inf', t_max_days, points_count, size, output_path)
         self.param_gen = HomogeneousModelParamGenerator(self.size)
 
 
@@ -88,7 +87,17 @@ class InfiniteHomogeneousGenerator(DataGenerator):
         for param in tqdm(params_list, desc="Generating homogeneous infinite reservoir data"):
             param.drop('r_e', axis=1, inplace=True) # убираем информацию о радиусе границы
 
-            converter = self.get_converter(param)
+            converter = HomogeneousConverter(
+                extract_scalar(param['k']),
+                extract_scalar(param['h']),
+                extract_scalar(param['q']),
+                extract_scalar(param['mu']),
+                extract_scalar(param['B']),
+                extract_scalar(param['p_i']),
+                extract_scalar(param['phi']),
+                extract_scalar(param['c_t']),
+                extract_scalar(param['r_w'])
+            )
             t_D_array = self.generate_search_time(converter)
 
             C_D = extract_scalar(converter.wellbore_storage_from_dim_to_dimless(extract_scalar(param['C'])))
@@ -110,11 +119,8 @@ class FiniteHomogeneousGenerator(DataGenerator):
     Генерация данных для гомогенного пласта с границами
     """
 
-    def __init__(self, t_max_days, points_count, size):
-        self.reservoir_type = 'homogeneous_fin'
-        self.t_max_days = t_max_days
-        self.size = size
-        self.points_count = points_count
+    def __init__(self, t_max_days, points_count, size, output_path):
+        super().__init__('homogeneous_fin', t_max_days, points_count, size, output_path)
         self.param_gen = HomogeneousModelParamGenerator(self.size)
 
 
@@ -124,7 +130,17 @@ class FiniteHomogeneousGenerator(DataGenerator):
         params_list = list(params)
 
         for param in tqdm(params_list, desc="Generating homogeneous finite reservoir data"):
-            converter = self.get_converter(param)
+            converter = HomogeneousConverter(
+                extract_scalar(param['k']),
+                extract_scalar(param['h']),
+                extract_scalar(param['q']),
+                extract_scalar(param['mu']),
+                extract_scalar(param['B']),
+                extract_scalar(param['p_i']),
+                extract_scalar(param['phi']),
+                extract_scalar(param['c_t']),
+                extract_scalar(param['r_w'])
+            )
             t_D_array = self.generate_search_time(converter)
 
             C_D = extract_scalar(converter.wellbore_storage_from_dim_to_dimless(extract_scalar(param['C'])))
