@@ -119,12 +119,7 @@ class DualPermeabilityParamGenerator(ParamGenerator):
                 S2=params['S2']
             )
 
-            # 4. Пьезопроводности
-            params['eta1'] = converter.diffusivity_system1()
-            params['eta2'] = converter.diffusivity_system2()
-            params['eta_ratio'] = converter.diffusivity_ratio()
-
-            # 5. Безразмерный внешний радиус
+            # 4. Безразмерный внешний радиус
             params['R_eD'] = converter.radius_from_dim_to_dimless(params['r_e'])
 
             params['C_D'] = converter.wellbore_storage_from_dim_to_dimless(params['C'])

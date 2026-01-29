@@ -66,18 +66,8 @@ class DualPermeabilityDimensionConverter:
         self.phi_total = phi1 + phi2
 
         # Вычисление безразмерных параметров
-        self.omega1 = self.calc_omega1()
-        self.omega2 = self.calc_omega2()
         self.lambda_param = self.calc_lambda()
         self.kappa = self.calc_kappa()
-
-    def calc_omega1(self):
-        """Коэффициент ёмкости системы 1"""
-        return self.storage1 / self.total_storage if self.total_storage > 0 else 0.5
-
-    def calc_omega2(self):
-        """Коэффициент ёмкости системы 2"""
-        return self.storage2 / self.total_storage if self.total_storage > 0 else 0.5
 
     def calc_omega(self):
         return self.phi1 * self.c_t1 * self.h1 / self.total_storage if self.total_storage > 0 else 0.5
@@ -93,34 +83,14 @@ class DualPermeabilityDimensionConverter:
     def pressure_from_dim_to_dimless(self, p, system=1):
         """
         Преобразование давления в безразмерное
-        system: 1 - для системы 1, 2 - для системы 2
         """
-        if system == 1:
-            k = self.k1
-            h = self.h1
-        elif system == 2:
-            k = self.k2
-            h = self.h2
-        else:
-            raise ValueError("system must be 1 or 2")
-
-        return 2 * np.pi * k * h * (self.p_i - p) / (self.mu * self.B * self.total_q)
+        return 2 * np.pi * (self.k1 * self.h1 + self.k2 * self.h2) * (self.p_i - p) / (self.mu * self.B * self.total_q)
 
     def pressure_from_dimless_to_dim(self, p_D, system=1):
         """
         Преобразование безразмерного давления в размерное
-        system: 1 - для системы 1, 2 - для системы 2
         """
-        if system == 1:
-            k = self.k1
-            h = self.h1
-        elif system == 2:
-            k = self.k2
-            h = self.h2
-        else:
-            raise ValueError("system must be 1 or 2")
-
-        return self.p_i - self.mu * self.B * self.total_q * p_D / (2 * np.pi * k * h)
+        return self.p_i - self.mu * self.B * self.total_q * p_D / (2 * np.pi * (self.k1 * self.h1 + self.k2 * self.h2))
 
     def time_from_dim_to_dimless(self, t, system='total'):
         """
@@ -189,20 +159,6 @@ class DualPermeabilityDimensionConverter:
     def radius_from_dimless_to_dim(self, r_D):
         """Преобразование безразмерного радиуса в размерное"""
         return r_D * self.r_w
-
-    def diffusivity_system1(self):
-        """Коэффициент пьезопроводности системы 1"""
-        return self.k1 / (self.phi1 * self.mu * self.c_t1)
-
-    def diffusivity_system2(self):
-        """Коэффициент пьезопроводности системы 2"""
-        return self.k2 / (self.phi2 * self.mu * self.c_t2)
-
-    def diffusivity_ratio(self):
-        """Отношение пьезопроводностей (система 2 / система 1)"""
-        eta1 = self.diffusivity_system1()
-        eta2 = self.diffusivity_system2()
-        return eta2 / eta1 if eta1 > 0 else 0.0
 
     def convert_debit_on_m3_by_seconds(self, q):
         """

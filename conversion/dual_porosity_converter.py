@@ -44,8 +44,6 @@ class DualPorosityDimensionConverter:
 
         # Вычисление производных параметров
         self.total_storage = phi_f * c_tf + phi_m * c_tm
-        self.average_porosity = phi_f + phi_m
-        self.effective_ct = self.total_storage / self.average_porosity if self.average_porosity > 0 else 0
 
         # Безразмерные параметры двойной пористости
         self.omega = self.calc_omega()  # коэффициент ёмкости
@@ -62,7 +60,7 @@ class DualPorosityDimensionConverter:
 
     def calc_lambda(self):
         """Вычисление коэффициента перетока (interporosity flow coefficient)"""
-        return self.alpha * self.k_m / self.k_f * self.r_w ** 2
+        return self.alpha * (self.k_m / self.k_f) * self.r_w ** 2
 
     def calc_kappa(self):
         """Вычисление отношения проницаемостей"""

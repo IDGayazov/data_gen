@@ -112,17 +112,11 @@ class RadialCompositeParamGenerator(ParamGenerator):
             result_params = {
                 'C_D': converter.wellbore_storage_from_dim_to_dimless(params['C']),
                 'S': params['S'],
-                'M': converter.M,
                 'M1': converter.M1,
                 'M2': converter.M2,
                 'omega1': converter.storage1,
                 'omega2': converter.storage2,
                 'r_fD': converter.r_fD,
-
-                'eta1': converter.eta1,
-                'eta2': converter.eta2,
-                'eta_ratio': converter.eta_ratio,
-
                 'k1': params['k1'],
                 'k2': params['k2'],
                 'phi1': params['phi1'],
@@ -142,11 +136,6 @@ class RadialCompositeParamGenerator(ParamGenerator):
 
             # r_fD = R_i/r_w
             result_params['r_fD'] = np.clip(result_params['r_fD'], 10, 100)
-
-            # Пьезопроводности
-            result_params['eta1'] = np.clip(result_params.get('eta1', 0.1), 0.01, 100)
-            result_params['eta2'] = np.clip(result_params.get('eta2', 0.1), 0.01, 100)
-            result_params['eta_ratio'] = np.clip(result_params.get('eta_ratio', 1.0), 0.01, 100)
 
             df = pd.DataFrame([result_params])
             varied_params_list.append(df)
