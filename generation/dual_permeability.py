@@ -5,7 +5,7 @@ import pandas as pd
 from tqdm import tqdm
 
 from conversion.dual_permeability_coverter import DualPermeabilityDimensionConverter
-from generation.generator import ParamGenerator, DataGenerator
+from generation.generator import ParamGenerator, DataGenerator, GenerationParams
 from generation.utils import extract_scalar
 from inversion.shtefest_algorithm import ShtefestAlgorithm
 from model.dualpermeability.finite_dual_permeability_model import FiniteDualPermeabilityReservoirModel
@@ -139,11 +139,9 @@ class InfiniteDualPermeabilityModelGenerator(DataGenerator):
     """
     Генерация данных для бесконечного пласта модели двойной проницаемости
     """
-
-    def __init__(self, t_max_days, points_count, size, output_path):
-        super().__init__('dual_permeability_inf', t_max_days, points_count, size, output_path)
+    def __init__(self, params: GenerationParams):
+        super().__init__('dual_permeability_inf', params)
         self.param_gen = DualPermeabilityParamGenerator(self.size)
-
 
     def generate(self):
         params = self.param_gen.generate()
@@ -185,7 +183,7 @@ class InfiniteDualPermeabilityModelGenerator(DataGenerator):
             alg = ShtefestAlgorithm(N=12)
 
             curve = model.pressure(t_D_array, alg) \
-                .gauss_noize(mu=0, sigma=5e-7) \
+                .gauss_noize(mu=0, sigma=self.sigma) \
                 .derivative(smoothig_alg='regression', delta=0.3) \
                 .get_pressure()
 
@@ -196,11 +194,9 @@ class FiniteDualPermeabilityGenerator(DataGenerator):
     """
     Генерация данных для модели двойной проницаемости для круговой границы
     """
-
-    def __init__(self, t_max_days, points_count, size, output_path):
-        super().__init__('dual_permeability_fin', t_max_days, points_count, size, output_path)
+    def __init__(self, params: GenerationParams):
+        super().__init__('dual_permeability_fin', params)
         self.param_gen = DualPermeabilityParamGenerator(self.size)
-
 
     def generate(self):
         params = self.param_gen.generate()
@@ -241,7 +237,7 @@ class FiniteDualPermeabilityGenerator(DataGenerator):
             alg = ShtefestAlgorithm(N=12)
 
             curve = model.pressure(t_D_array, alg) \
-                .gauss_noize(mu=0, sigma=5e-7) \
+                .gauss_noize(mu=0, sigma=self.sigma) \
                 .derivative(smoothig_alg='regression', delta=0.3) \
                 .get_pressure()
 

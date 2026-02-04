@@ -194,13 +194,13 @@ class ReservoirModel(ABC):
         return self
 
 
-    def visualize(self, title, horizontal_line=True):
+    def visualize(self, title, horizontal_line=True, point_type='x'):
         """
         Визуализация, зависимости давления от времени в loglog графике.
         """
         plt.figure(figsize=(10, 6))
-        plt.loglog(self.df['t_D'], self.df['P_wD'], 'g-', label='Теоретическое давление')
-        plt.loglog(self.df['t_D'], self.df['dP_wD'], 'b--', linewidth=2, label='dP_wD/dln_t_D')
+        plt.loglog(self.df['t_D'], self.df['P_wD'], 'g' + point_type, label='Теоретическое давление')
+        plt.loglog(self.df['t_D'], self.df['dP_wD'], 'b' + point_type, linewidth=2, label='dP_wD/dln_t_D')
 
         if 'P_wD_gauss' in self.df.columns:
             plt.loglog(self.df['t_D'], self.df['P_wD_gauss'], 'ro', markersize=2,
@@ -240,3 +240,10 @@ class ReservoirModel(ABC):
             Датафрейм зависимости давления/времени.
         """
         return self.df
+
+    def load_model(self, filename: str):
+        """
+        Загрузка модели из файла
+        """
+        self.df = pd.read_csv(filename)
+        return self

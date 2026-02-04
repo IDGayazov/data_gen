@@ -5,7 +5,7 @@ import pandas as pd
 from tqdm import tqdm
 
 from conversion.radial_composite_converter import RadialCompositeConverter
-from generation.generator import ParamGenerator, DataGenerator
+from generation.generator import ParamGenerator, DataGenerator, GenerationParams
 from generation.utils import extract_scalar
 from inversion.shtefest_algorithm import ShtefestAlgorithm
 from model.radialcomposite.infinite_radial_composite_model import InfiniteRadialCompositeReservoirModel
@@ -147,11 +147,9 @@ class InfiniteRadialCompositeGenerator(DataGenerator):
     """
     Генерация данных для бесконечного пласта радиально-композитной модели
     """
-
-    def __init__(self, t_max_days, points_count, size, output_path):
-        super().__init__('radial_composite_inf', t_max_days, points_count, size, output_path)
+    def __init__(self, params: GenerationParams):
+        super().__init__('radial_composite_inf', params)
         self.param_gen = RadialCompositeParamGenerator(self.size)
-
 
     def generate(self):
         params = self.param_gen.generate()
@@ -204,7 +202,7 @@ class InfiniteRadialCompositeGenerator(DataGenerator):
             alg = ShtefestAlgorithm(N=12)
 
             curve = model.pressure(t_D_array, alg) \
-                .gauss_noize(mu=0, sigma=5e-7) \
+                .gauss_noize(mu=0, sigma=self.sigma) \
                 .derivative(smoothig_alg='regression', delta=0.3) \
                 .get_pressure()
 

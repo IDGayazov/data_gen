@@ -7,12 +7,8 @@
 /my_universal_model.h5
 /training_metrics.json
 /training_results.png
-<<<<<<< HEAD
+
 /class_correlation.png
 /class_examples.png
-=======
-/datasets/dataset2/
-/datasets/dataset3/
-/datasets/dataset4/
-/datasets/dataset5/
->>>>>>> 1412fe723ed7e699e731d875308223a9dbed4ed9
+
+/datasets/

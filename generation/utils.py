@@ -1,6 +1,8 @@
 import shutil
 from pathlib import Path
 
+import numpy as np
+
 
 def extract_scalar(value):
     """
@@ -23,6 +25,11 @@ def extract_scalar(value):
 
 def clear_folder(folder_path: str):
     path = Path(folder_path)
+
+    if not path.exists():
+        print(f'Path: {folder_path} not exists')
+        return
+
     for item in path.iterdir():
         if item.is_file() or item.is_symlink():
             item.unlink()

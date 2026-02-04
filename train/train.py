@@ -57,7 +57,6 @@ class WellTestTrainer:
         gpus = tf.config.list_physical_devices('GPU')
 
         if gpus:
-            print(f"GPU доступен: {gpus[0].name}")
             return 'GPU'
         else:
             print("GPU не обнаружен, используется CPU")
@@ -255,20 +254,20 @@ class WellTestTrainer:
 
             self.training_time = time.time() - start_time
 
-            print(f"\nОбучение завершено за {self.training_time:.2f} секунд")
-            print(f"Лучшая модель сохранена в: {self.best_model_path}")
+            print(f"\n✅ Обучение завершено за {self.training_time:.2f} секунд")
+            print(f"✅ Лучшая модель сохранена в: {self.best_model_path}")
 
             self._save_training_info(X_train, X_val)
 
             return self.history
 
         except Exception as e:
-            print(f"\nОшибка при обучении: {e}")
+            print(f"\n❌ Ошибка при обучении: {e}")
             print("Попытка восстановления...")
 
             if os.path.exists(self.best_model_path):
                 self.model = keras.models.load_model(self.best_model_path)
-                print("Загружена лучшая сохраненная модель")
+                print("✅ Загружена лучшая сохраненная модель")
 
             raise
 
@@ -293,7 +292,7 @@ class WellTestTrainer:
         with open(self.metrics_file, 'w') as f:
             json.dump(info, f, indent=2, default=str)
 
-        print(f"Информация об обучении сохранена в {self.metrics_file}")
+        print(f"✅ Информация об обучении сохранена в {self.metrics_file}")
 
     def evaluate(self, X_test, y_test, batch_size=None):
         """
@@ -349,14 +348,14 @@ class WellTestTrainer:
             y_true, y_pred_classes, average=None
         )
 
-        print("\nClassification Report:")
+        print("\n📊 Classification Report:")
         print(classification_report(
             y_true, y_pred_classes,
             target_names=self.class_names,
             digits=4
         ))
 
-        print(f"\nROC AUC Score: {roc_auc:.4f}" if roc_auc is not None else "")
+        print(f"\n📈 ROC AUC Score: {roc_auc:.4f}" if roc_auc is not None else "")
 
         # Сохранение метрик
         self.metrics = {
@@ -441,7 +440,7 @@ class WellTestTrainer:
             'samples_per_second': 1 / avg_time_per_sample
         }
 
-        print(f"\nРезультаты бенчмарка:")
+        print(f"\n📊 Результаты бенчмарка:")
         print(f"  Устройство: {results['device']}")
         print(f"  Среднее время на образец: {results['avg_time_per_sample_ms']:.2f} ms")
         print(f"  Образцов в секунду: {results['samples_per_second']:.0f}")
@@ -478,9 +477,92 @@ class WellTestTrainer:
 
         if save_path:
             plt.savefig(save_path, dpi=150, bbox_inches='tight')
-            print(f"График сохранен в {save_path}")
+            print(f"📊 График сохранен в {save_path}")
 
         plt.show()
+
+    def plot_confusion_matrix(self, X_test, y_test, batch_size=None,
+                             normalize=True, save_path=None, show_plot=True):
+        """
+        Построение и визуализация confusion matrix
+
+        Parameters:
+        -----------
+        X_test, y_test : numpy arrays
+            Тестовые данные
+        batch_size : int, optional
+            Размер батча для предсказания
+        normalize : bool
+            Нормализовать ли значения (проценты) или оставить абсолютные значения
+        save_path : str, optional
+            Путь для сохранения графика
+        show_plot : bool
+            Показывать ли график
+
+        Returns:
+        --------
+        numpy.ndarray : confusion matrix
+        """
+        print("\n" + "=" * 60)
+        print("CONFUSION MATRIX")
+        print("=" * 60)
+
+        if batch_size is None:
+            batch_size = 32
+
+        y_pred = self.model.predict(X_test, batch_size=batch_size, verbose=0)
+        y_pred_classes = np.argmax(y_pred, axis=1)
+        y_true = np.argmax(y_test, axis=1)
+
+        cm = confusion_matrix(y_true, y_pred_classes)
+
+        if normalize:
+            cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis] * 100
+            fmt = '.2f'
+            title_suffix = ' (%)'
+        else:
+            fmt = 'd'
+            title_suffix = ''
+
+        fig, ax = plt.subplots(figsize=(10, 8))
+
+        im = ax.imshow(cm, interpolation='nearest', cmap=plt.cm.Blues)
+        ax.figure.colorbar(im, ax=ax)
+
+        ax.set(xticks=np.arange(cm.shape[1]),
+               yticks=np.arange(cm.shape[0]),
+               xticklabels=self.class_names,
+               yticklabels=self.class_names,
+               title=f'Confusion Matrix{title_suffix}',
+               ylabel='True Label',
+               xlabel='Predicted Label')
+
+        plt.setp(ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
+
+        thresh = cm.max() / 2.
+        for i in range(cm.shape[0]):
+            for j in range(cm.shape[1]):
+                ax.text(j, i, format(cm[i, j], fmt),
+                        ha="center", va="center",
+                        color="white" if cm[i, j] > thresh else "black",
+                        fontsize=10)
+
+        fig.tight_layout()
+
+        if self.metrics is not None:
+            self.metrics['confusion_matrix'] = cm.tolist()
+            self.metrics['confusion_matrix_normalized'] = normalize
+            with open('evaluation_metrics.json', 'w') as f:
+                json.dump(self.metrics, f, indent=2, default=str)
+
+        if save_path:
+            plt.savefig(save_path, dpi=150, bbox_inches='tight')
+            print(f"📊 Confusion matrix сохранена в {save_path}")
+
+        if show_plot:
+            plt.show()
+
+        return cm
 
     def save_model(self, path='welltest_model_complete', format='keras'):
         """

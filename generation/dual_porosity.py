@@ -5,7 +5,7 @@ import pandas as pd
 from tqdm import tqdm
 
 from conversion.dual_porosity_converter import DualPorosityDimensionConverter
-from generation.generator import ParamGenerator, DataGenerator
+from generation.generator import ParamGenerator, DataGenerator, GenerationParams
 from generation.utils import extract_scalar
 from inversion.shtefest_algorithm import ShtefestAlgorithm
 from model.dualporosity.finite_dual_porosity_model import FiniteDualPorosityReservoirModel
@@ -136,9 +136,8 @@ class InfiniteDualPorosityGenerator(DataGenerator):
     """
     Генерация данных для бесконечного пласта модели двойной пористости
     """
-
-    def __init__(self, t_max_days, points_count, size, output_path):
-        super().__init__('dual_porosity_inf', t_max_days, points_count, size, output_path)
+    def __init__(self, params: GenerationParams):
+        super().__init__('dual_porosity_inf', params)
         self.param_gen = DualPorosityModelParamGenerator(self.size)
 
 
@@ -177,7 +176,7 @@ class InfiniteDualPorosityGenerator(DataGenerator):
             alg = ShtefestAlgorithm(N=12)
 
             curve = model.pressure(t_D_array, alg) \
-                .gauss_noize(mu=0, sigma=5e-7) \
+                .gauss_noize(mu=0, sigma=self.sigma) \
                 .derivative(smoothig_alg='regression', delta=0.3) \
                 .get_pressure()
 
@@ -188,11 +187,9 @@ class FiniteDualPorosityGenerator(DataGenerator):
     """
     Генерация данных для модели двойной пористости с круговой границей
     """
-
-    def __init__(self, t_max_days, points_count, size, output_path):
-        super().__init__('dual_porosity_fin', t_max_days, points_count, size, output_path)
+    def __init__(self, params: GenerationParams):
+        super().__init__('dual_porosity_fin', params)
         self.param_gen = DualPorosityModelParamGenerator(self.size)
-
 
     def generate(self):
         params = self.param_gen.generate()
@@ -228,7 +225,7 @@ class FiniteDualPorosityGenerator(DataGenerator):
             alg = ShtefestAlgorithm(N=12)
 
             curve = model.pressure(t_D_array, alg) \
-                .gauss_noize(mu=0, sigma=5e-7) \
+                .gauss_noize(mu=0, sigma=self.sigma) \
                 .derivative(smoothig_alg='regression', delta=0.3) \
                 .get_pressure()
 

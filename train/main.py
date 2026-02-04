@@ -35,6 +35,10 @@ if __name__ == "__main__":
 
     trainer.plot_training_history(save_path='training_results.png')
 
+    cm = trainer.plot_confusion_matrix(X_test, y_test,
+                                   normalize=True,
+                                   save_path='confusion_matrix.png')
+
     trainer.save_model('my_universal_model', format='both')
 
     pred_class, probs, confidence = trainer.predict_single(X_test[0])

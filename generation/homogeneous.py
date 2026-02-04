@@ -5,7 +5,7 @@ import pandas as pd
 from tqdm import tqdm
 
 from conversion.homogeneous_converter import HomogeneousConverter
-from generation.generator import extract_scalar
+from generation.generator import extract_scalar, GenerationParams
 from generation.generator import DataGenerator, ParamGenerator
 from inversion.shtefest_algorithm import ShtefestAlgorithm
 from model.homogeneous.finite_homogeneous_model import FiniteHomogeneousReservoirModel
@@ -73,11 +73,9 @@ class InfiniteHomogeneousGenerator(DataGenerator):
     """
     Генерация данных для бесконечного гомогенного пласта
     """
-
-    def __init__(self, t_max_days, points_count, size, output_path):
-        super().__init__('homogeneous_inf', t_max_days, points_count, size, output_path)
+    def __init__(self, params: GenerationParams):
+        super().__init__('homogeneous_inf', params)
         self.param_gen = HomogeneousModelParamGenerator(self.size)
-
 
     def generate(self):
         params = self.param_gen.generate()
@@ -107,7 +105,7 @@ class InfiniteHomogeneousGenerator(DataGenerator):
             alg = ShtefestAlgorithm(N=12)
 
             curve = model.pressure(t_D_array, alg) \
-                .gauss_noize(mu=0, sigma=5e-7) \
+                .gauss_noize(mu=0, sigma=self.sigma) \
                 .derivative(smoothig_alg='regression', delta=0.3) \
                 .get_pressure()
 
@@ -118,9 +116,8 @@ class FiniteHomogeneousGenerator(DataGenerator):
     """
     Генерация данных для гомогенного пласта с границами
     """
-
-    def __init__(self, t_max_days, points_count, size, output_path):
-        super().__init__('homogeneous_fin', t_max_days, points_count, size, output_path)
+    def __init__(self, params: GenerationParams):
+        super().__init__('homogeneous_fin', params)
         self.param_gen = HomogeneousModelParamGenerator(self.size)
 
 
@@ -151,7 +148,7 @@ class FiniteHomogeneousGenerator(DataGenerator):
             alg = ShtefestAlgorithm(N=12)
 
             curve = model.pressure(t_D_array, alg) \
-                .gauss_noize(mu=0, sigma=5e-7) \
+                .gauss_noize(mu=0, sigma=self.sigma) \
                 .derivative(smoothig_alg='regression', delta=0.3) \
                 .get_pressure()
 
