@@ -10,13 +10,13 @@ from sklearn.preprocessing import LabelEncoder, OneHotEncoder, StandardScaler
 class PressureDataClassificationPreprocessor1D:
     """Подготовка данных для классификации типа пласта 1D CNN из файлов кривых"""
 
-    def __init__(self, target_size=500, test_size=0.2, val_size=0.1,
+    def __init__(self, data_dir, target_size=500, test_size=0.2, val_size=0.1,
                  random_state=42, debug=False):
         self.target_size = target_size
         self.test_size = test_size
         self.val_size = val_size
         self.random_state = random_state
-        self.data_dir = './dataset4/curve/'
+        self.data_dir = data_dir
 
         self.label_encoder = LabelEncoder()
         self.onehot_encoder = OneHotEncoder(sparse_output=False)
@@ -25,7 +25,6 @@ class PressureDataClassificationPreprocessor1D:
         self.class_names = []
 
         self.debug = debug
-
 
     def load_data_for_classification(self):
         """
@@ -56,7 +55,6 @@ class PressureDataClassificationPreprocessor1D:
         y = np.array(y_list)
 
         return X, y
-
 
     def normalize(self, X):
         """
@@ -99,7 +97,6 @@ class PressureDataClassificationPreprocessor1D:
         one_hot_encoded = self.one_hot_encoder.transform(integer_encoded_reshaped)
         return one_hot_encoded
 
-
     def _init_target_encoders(self):
         """
         Подготовка данных для целевой переменной
@@ -128,7 +125,6 @@ class PressureDataClassificationPreprocessor1D:
 
         if self.debug:
             print(f"One-hot кодирование (размерность): {one_hot_encoded.shape}")
-
 
     def _get_label_from_filename(self, filename):
         parts = filename.rsplit('_', 1)
@@ -170,7 +166,6 @@ class PressureDataClassificationPreprocessor1D:
         self.X_original, self.y_original = X, y
 
         return X_train, X_val, X_test, y_train, y_val, y_test
-
 
     def stats(self, return_dict=False):
         """
@@ -250,7 +245,6 @@ class PressureDataClassificationPreprocessor1D:
 
         if return_dict:
             return stats_dict
-
 
     def get_class_names(self):
         return self.class_names

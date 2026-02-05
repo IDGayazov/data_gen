@@ -36,7 +36,7 @@ def single_generation():
 def noize_relation_generation():
     T_MAX_DAYS: Final = 30
     POINTS_COUNT: Final = 128
-    SIZE: Final = 5
+    SIZE: Final = 500
     BASE_OUTPUT_PATH: Final = '../datasets/dataset'
 
     params = [

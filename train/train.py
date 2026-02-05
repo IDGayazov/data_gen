@@ -294,13 +294,13 @@ class WellTestTrainer:
 
         print(f"✅ Информация об обучении сохранена в {self.metrics_file}")
 
-    def evaluate(self, X_test, y_test, batch_size=None):
+    def evaluate(self, X, y, data_type='TEST', batch_size=None):
         """
-        Оценка модели на тестовых данных
+        Оценка модели
 
         Parameters:
         -----------
-        X_test, y_test : numpy arrays
+        X, y : numpy arrays
             Тестовые данные
         batch_size : int, optional
             Размер батча для оценки
@@ -310,24 +310,24 @@ class WellTestTrainer:
         dict : метрики оценки
         """
         print("\n" + "=" * 60)
-        print("ОЦЕНКА МОДЕЛИ")
+        print("ОЦЕНКА МОДЕЛИ на", data_type)
         print("=" * 60)
 
         if batch_size is None:
             batch_size = 32
 
-        test_loss, test_accuracy = self.model.evaluate(
-            X_test, y_test,
+        loss, accuracy = self.model.evaluate(
+            X, y,
             batch_size=batch_size,
             verbose=0
         )
 
-        print(f"Test Loss: {test_loss:.4f}")
-        print(f"Test Accuracy: {test_accuracy:.4f}")
+        print(f"Loss: {loss:.4f}")
+        print(f"Accuracy: {accuracy:.4f}")
 
-        y_pred = self.model.predict(X_test, batch_size=batch_size, verbose=0)
+        y_pred = self.model.predict(X, batch_size=batch_size, verbose=0)
         y_pred_classes = np.argmax(y_pred, axis=1)
-        y_true = np.argmax(y_test, axis=1)
+        y_true = np.argmax(y, axis=1)
 
         try:
             if len(self.class_names) == 2:
@@ -357,10 +357,9 @@ class WellTestTrainer:
 
         print(f"\n📈 ROC AUC Score: {roc_auc:.4f}" if roc_auc is not None else "")
 
-        # Сохранение метрик
         self.metrics = {
-            'test_loss': float(test_loss),
-            'test_accuracy': float(test_accuracy),
+            'loss': float(loss),
+            'accuracy': float(accuracy),
             'roc_auc': float(roc_auc) if roc_auc is not None else None,
             'classification_report': report,
             'precision_per_class': precision.tolist(),
@@ -374,7 +373,7 @@ class WellTestTrainer:
             'evaluation_time': time.time()
         }
 
-        with open('evaluation_metrics.json', 'w') as f:
+        with open(f'evaluation_metrics_{data_type}.json', 'w') as f:
             json.dump(self.metrics, f, indent=2, default=str)
 
         return self.metrics
