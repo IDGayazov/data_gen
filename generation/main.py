@@ -36,7 +36,7 @@ def single_generation():
 def noize_relation_generation():
     T_MAX_DAYS: Final = 30
     POINTS_COUNT: Final = 128
-    SIZE: Final = 500
+    SIZE: Final = 5000
     BASE_OUTPUT_PATH: Final = '../datasets/dataset'
 
     params = [
@@ -48,11 +48,9 @@ def noize_relation_generation():
     ]
 
     for param in params:
-        print('Generating dataset for params:', param)
+        print('Generating dataset for:', param)
 
         clear_folder(param.output_path)
-
-        # обнуляем генератор
         DataGenerator.reset_global_counter()
 
         generators = [

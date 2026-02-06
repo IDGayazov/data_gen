@@ -11,7 +11,7 @@ class CommonReservoirModel(ReservoirModel):
         print('Not supported method!')
 
 if __name__ == '__main__':
-    file_name = '../datasets/dataset03/curve/homogeneous_inf_0.csv'
+    file_name = '../datasets/dataset05/curve/homogeneous_inf_1.csv'
 
     model = CommonReservoirModel()
     model.load_model(file_name) \
