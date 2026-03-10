@@ -100,6 +100,7 @@ class InfiniteHomogeneousGenerator(DataGenerator):
 
             C_D = extract_scalar(converter.wellbore_storage_from_dim_to_dimless(extract_scalar(param['C'])))
             S = extract_scalar(param['S'])
+            param['C_D'] = C_D
 
             model = InfiniteHomogeneousReservoirModel(C_D=C_D, S=S)
             alg = ShtefestAlgorithm(N=12)
@@ -143,6 +144,8 @@ class FiniteHomogeneousGenerator(DataGenerator):
             C_D = extract_scalar(converter.wellbore_storage_from_dim_to_dimless(extract_scalar(param['C'])))
             r_D_e = extract_scalar(converter.reservoir_radius_from_dim_to_dimless(extract_scalar(param['r_e'])))
             S = extract_scalar(param['S'])
+            param['C_D'] = C_D
+            param['r_D_e'] = r_D_e
 
             model = FiniteHomogeneousReservoirModel(C_D=C_D, S=S, R_D_E=r_D_e)
             alg = ShtefestAlgorithm(N=12)

@@ -1,10 +1,23 @@
 import os
 from abc import ABC, abstractmethod
 from collections import Counter
+from enum import Enum
 
 import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder, StandardScaler
+
+class Model(Enum):
+    HOMOGENEOUS_INF = 'homogeneous_inf'
+    HOMOGENEOUS_FIN = 'homogeneous_fin'
+
+    DUAL_POROSITY_INF = 'dual_porosity_inf'
+    DUAL_POROSITY_FIN = 'dual_porosity_fin'
+
+    DUAL_PERMEABILITY_INF = 'dual_permeability_inf'
+    DUAL_PERMEABILITY_FIN = 'dual_permeability_fin'
+
+    RADIAL_COMPOSITE_INF = 'radial_composite_inf'
 
 
 class AbstractPressureDataPreprocessor(ABC):
@@ -51,6 +64,66 @@ class AbstractPressureDataPreprocessor(ABC):
             X_norm[:, :, i] = channel_norm
 
         return X_norm
+
+    def get_dataset(self, task='classification'):
+        X, y = self.load_data()
+
+        if self.debug:
+            print('shape X =', X.shape)
+
+        if task == 'classification':
+            X_train_val, X_test, y_train_val, y_test = train_test_split(
+                X, y,
+                test_size=self.test_size,
+                random_state=42,
+                shuffle=True,
+                stratify=y
+            )
+        elif task == 'regression':
+            X_train_val, X_test, y_train_val, y_test = train_test_split(
+                X, y,
+                test_size=self.test_size,
+                random_state=42,
+                shuffle=True,
+                stratify=None
+            )
+        else:
+            print('Task may be: classification or regression')
+            return None
+
+        val_size_relative = self.val_size / (1 - self.test_size)
+
+        if task == 'classification':
+            X_train, X_val, y_train, y_val = train_test_split(
+                X_train_val, y_train_val,
+                test_size=val_size_relative,
+                random_state=42,
+                shuffle=True,
+                stratify=y_train_val
+            )
+        elif task == 'regression':
+            X_train, X_val, y_train, y_val = train_test_split(
+                X_train_val, y_train_val,
+                test_size=val_size_relative,
+                random_state=42,
+                shuffle=True,
+                stratify=None
+            )
+        else:
+            print('Task may be: classification or regression')
+            return None
+
+        if self.debug:
+            print(f"Train: {X_train.shape} ({(X_train.shape[0] / X.shape[0]) * 100:.1f}%)")
+            print(f"Val: {X_val.shape} ({(X_val.shape[0] / X.shape[0]) * 100:.1f}%)")
+            print(f"Test: {X_test.shape} ({(X_test.shape[0] / X.shape[0]) * 100:.1f}%)")
+
+        self.X_train, self.X_val, self.X_test = X_train, X_val, X_test
+        self.y_train, self.y_val, self.y_test = y_train, y_val, y_test
+        self.X_original, self.y_original = X, y
+
+        return X_train, X_val, X_test, y_train, y_val, y_test
+
 
 
 class AbstractPressureDataClassificationPreprocessor(AbstractPressureDataPreprocessor, ABC):
@@ -109,41 +182,6 @@ class AbstractPressureDataClassificationPreprocessor(AbstractPressureDataPreproc
         parts = filename.rsplit('_', 1)
         label = parts[0]
         return label
-
-    def get_dataset(self):
-        X, y = self.load_data()
-
-        if self.debug:
-            print('shape X =', X.shape)
-
-        X_train_val, X_test, y_train_val, y_test = train_test_split(
-            X, y,
-            test_size=self.test_size,
-            random_state=42,
-            shuffle=True,
-            stratify=y
-        )
-
-        val_size_relative = self.val_size / (1 - self.test_size)
-
-        X_train, X_val, y_train, y_val = train_test_split(
-            X_train_val, y_train_val,
-            test_size=val_size_relative,
-            random_state=42,
-            shuffle=True,
-            stratify=y_train_val
-        )
-
-        if self.debug:
-            print(f"Train: {X_train.shape} ({(X_train.shape[0] / X.shape[0]) * 100:.1f}%)")
-            print(f"Val: {X_val.shape} ({(X_val.shape[0] / X.shape[0]) * 100:.1f}%)")
-            print(f"Test: {X_test.shape} ({(X_test.shape[0] / X.shape[0]) * 100:.1f}%)")
-
-        self.X_train, self.X_val, self.X_test = X_train, X_val, X_test
-        self.y_train, self.y_val, self.y_test = y_train, y_val, y_test
-        self.X_original, self.y_original = X, y
-
-        return X_train, X_val, X_test, y_train, y_val, y_test
 
     def stats(self, return_dict=False):
         """
