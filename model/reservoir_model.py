@@ -92,8 +92,8 @@ class ReservoirModel(ABC):
 
         p_w_d_array = np.array(p_w_d_results)
 
-        if np.any(np.isnan(p_w_d_array)):
-            p_w_d_array = self._interpolate_nan_values(t_D, p_w_d_array)
+        # if np.any(np.isnan(p_w_d_array)):
+        #     p_w_d_array = self._interpolate_nan_values(t_D, p_w_d_array)
 
         table_data = np.column_stack((t_D, p_w_d_array))
         self.df = pd.DataFrame(table_data, columns=['t_D', 'P_wD'])
@@ -150,25 +150,61 @@ class ReservoirModel(ABC):
 
         return p_interp
 
-    def gauss_noize(self, mu=0, sigma=5e-5):
+    def resample_to_fixed_points(self, n_points=128):
         """
-        Функция, добавляющая гауссов шум к данным.
-        Данные с шумами добавляются в отдельный столбец P_wD_gauss в датафрейме.
-
-        Получает:
-            mu: матожидание.
-            sigma: стандартное отклонение.
-
-        Возвращает:
-            self
+        Приведение кривой к фиксированному числу точек
+        с равномерным шагом по логарифму времени
         """
+        if len(self.df) == 0:
+            return self
         
-        signal_amplitude = self.df['P_wD'].max() - self.df['P_wD'].min()
+        # Получаем логарифмические границы
+        log_t_min = np.log10(self.df['t_D'].min())
+        log_t_max = np.log10(self.df['t_D'].max())
         
-        noise = np.random.normal(mu, sigma * signal_amplitude, len(self.df))
-        self.df['P_wD_gauss'] = self.df['P_wD'] + noise
+        # Равномерная сетка по log(t)
+        log_t_new = np.linspace(log_t_min, log_t_max, n_points)
+        t_new = 10 ** log_t_new
+        
+        # Линейная интерполяция
+        p_new = np.interp(np.log(t_new), np.log(self.df['t_D']), self.df['P_wD'])
+        
+        # Обновляем датафрейм
+        self.df = pd.DataFrame({
+            't_D': t_new,
+            'P_wD': p_new
+        })
         
         return self
+
+    def gauss_noize(self, mu=0, sigma=0.1):
+        """
+        Добавление гауссова шума с фиксированной дисперсией
+        sigma^2 = 0.01 (стандартное отклонение = 0.1)
+        """
+        noise = np.random.normal(mu, sigma, len(self.df))
+        self.df['P_wD_gauss'] = self.df['P_wD'] + noise
+        return self
+
+    # def gauss_noize(self, mu=0, sigma=5e-5):
+    #     """
+    #     Функция, добавляющая гауссов шум к данным.
+    #     Данные с шумами добавляются в отдельный столбец P_wD_gauss в датафрейме.
+
+    #     Получает:
+    #         mu: матожидание.
+    #         sigma: стандартное отклонение.
+
+    #     Возвращает:
+    #         self
+    #     """
+        
+    #     signal_amplitude = self.df['P_wD'].max() - self.df['P_wD'].min()
+        
+    #     noise = np.random.normal(mu, sigma * signal_amplitude, len(self.df))
+    #     self.df['P_wD_gauss'] = self.df['P_wD'] + noise
+        
+    #     return self
 
     def derivative(self, smoothig_alg='regression', delta=1):
         """

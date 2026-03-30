@@ -11,7 +11,7 @@ from generation.utils import clear_folder
 def single_generation():
     T_MAX_DAYS: Final = 30
     POINTS_COUNT: Final = 128
-    SIZE: Final = 25000
+    SIZE: Final = 20000
     SIGMA: Final = 5e-4
     OUTPUT_PATH: Final = '../datasets/homogeneous_inf'
 

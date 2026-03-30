@@ -48,7 +48,7 @@ class HomogeneousModelParamGenerator(ParamGenerator):
             params['C'] = 10 ** np.random.uniform(-9, -7)
 
             # скин-фактор
-            params['S'] = np.random.uniform(0, 10)
+            params['S'] = np.random.uniform(0, 8)
 
             for group in correlation_groups:
                 group_factor = np.random.uniform(0.5, 2.0)
@@ -83,8 +83,6 @@ class InfiniteHomogeneousGenerator(DataGenerator):
         params_list = list(params)
 
         for param in tqdm(params_list, desc="Generating homogeneous infinite reservoir data"):
-            param.drop('r_e', axis=1, inplace=True) # убираем информацию о радиусе границы
-
             converter = HomogeneousConverter(
                 extract_scalar(param['k']),
                 extract_scalar(param['h']),
@@ -101,6 +99,7 @@ class InfiniteHomogeneousGenerator(DataGenerator):
             C_D = extract_scalar(converter.wellbore_storage_from_dim_to_dimless(extract_scalar(param['C'])))
             S = extract_scalar(param['S'])
             param['C_D'] = C_D
+            param['r_D_e'] = 0
 
             model = InfiniteHomogeneousReservoirModel(C_D=C_D, S=S)
             alg = ShtefestAlgorithm(N=12)

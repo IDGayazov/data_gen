@@ -1,4 +1,5 @@
 from model.reservoir_model import ReservoirModel
+import sys
 
 
 class CommonReservoirModel(ReservoirModel):
@@ -11,7 +12,14 @@ class CommonReservoirModel(ReservoirModel):
         print('Not supported method!')
 
 if __name__ == '__main__':
-    file_name = '../datasets/dataset05/curve/homogeneous_inf_1.csv'
+    if len(sys.argv) > 1:
+        num = sys.argv[1]
+        file_name = f'/home/ilnaz/PycharmProjects/datasets/homogeneous_inf_06/curve/homogeneous_fin_{num}.csv'
+    else:
+        file_name = '/home/ilnaz/PycharmProjects/datasets/homogeneous_inf_06/curve/homogeneous_fin_1.csv'
+
+    file_name = '/home/ilnaz/PycharmProjects/datasets/homogeneous_inf_06/curve/homogeneous_fin_1.csv'
+    # file_name = '../datasets/homogeneous/curve/homogeneous_fin_20001.csv'
 
     model = CommonReservoirModel()
     model.load_model(file_name) \

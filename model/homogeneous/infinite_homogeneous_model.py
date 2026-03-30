@@ -49,9 +49,9 @@ if __name__ == "__main__":
     model = InfiniteHomogeneousReservoirModel(C_D=100, S=1)
 
     t_D_array = np.logspace(0, 7, 128)
-    alg = ShtefestAlgorithm(N=4)
+    alg = ShtefestAlgorithm(N=12)
 
     model.pressure(t_D_array, alg) \
-        .gauss_noize(mu=0, sigma=5e-7) \
+        .gauss_noize(mu=0, sigma=5e-4) \
         .derivative(smoothig_alg='regression', delta=0.3) \
         .visualize('Кривые давления (однородный пласт)')
