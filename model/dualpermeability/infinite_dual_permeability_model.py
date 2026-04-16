@@ -218,7 +218,7 @@ class InfiniteDualPermeabilityReservoirModel(ReservoirModel):
         p1 = self.a1(u) * self.B1(u) * k0(r_D * sigma1) + self.a2(u) * self.B2(u) * k0(r_D * sigma2)
         p2 = self.B1(u) * k0(r_D * sigma1) + self.B2(u) * k0(r_D * sigma2)
 
-        return p2
+        return p1 + p2
 
 
     def P_wD_laplace(self, u, r_D):
@@ -244,7 +244,7 @@ class InfiniteDualPermeabilityReservoirModel(ReservoirModel):
 
 
 if __name__ == "__main__":
-    params = pd.read_csv('../../datasets/dataset5/params/45.csv')
+    params = pd.read_csv('../datasets/dataset5/params/45.csv')
 
     print('C_D: ', params['C_D'][0])
     print('S: ', params['S1'][0])

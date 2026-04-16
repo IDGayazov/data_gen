@@ -59,7 +59,7 @@ class DualPorosityDimensionConverter:
         return storage_f / total_storage if total_storage > 0 else 0.0
 
     def calc_lambda(self):
-        """Вычисление коэффициента перетока (interporosity flow coefficient)"""
+        """Вычисление коэффициента перетока"""
         return self.alpha * (self.k_m / self.k_f) * self.r_w ** 2
 
     def calc_kappa(self):

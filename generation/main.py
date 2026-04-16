@@ -11,9 +11,9 @@ from generation.utils import clear_folder
 def single_generation():
     T_MAX_DAYS: Final = 30
     POINTS_COUNT: Final = 128
-    SIZE: Final = 20000
+    SIZE: Final = 1000
     SIGMA: Final = 5e-4
-    OUTPUT_PATH: Final = '../datasets/homogeneous_inf'
+    OUTPUT_PATH: Final = '../datasets/models'
 
     params = GenerationParams(T_MAX_DAYS, POINTS_COUNT, SIZE, SIGMA, OUTPUT_PATH)
 
@@ -21,12 +21,12 @@ def single_generation():
 
     generators = [
         InfiniteHomogeneousGenerator(params),
-        # FiniteHomogeneousGenerator(params),
-        # InfiniteDualPorosityGenerator(params),
-        # FiniteDualPorosityGenerator(params),
-        # InfiniteDualPermeabilityModelGenerator(params),
-        # FiniteDualPermeabilityGenerator(params),
-        # InfiniteRadialCompositeGenerator(params)
+        FiniteHomogeneousGenerator(params),
+        InfiniteDualPorosityGenerator(params),
+        FiniteDualPorosityGenerator(params),
+        InfiniteDualPermeabilityModelGenerator(params),
+        FiniteDualPermeabilityGenerator(params),
+        InfiniteRadialCompositeGenerator(params)
     ]
 
     for generator in generators:
@@ -40,8 +40,8 @@ def noize_relation_generation():
     BASE_OUTPUT_PATH: Final = '../datasets/dataset'
 
     params = [
-        # GenerationParams(T_MAX_DAYS, POINTS_COUNT, SIZE, 5e-7, BASE_OUTPUT_PATH + '07'),
-        # GenerationParams(T_MAX_DAYS, POINTS_COUNT, SIZE, 5e-6, BASE_OUTPUT_PATH + '06'),
+        GenerationParams(T_MAX_DAYS, POINTS_COUNT, SIZE, 5e-7, BASE_OUTPUT_PATH + '07'),
+        GenerationParams(T_MAX_DAYS, POINTS_COUNT, SIZE, 5e-6, BASE_OUTPUT_PATH + '06'),
         GenerationParams(T_MAX_DAYS, POINTS_COUNT, SIZE, 5e-5, BASE_OUTPUT_PATH + '05'),
         GenerationParams(T_MAX_DAYS, POINTS_COUNT, SIZE, 5e-4, BASE_OUTPUT_PATH + '04'),
         GenerationParams(T_MAX_DAYS, POINTS_COUNT, SIZE, 5e-3, BASE_OUTPUT_PATH + '03')

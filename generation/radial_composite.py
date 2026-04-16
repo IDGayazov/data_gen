@@ -136,6 +136,8 @@ class RadialCompositeParamGenerator(ParamGenerator):
 
             # r_fD = R_i/r_w
             result_params['r_fD'] = np.clip(result_params['r_fD'], 10, 100)
+            result_params['M12'] = converter.M1 / converter.M2
+            result_params['omega12'] = converter.storage1 / converter.storage2
 
             df = pd.DataFrame([result_params])
             varied_params_list.append(df)

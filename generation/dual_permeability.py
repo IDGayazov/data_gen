@@ -68,7 +68,8 @@ class DualPermeabilityParamGenerator(ParamGenerator):
             params['C'] = 10 ** np.random.uniform(-9, -7)  # м³/Па
 
             # Фактор формы
-            params['alpha'] = np.random.uniform(0.001, 1)
+            # params['alpha'] = np.random.uniform(0.001, 1)
+            params['alpha'] = 10 ** np.random.uniform(-6, -2) 
 
             # Скин-факторы
             params['S1'] = np.random.uniform(0, 10)
@@ -96,7 +97,8 @@ class DualPermeabilityParamGenerator(ParamGenerator):
             params['B'] = np.clip(params['B'], 1.0, 1.8)  # объемный коэффициент
             
             # Корректировка параметров для получения характерных графиков двойной проницаемости
-            kappa = np.random.uniform(0.7, 0.99)
+            # kappa = np.random.uniform(0.7, 0.99)
+            kappa = np.random.uniform(0.6, 0.85)
             params['k1'] = params['k2'] * kappa * params['h2'] / (params['h1'] * (1 - kappa))
 
             converter = DualPermeabilityDimensionConverter(

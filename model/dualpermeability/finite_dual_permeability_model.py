@@ -7,6 +7,8 @@ from scipy.special import k0, k1, i0, i1
 
 from inversion.shtefest_algorithm import ShtefestAlgorithm
 from model.reservoir_model import ReservoirModel
+# from scipy.special import kn, in_  
+# from scipy.special import kve, ive
 
 
 class FiniteDualPermeabilityReservoirModel(ReservoirModel):
@@ -188,6 +190,7 @@ class FiniteDualPermeabilityReservoirModel(ReservoirModel):
         sigma1 = np.sqrt(sigma1_sq)
 
         return (1 - a1_val) * k0(sigma1) / self.b(s)
+
 
     def P_wD_laplace_rD(self, u, r_D, r_D_e, omega, lam, kappa):
         """
