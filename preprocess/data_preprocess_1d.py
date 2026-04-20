@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 from typing_extensions import override
 
+from preprocess.multilabel_cls import MultilabelEncoder
 from preprocess.abstract_preprcessor import AbstractPressureDataClassificationPreprocessor, \
     AbstractPressureDataPreprocessor, Model
 
@@ -53,13 +54,6 @@ class PressureDataRegressionPreprocessor1D(AbstractPressureDataPreprocessor):
         super().__init__(data_dir, test_size, val_size, random_state, debug)
 
         self.model_type = model_type
-
-        self.model_params = {
-            Model.HOMOGENEOUS_INF.value: ['k', 'C_D', 'S'],
-            Model.DUAL_POROSITY_INF.value: ['k', 'C_D', 'S', 'omega', 'lambda'],
-            Model.DUAL_PERMEABILITY_INF.value : ['k', 'C_D', 'S', 'omega', 'lambda', 'kappa'],
-            Model.RADIAL_COMPOSITE_INF.value : ['k', 'C_D', 'S', 'M', 'R_f'],
-        }
 
     @override
     def load_data(self):
@@ -134,6 +128,87 @@ class PressureDataRegressionPreprocessor1D(AbstractPressureDataPreprocessor):
         return None
 
 
+class PressureDataMultilabelClassificationPreprocessor1D(AbstractPressureDataClassificationPreprocessor):
+    """Подготовка данных для multilabel классификации типа пласта из файлов кривых"""
+
+    def __init__(self, data_dir, test_size=0.2, val_size=0.1, random_state=42, debug=False):
+        super().__init__(data_dir, test_size, val_size, random_state, debug)
+        self.encoder = MultilabelEncoder()
+
+    @override
+    def load_data(self):
+        """
+        Загрузка датасета
+        :return: np.array(X), np.array(y)
+        """
+        X_list = []
+        y_list = []
+
+        curve_data_dir = self.data_dir + "/curve"
+
+        for item in os.listdir(curve_data_dir):
+            file_path = os.path.join(curve_data_dir, item)
+
+            df = pd.read_csv(file_path)[['t_D', 'dP_wD']]
+
+            t_D = np.array(df['t_D'])
+            dP_wD = np.array(df['dP_wD'])
+
+            model, boundary, num, type = self._get_labels_from_filename(item)
+            num = int(num)
+
+            k = self.get_k(model, num)[0]
+
+            dP_wD = dP_wD / k
+            t_D = t_D / k
+
+            sample = np.column_stack([dP_wD, t_D])
+            X_list.append(sample)
+
+            target = self.encoder.encode(model, boundary, type)
+            y_list.append(target)
+
+        X = np.array(X_list)
+        y = np.array(y_list)
+
+        return X, y
+
+    def _get_labels_from_filename(self, item):
+        """
+        Получение target из названия файла.
+        Пример входного файла: homogeneous_inf_12_inc1
+        """
+        basename = os.path.basename(item)
+        name_without_ext = os.path.splitext(basename)[0]
+        parts = name_without_ext.split('_')
+
+        if len(parts) > 4:
+            return parts[0] + '_' + parts[1], parts[2], parts[3], parts[4]
+        else:
+            return parts[0], parts[1], parts[2], parts[3]
+
+    def get_k(self, model_type, num):
+        """
+        Получение параметра k.
+        """
+        file_name = f'{self.data_dir}/params/{num}.csv'
+        param_df = pd.read_csv(file_name)
+
+        if model_type == 'homogeneous':
+            return param_df['k']
+
+        if model_type == 'dual_porosity':
+            return param_df['k_f']
+
+        if model_type == 'dual_permeability':
+            return param_df['k2']
+
+        if model_type == 'radial_composite':
+            return param_df['k1']
+
+        return None
+
+
 if __name__ == "__main__":
     # data_preprocess = PressureDataClassificationPreprocessor1D(data_dir='../datasets/dataset/curve', debug=True)
     # X_train, X_val, X_test, y_train, y_val, y_test = data_preprocess.get_dataset()
@@ -155,10 +230,14 @@ if __name__ == "__main__":
     # data_preprocess = PressureDataRegressionPreprocessor1D(data_dir='../datasets/dataset',
     #                                                        model_type=Model.DUAL_PERMEABILITY_FIN)
 
-    data_preprocess = PressureDataRegressionPreprocessor1D(data_dir='../datasets/dataset',
-                                                           model_type=Model.HOMOGENEOUS_INF,
-                                                           debug=True)
+    # data_preprocess = PressureDataRegressionPreprocessor1D(data_dir='../datasets/dataset',
+    #                                                        model_type=Model.HOMOGENEOUS_INF,
+    #                                                        debug=True)
 
-    X_train, X_val, X_test, y_train, y_val, y_test = data_preprocess.get_dataset(task='regression')
+    data_preprocess = PressureDataMultilabelClassificationPreprocessor1D(data_dir='/home/ilnaz/PycharmProjects/datasets/models_incs_prc')
+
+    X_train, X_val, X_test, y_train, y_val, y_test = data_preprocess.get_dataset(task='classification')
 
     print('y_shape', y_train[0].shape)
+    encoder = MultilabelEncoder()
+    print(encoder.decode(y_train[19000]))

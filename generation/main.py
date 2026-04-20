@@ -36,15 +36,17 @@ def single_generation():
 def noize_relation_generation():
     T_MAX_DAYS: Final = 30
     POINTS_COUNT: Final = 128
-    SIZE: Final = 5000
+    SIZE: Final = 4000
     BASE_OUTPUT_PATH: Final = '../datasets/dataset'
 
     params = [
-        GenerationParams(T_MAX_DAYS, POINTS_COUNT, SIZE, 5e-7, BASE_OUTPUT_PATH + '07'),
-        GenerationParams(T_MAX_DAYS, POINTS_COUNT, SIZE, 5e-6, BASE_OUTPUT_PATH + '06'),
-        GenerationParams(T_MAX_DAYS, POINTS_COUNT, SIZE, 5e-5, BASE_OUTPUT_PATH + '05'),
-        GenerationParams(T_MAX_DAYS, POINTS_COUNT, SIZE, 5e-4, BASE_OUTPUT_PATH + '04'),
-        GenerationParams(T_MAX_DAYS, POINTS_COUNT, SIZE, 5e-3, BASE_OUTPUT_PATH + '03')
+        # GenerationParams(T_MAX_DAYS, POINTS_COUNT, SIZE, 5e-7, BASE_OUTPUT_PATH + '07'),
+        # GenerationParams(T_MAX_DAYS, POINTS_COUNT, SIZE, 5e-6, BASE_OUTPUT_PATH + '06'),
+        # GenerationParams(T_MAX_DAYS, POINTS_COUNT, SIZE, 5e-5, BASE_OUTPUT_PATH + '05'),
+        # GenerationParams(T_MAX_DAYS, POINTS_COUNT, SIZE, 5e-4, BASE_OUTPUT_PATH + '04'),
+        # GenerationParams(T_MAX_DAYS, POINTS_COUNT, SIZE, 5e-3, BASE_OUTPUT_PATH + '03'),
+        # GenerationParams(T_MAX_DAYS, POINTS_COUNT, SIZE, 5e-2, BASE_OUTPUT_PATH + '02'),
+        GenerationParams(T_MAX_DAYS, POINTS_COUNT, SIZE, 5e-1, BASE_OUTPUT_PATH + '01')
     ]
 
     for param in params:
@@ -68,8 +70,8 @@ def noize_relation_generation():
 
 
 def main():
-    single_generation()
-    # noize_relation_generation()
+    # single_generation()
+    noize_relation_generation()
 
 if __name__ == "__main__":
     main()

@@ -19,7 +19,7 @@ class GenerationParams:
         self.output_path = output_path
 
     def __str__(self):
-        return (f'Generation params: days: {self.t_max_days}, size: {self.points_count}, points_count: {self.points_count}, '
+        return (f'Generation params: days: {self.t_max_days}, size: {self.size}, points_count: {self.points_count}, '
                 f'sigma: {self.sigma}, output_path: {self.output_path}')
 
 

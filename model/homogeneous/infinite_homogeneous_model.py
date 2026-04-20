@@ -48,7 +48,7 @@ class InfiniteHomogeneousReservoirModel(ReservoirModel):
 if __name__ == "__main__":
     model = InfiniteHomogeneousReservoirModel(C_D=100, S=1)
 
-    t_D_array = np.logspace(0, 7, 128)
+    t_D_array = np.logspace(0, 3, 128)
     alg = ShtefestAlgorithm(N=12)
 
     model.pressure(t_D_array, alg) \

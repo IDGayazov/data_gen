@@ -1,5 +1,6 @@
 /datasets/dataset/
 /.venv/
+/venv/
 .idea
 /training_checkpoints/
 /best_welltest_model.h5

@@ -2,6 +2,10 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
+import pandas as pd
+import numpy as np
+from scipy import interpolate
+
 from abc import ABC, abstractmethod
 
 from derivate.bourdais_logarithmic_derivative import BourdaisLogarithmicDerivative
@@ -235,7 +239,7 @@ class ReservoirModel(ABC):
         Визуализация, зависимости давления от времени в loglog графике.
         """
         plt.figure(figsize=(10, 6))
-        plt.loglog(self.df['t_D'], self.df['P_wD'], 'g' + point_type, label='Теоретическое давление')
+        plt.loglog(self.df['t_D'], self.df['P_wD_gauss'], 'g' + point_type, label='Теоретическое давление')
         plt.loglog(self.df['t_D'], self.df['dP_wD'], 'b' + point_type, linewidth=2, label='dP_wD/dln_t_D')
 
         if 'P_wD_gauss' in self.df.columns:
@@ -283,3 +287,88 @@ class ReservoirModel(ABC):
         """
         self.df = pd.read_csv(filename)
         return self
+
+    def load_and_preprocess(self, filename: str, n_points: int = 128, 
+                            t_min: float = None, t_max: float = None):
+        """
+        Загрузка и предобработка кривой ГДИС
+        
+        Parameters:
+        -----------
+        filename : str
+            Путь к файлу с колонками t_D, dP_wD
+        n_points : int
+            Количество точек после интерполяции (по умолчанию 128)
+        t_min, t_max : float, optional
+            Границы для обрезания кривой (в логарифмическом масштабе)
+            Если None - берем по данным
+        """
+        # Загрузка данных
+        self.df = pd.read_csv(filename)
+        
+        # Убедимся, что данные отсортированы по времени
+        self.df = self.df.sort_values('t_D').reset_index(drop=True)
+        
+        # Логарифмическое обрезание кривой
+        self.df = self._crop_curve(t_min, t_max)
+        
+        # Логарифмическая интерполяция на n_points точек
+        self.df_interpolated = self._log_interpolate(n_points)
+        
+        return self
+
+    def _crop_curve(self, t_min: float = None, t_max: float = None):
+        """
+        Обрезание кривой по времени в логарифмическом масштабе
+        """
+        df_cropped = self.df.copy()
+        
+        if t_min is not None:
+            df_cropped = df_cropped[df_cropped['t_D'] >= t_min]
+        
+        if t_max is not None:
+            df_cropped = df_cropped[df_cropped['t_D'] <= t_max]
+        
+        # Логируем информацию об обрезании
+        print(f"Кривая обрезана: {len(self.df)} -> {len(df_cropped)} точек")
+        print(f"Диапазон t_D: [{df_cropped['t_D'].min():.2e}, {df_cropped['t_D'].max():.2e}]")
+        
+        return df_cropped.reset_index(drop=True)
+
+    def _log_interpolate(self, n_points: int = 128):
+        """
+        Логарифмическая интерполяция на равномерную сетку в log пространстве
+        """
+        # Защита от дубликатов
+        df_clean = self.df.drop_duplicates(subset=['t_D']).copy()
+        
+        # Создаем равномерную сетку в логарифмическом пространстве
+        log_t_min = np.log10(df_clean['t_D'].min())
+        log_t_max = np.log10(df_clean['t_D'].max())
+        
+        # Генерируем точки на равномерной логарифмической сетке
+        log_t_interp = np.linspace(log_t_min, log_t_max, n_points)
+        t_interp = 10 ** log_t_interp
+        
+        # Интерполяция производной давления
+        # Используем кубический сплайн для гладкости
+        f_interp = interpolate.interp1d(
+            df_clean['t_D'], 
+            df_clean['dP_wD'],
+            kind='cubic',      # Кубическая интерполяция
+            bounds_error=False,
+            fill_value='extrapolate'  # Экстраполяция на краях (если нужно)
+        )
+        
+        dP_interp = f_interp(t_interp)
+        
+        # Создаем DataFrame с интерполированными данными
+        df_result = pd.DataFrame({
+            't_D': t_interp,
+            'dP_wD': dP_interp,
+            'log_t_D': log_t_interp  # Сохраняем логарифм для удобства
+        })
+        
+        print(f"Интерполяция завершена: {n_points} точек в логарифмическом масштабе")
+        
+        return df_result
