@@ -82,21 +82,12 @@ class MultilabelEncoder:
         }
 
 if __name__ == "__main__":
-    # Пример использования
     encoder = MultilabelEncoder()
 
-    # Кодирование одной кривой
     y = encoder.encode('homogeneous', 'inf', 'full')
     print(f"Вектор меток: {y}")
     print(f"Длина вектора: {len(y)}")
     print(f"Сумма (кол-во активных меток): {y.sum()}")
 
-    # Результат:
-    # Вектор меток: [1 0 0 0 1 0 1 0]
-    # Длина вектора: 8
-    # Сумма: 3
-
-    # Декодирование обратно
     decoded = encoder.decode(y)
     print(f"Декодировано: {decoded}")
-    # Результат: {'reservoir': 'homogeneous', 'boundary': 'infinite', 'suffix': 'inc1'}

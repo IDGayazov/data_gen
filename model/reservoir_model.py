@@ -181,34 +181,29 @@ class ReservoirModel(ABC):
         
         return self
 
-    def gauss_noize(self, mu=0, sigma=0.1):
+    def gauss_noize(self, mu=0, sigma=0.1, relative=False, snr_db=None):
         """
-        Добавление гауссова шума с фиксированной дисперсией
-        sigma^2 = 0.01 (стандартное отклонение = 0.1)
+        Добавление гауссова шума к кривой ГДИС
+        
+        Parameters:
+        -----------
+        mu : float
+            Среднее значение шума (обычно 0)
+        sigma : float
+            Стандартное отклонение шума (если relative=False)
+        relative : bool
+            Если True, sigma интерпретируется как относительная ошибка (в долях)
+            Например, sigma=0.05 означает 5% шум
         """
-        noise = np.random.normal(mu, sigma, len(self.df))
+        if relative:
+            noise = np.random.normal(mu, sigma, len(self.df)) * np.abs(self.df['P_wD'].values)
+        else:
+            noise = np.random.normal(mu, sigma, len(self.df))
+        
         self.df['P_wD_gauss'] = self.df['P_wD'] + noise
+
+        self.df['P_wD_gauss'] = self.df['P_wD_gauss'].clip(lower=0)
         return self
-
-    # def gauss_noize(self, mu=0, sigma=5e-5):
-    #     """
-    #     Функция, добавляющая гауссов шум к данным.
-    #     Данные с шумами добавляются в отдельный столбец P_wD_gauss в датафрейме.
-
-    #     Получает:
-    #         mu: матожидание.
-    #         sigma: стандартное отклонение.
-
-    #     Возвращает:
-    #         self
-    #     """
-        
-    #     signal_amplitude = self.df['P_wD'].max() - self.df['P_wD'].min()
-        
-    #     noise = np.random.normal(mu, sigma * signal_amplitude, len(self.df))
-    #     self.df['P_wD_gauss'] = self.df['P_wD'] + noise
-        
-    #     return self
 
     def derivative(self, smoothig_alg='regression', delta=1):
         """

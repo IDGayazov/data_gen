@@ -2,6 +2,7 @@
 /.venv/
 /venv/
 .idea
+**/__pycache__/
 /training_checkpoints/
 /best_welltest_model.h5
 /evaluation_metrics.json

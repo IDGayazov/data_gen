@@ -46,12 +46,12 @@ class InfiniteHomogeneousReservoirModel(ReservoirModel):
 
 
 if __name__ == "__main__":
-    model = InfiniteHomogeneousReservoirModel(C_D=100, S=1)
+    model = InfiniteHomogeneousReservoirModel(C_D=100, S=2)
 
-    t_D_array = np.logspace(0, 3, 128)
+    t_D_array = np.logspace(0, 7, 128)
     alg = ShtefestAlgorithm(N=12)
 
     model.pressure(t_D_array, alg) \
-        .gauss_noize(mu=0, sigma=5e-4) \
-        .derivative(smoothig_alg='regression', delta=0.3) \
+        .gauss_noize(mu=0, sigma=1e-3, relative=True) \
+        .derivative(smoothig_alg='regression', delta=0.175) \
         .visualize('Кривые давления (однородный пласт)')

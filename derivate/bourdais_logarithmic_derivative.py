@@ -35,14 +35,16 @@ class BourdaisLogarithmicDerivative:
                 return np.nan
             
             ln_t = np.log(t)
-            t_local_points = self.f[self.f[x_col_name].between(ln_t - delta, ln_t + delta)]
-            
+
+            ln_delta = delta * np.log(10) 
+
+            t_local_points = self.f[self.f[x_col_name].between(ln_t - ln_delta, ln_t + ln_delta)]
+
             if len(t_local_points) < 2:
-                t_local_points = self.f[self.f[x_col_name].between(ln_t - 2*delta, ln_t + 2*delta)]
-                if len(t_local_points) < 2:
-                    t_local_points = self.f
-                    if len(t_local_points) < 2:
-                        return np.nan
+                t_local_points = self.f[self.f[x_col_name].between(ln_t - 2*ln_delta, ln_t + 2*ln_delta)]
+
+            if len(t_local_points) < 2:
+                return np.nan
             
             x_data = t_local_points[x_col_name].to_numpy(dtype=float)
             y_data = t_local_points[y_col_name].to_numpy(dtype=float)
