@@ -386,7 +386,7 @@ def main():
     # Конфигурация
     CONFIG = {
         'input_dir': '/home/ilnaz/PycharmProjects/datasets/models/curve',           # Папка с исходными кривыми
-        'output_dir': '/home/ilnaz/PycharmProjects/datasets/models_incs_prc/curve/',    # Папка для обработанных кривых
+        'output_dir': '/home/ilnaz/PycharmProjects/datasets/models_incs/curve/',    # Папка для обработанных кривых
         'n_points': 128,                     # Количество точек после интерполяции
         'normalize': True,                   # Нормализация данных
         'overwrite': True,                   # Перезаписывать существующие файлы

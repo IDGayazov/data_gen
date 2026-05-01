@@ -9,7 +9,7 @@ from model.reservoir_model import ReservoirModel
 
 from inversion.shtefest_algorithm import ShtefestAlgorithm
 
-matplotlib.use('TkAgg')
+# matplotlib.use('TkAgg')
 
 class InfiniteDualPorosityReservoirModel(ReservoirModel):
     """

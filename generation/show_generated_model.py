@@ -16,12 +16,20 @@ if __name__ == '__main__':
         num = sys.argv[1]
         # file_name = f'/home/ilnaz/PycharmProjects/datasets/homogeneous_inf/curve/homogeneous_inf_{num}.csv'
         # file_name = f'/home/ilnaz/PycharmProjects/datasets/homogeneous_inf_04/curve/homogeneous_fin_{num}.csv'
-        file_name = f'/home/ilnaz/PycharmProjects/datasets/dual_porosity_inf/curve/dual_porosity_inf_{num}.csv'
+        # file_name = f'/home/ilnaz/PycharmProjects/datasets/dual_porosity_inf/curve/dual_porosity_inf_{num}.csv'
+        # file_name = f'/home/ilnaz/PycharmProjects/datasets/dataset/dataset04/curve/homogeneous_inf_{num}.csv'
+        # file_name = f'/home/ilnaz/PycharmProjects/datasets/homogeneous_inf/curve/homogeneous_inf_{num}.csv'
+        # file_name = f'/home/ilnaz/PycharmProjects/datasets/homogeneous_fin/curve/homogeneous_fin_{num}.csv'
+        # file_name = f'/home/ilnaz/PycharmProjects/datasets/dual_porosity_inf/curve/dual_porosity_inf_{num}.csv'
+        # file_name = f'/home/ilnaz/PycharmProjects/datasets/dual_porosity_fin/curve/dual_porosity_fin_{num}.csv'
+        # file_name = f'/home/ilnaz/PycharmProjects/datasets/dual_permeability_inf/curve/dual_permeability_inf_{num}.csv'
+        # file_name = f'/home/ilnaz/PycharmProjects/datasets/dual_permeability_fin/curve/dual_permeability_fin_{num}.csv'
+        file_name = f'/home/ilnaz/PycharmProjects/datasets/radial_composite_inf/curve/radial_composite_inf_{num}.csv'
     else:
         # file_name = '/home/ilnaz/PycharmProjects/datasets/homogeneous_inf_04/curve/homogeneous_fin_1.csv'
         file_name = '/home/ilnaz/PycharmProjects/datasets/homogeneous_inf_incs_prc/curve/homogeneous_inf_4_inc1.csv'
 
-    file_name = '/home/ilnaz/PycharmProjects/datasets/homogeneous_inf_incs_prc/curve/homogeneous_inf_10_inc1.csv'
+    # file_name = '/home/ilnaz/PycharmProjects/datasets/homogeneous_inf/curve/homogeneous_inf_1.csv'
 
     # file_name = '/home/ilnaz/PycharmProjects/datasets/homogeneous_inf/curve/homogeneous_inf_45.csv'
     # file_name = '../datasets/homogeneous/curve/homogeneous_fin_20001.csv'

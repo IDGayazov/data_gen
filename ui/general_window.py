@@ -1,4 +1,6 @@
 import os
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import sys
 
 from PyQt5.QtWidgets import QApplication
@@ -20,15 +22,8 @@ from PyQt5 import uic
 from PyQt5.QtWidgets import QMainWindow, QMessageBox, QVBoxLayout, QWidget
 from PyQt5.QtCore import Qt
 
-class CommonReservoirModel(ReservoirModel):
-    """
-    Общая для всех реализация модели пласта
-
-    Можно загрузить датасет из файла
-    """
-    def F(self, s):
-        print('Not supported method!')
-
+from generation.show_generated_model import CommonReservoirModel
+from ui.prediction import GenerationWindow 
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -46,7 +41,28 @@ class MainWindow(QMainWindow):
         
         # Настраиваем график
         self.setup_loglog_plot()
-    
+        self.predict.clicked.connect(self.open_generation_window)
+
+        # Ссылка на окно предсказания
+        self.prediction_window = None
+        self.df = None
+        self.k = 1
+
+    def open_generation_window(self):
+        """Открывает окно prediction.ui"""
+        try:
+            # Создаем окно, если его еще нет или оно закрыто
+            if self.prediction_window is None or not self.prediction_window.isVisible():
+                self.prediction_window = GenerationWindow(self)
+                self.prediction_window.set_dataset(self.df, self.k)
+                self.prediction_window.show()
+            else:
+                # Если окно уже открыто, просто активируем его
+                self.prediction_window.raise_()
+                self.prediction_window.activateWindow()
+        except Exception as e:
+            QMessageBox.critical(self, "Ошибка", f"Не удалось открыть окно предсказания: {str(e)}")
+
     def setup_loglog_plot(self):
         """Настройка логарифмического графика"""
         # Создаем контейнер
@@ -78,14 +94,18 @@ class MainWindow(QMainWindow):
     def generate_graph(self):
         """Генерация графика"""
 
-        file_name = self.get_single_file('/home/ilnaz/PycharmProjects/datasets/ui/curve')
-
         try:
             # Определяем выбранную модель
             if self.homogen_inf.isChecked():
                 model_name = "Homogeneous infinite"
 
                 self._make_homogeneous_inf_model()
+
+                file_name = self.get_single_file('/home/ilnaz/PycharmProjects/datasets/ui/curve')
+                file_name_params = self.get_single_file('/home/ilnaz/PycharmProjects/datasets/ui/params')
+
+                params_df = read_csv(file_name_params)
+                self.k = params_df['k']
 
                 model = CommonReservoirModel()
                 df = model.load_model(file_name) \
@@ -94,78 +114,118 @@ class MainWindow(QMainWindow):
                 t = df['t_D']
                 y = df['P_wD_gauss']
                 dy = df['dP_wD']
+
+                self.df = df
+
                 color = 'b'
             elif self.homogen_fin.isChecked():
                 model_name = "Homogeneous finite"
 
                 self._make_homogeneous_fin_model()
+
+                file_name = self.get_single_file('/home/ilnaz/PycharmProjects/datasets/ui/curve')
+
                 model = CommonReservoirModel()
-                df = model.load_model('/home/ilnaz/PycharmProjects/datasets/ui/curve/homogeneous_fin_1.csv') \
+                df = model.load_model(file_name) \
                           .get_pressure()
                 
                 t = df['t_D']
                 y = df['P_wD_gauss']
                 dy = df['dP_wD']
+
+                self.df = df
+
                 color = 'g'
             elif self.dual_por_inf.isChecked():
                 model_name = "Dual porosity infinite"
 
                 self._make_dual_porosity_inf_model()
+
+                file_name = self.get_single_file('/home/ilnaz/PycharmProjects/datasets/ui/curve')
+
                 model = CommonReservoirModel()
-                df = model.load_model('/home/ilnaz/PycharmProjects/datasets/ui/curve/dual_porosity_inf_1.csv') \
+                df = model.load_model(file_name) \
                           .get_pressure()
                 
                 t = df['t_D']
                 y = df['P_wD_gauss']
                 dy = df['dP_wD']
+
+                self.df = df
+
                 color = 'r'
             elif self.dual_por_fin.isChecked():
                 model_name = "Dual porosity finite"
 
                 self._make_dual_porosity_fin_model()
+                
+                file_name = self.get_single_file('/home/ilnaz/PycharmProjects/datasets/ui/curve')
+
                 model = CommonReservoirModel()
-                df = model.load_model('/home/ilnaz/PycharmProjects/datasets/ui/curve/dual_porosity_fin_1.csv') \
+                df = model.load_model(file_name) \
                           .get_pressure()
+
                 
                 t = df['t_D']
                 y = df['P_wD_gauss']
                 dy = df['dP_wD']
+
+                self.df = df
+
                 color = 'c'
             elif self.dual_perm_inf.isChecked():
                 model_name = "Dual permeability infinite"
 
                 self._make_dual_permeability_inf_model()
+
+                file_name = self.get_single_file('/home/ilnaz/PycharmProjects/datasets/ui/curve')
+
                 model = CommonReservoirModel()
-                df = model.load_model('/home/ilnaz/PycharmProjects/datasets/ui/curve/dual_permeability_inf_1.csv') \
+                df = model.load_model(file_name) \
                           .get_pressure()
                 
                 t = df['t_D']
                 y = df['P_wD_gauss']
                 dy = df['dP_wD']
+
+                self.df = df
+
                 color = 'm'
             elif self.dual_perm_fin.isChecked():
                 model_name = "Dual permeability finite"
 
                 self._make_dual_permeability_fin_model()
+
+                file_name = self.get_single_file('/home/ilnaz/PycharmProjects/datasets/ui/curve')
+
                 model = CommonReservoirModel()
-                df = model.load_model('/home/ilnaz/PycharmProjects/datasets/ui/curve/dual_permeability_fin_1.csv') \
+                df = model.load_model(file_name) \
                           .get_pressure()
                 
                 t = df['t_D']
                 y = df['P_wD_gauss']
                 dy = df['dP_wD']
+
+                self.df = df
+
                 color = 'y'
             elif self.rad_comp_inf.isChecked():
                 model_name = "Radial composite infinite"
 
                 self._make_radial_composite_inf_model()
+
+                file_name = self.get_single_file('/home/ilnaz/PycharmProjects/datasets/ui/curve')
+
                 model = CommonReservoirModel()
-                df = model.load_model('/home/ilnaz/PycharmProjects/datasets/ui/curve/radial_composite_inf_1.csv') \
+                df = model.load_model(file_name) \
                           .get_pressure()
                 
                 t = df['t_D']
                 y = df['P_wD_gauss']
                 dy = df['dP_wD']
+
+                self.df = df
+
                 color = '#FF6B6B'
             else:
                 QMessageBox.warning(self, "Предупреждение", "Пожалуйста, выберите тип модели!")

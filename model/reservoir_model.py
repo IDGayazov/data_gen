@@ -229,7 +229,7 @@ class ReservoirModel(ABC):
         return self
 
 
-    def visualize(self, title, horizontal_line=True, point_type='x'):
+    def visualize(self, title, horizontal_line=False, point_type='x'):
         """
         Визуализация, зависимости давления от времени в loglog графике.
         """

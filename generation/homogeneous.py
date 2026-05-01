@@ -106,7 +106,7 @@ class InfiniteHomogeneousGenerator(DataGenerator):
 
             curve = model.pressure(t_D_array, alg) \
                 .gauss_noize(mu=0, sigma=self.sigma) \
-                .derivative(smoothig_alg='regression', delta=0.3) \
+                .derivative(smoothig_alg='regression', delta=0.175) \
                 .get_pressure()
 
             self.save(curve, param)
@@ -151,7 +151,7 @@ class FiniteHomogeneousGenerator(DataGenerator):
 
             curve = model.pressure(t_D_array, alg) \
                 .gauss_noize(mu=0, sigma=self.sigma) \
-                .derivative(smoothig_alg='regression', delta=0.3) \
+                .derivative(smoothig_alg='regression', delta=0.175) \
                 .get_pressure()
 
             self.save(curve, param)
