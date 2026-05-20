@@ -1,6 +1,7 @@
 /datasets/dataset/
 /.venv/
 /venv/
+/venv312/
 .idea
 **/__pycache__/
 /training_checkpoints/

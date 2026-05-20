@@ -2,6 +2,36 @@ import os
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import sys
+from pathlib import Path
+
+# TF must be imported before PyQt5 to avoid DLL conflicts on Windows
+from tensorflow import keras  # noqa: F401
+
+import PyQt5
+from PyQt5.QtCore import QLibraryInfo
+
+import pandas as pd
+
+# On some Windows setups Qt fails to auto-discover plugins in venv paths.
+_qt_plugins_path = QLibraryInfo.location(QLibraryInfo.PluginsPath)
+_qt_plugins_dir = Path(_qt_plugins_path) if _qt_plugins_path else None
+if not (_qt_plugins_dir and _qt_plugins_dir.exists()):
+    # Fallback for environments where QLibraryInfo returns an empty path.
+    _pyqt5_file = getattr(PyQt5, '__file__', None)
+    if _pyqt5_file:
+        _candidate = Path(_pyqt5_file).resolve().parent / 'Qt5' / 'plugins'
+        if _candidate.exists():
+            _qt_plugins_dir = _candidate
+if not (_qt_plugins_dir and _qt_plugins_dir.exists()):
+    _candidate = Path(sys.prefix) / 'Lib' / 'site-packages' / 'PyQt5' / 'Qt5' / 'plugins'
+    if _candidate.exists():
+        _qt_plugins_dir = _candidate
+
+if _qt_plugins_dir and _qt_plugins_dir.exists():
+    _qt_platforms_dir = _qt_plugins_dir / 'platforms'
+    os.environ.setdefault('QT_PLUGIN_PATH', str(_qt_plugins_dir))
+    if _qt_platforms_dir.exists():
+        os.environ.setdefault('QT_QPA_PLATFORM_PLUGIN_PATH', str(_qt_platforms_dir))
 
 from PyQt5.QtWidgets import QApplication
 
@@ -31,7 +61,7 @@ class MainWindow(QMainWindow):
         
         # Получаем путь к .ui файлу
         import os
-        ui_path = os.path.join(os.path.dirname(__file__), '/home/ilnaz/PycharmProjects/data-gen/ui/main.ui')
+        ui_path = os.path.join(os.path.dirname(__file__), 'main.ui')
         
         # Загрузка UI
         uic.loadUi(ui_path, self)
@@ -101,10 +131,10 @@ class MainWindow(QMainWindow):
 
                 self._make_homogeneous_inf_model()
 
-                file_name = self.get_single_file('/home/ilnaz/PycharmProjects/datasets/ui/curve')
-                file_name_params = self.get_single_file('/home/ilnaz/PycharmProjects/datasets/ui/params')
+                file_name = self.get_single_file(str(Path(__file__).resolve().parent.parent.parent / 'datasets' / 'ui' / 'curve'))
+                file_name_params = self.get_single_file(str(Path(__file__).resolve().parent.parent.parent / 'datasets' / 'ui' / 'params'))
 
-                params_df = read_csv(file_name_params)
+                params_df = pd.read_csv(file_name_params)
                 self.k = params_df['k']
 
                 model = CommonReservoirModel()
@@ -123,7 +153,7 @@ class MainWindow(QMainWindow):
 
                 self._make_homogeneous_fin_model()
 
-                file_name = self.get_single_file('/home/ilnaz/PycharmProjects/datasets/ui/curve')
+                file_name = self.get_single_file(str(Path(__file__).resolve().parent.parent.parent / 'datasets' / 'ui' / 'curve'))
 
                 model = CommonReservoirModel()
                 df = model.load_model(file_name) \
@@ -141,7 +171,7 @@ class MainWindow(QMainWindow):
 
                 self._make_dual_porosity_inf_model()
 
-                file_name = self.get_single_file('/home/ilnaz/PycharmProjects/datasets/ui/curve')
+                file_name = self.get_single_file(str(Path(__file__).resolve().parent.parent.parent / 'datasets' / 'ui' / 'curve'))
 
                 model = CommonReservoirModel()
                 df = model.load_model(file_name) \
@@ -159,7 +189,7 @@ class MainWindow(QMainWindow):
 
                 self._make_dual_porosity_fin_model()
                 
-                file_name = self.get_single_file('/home/ilnaz/PycharmProjects/datasets/ui/curve')
+                file_name = self.get_single_file(str(Path(__file__).resolve().parent.parent.parent / 'datasets' / 'ui' / 'curve'))
 
                 model = CommonReservoirModel()
                 df = model.load_model(file_name) \
@@ -178,7 +208,7 @@ class MainWindow(QMainWindow):
 
                 self._make_dual_permeability_inf_model()
 
-                file_name = self.get_single_file('/home/ilnaz/PycharmProjects/datasets/ui/curve')
+                file_name = self.get_single_file(str(Path(__file__).resolve().parent.parent.parent / 'datasets' / 'ui' / 'curve'))
 
                 model = CommonReservoirModel()
                 df = model.load_model(file_name) \
@@ -196,7 +226,7 @@ class MainWindow(QMainWindow):
 
                 self._make_dual_permeability_fin_model()
 
-                file_name = self.get_single_file('/home/ilnaz/PycharmProjects/datasets/ui/curve')
+                file_name = self.get_single_file(str(Path(__file__).resolve().parent.parent.parent / 'datasets' / 'ui' / 'curve'))
 
                 model = CommonReservoirModel()
                 df = model.load_model(file_name) \
@@ -214,7 +244,7 @@ class MainWindow(QMainWindow):
 
                 self._make_radial_composite_inf_model()
 
-                file_name = self.get_single_file('/home/ilnaz/PycharmProjects/datasets/ui/curve')
+                file_name = self.get_single_file(str(Path(__file__).resolve().parent.parent.parent / 'datasets' / 'ui' / 'curve'))
 
                 model = CommonReservoirModel()
                 df = model.load_model(file_name) \
@@ -266,8 +296,11 @@ class MainWindow(QMainWindow):
 
     def get_single_file(self, folder_path):
         """Возвращает путь к единственному файлу в папке"""
-        files = os.listdir(folder_path)
-        
+        folder = Path(folder_path)
+        if not folder.exists():
+            raise ValueError(f"Папка не найдена: {folder_path}")
+        files = [f for f in os.listdir(folder_path) if not f.startswith('.')]
+
         if len(files) == 0:
             raise ValueError(f"В папке {folder_path} нет файлов")
         elif len(files) == 1:
@@ -280,7 +313,7 @@ class MainWindow(QMainWindow):
         POINTS_COUNT: Final = 128
         SIZE: Final = 1
         SIGMA: Final = 5e-5
-        OUTPUT_PATH: Final = '../datasets/ui'
+        OUTPUT_PATH: Final = str(Path(__file__).resolve().parent.parent.parent / 'datasets' / 'ui')
 
         clear_folder(OUTPUT_PATH)
 
@@ -294,7 +327,7 @@ class MainWindow(QMainWindow):
         POINTS_COUNT: Final = 128
         SIZE: Final = 1
         SIGMA: Final = 5e-3
-        OUTPUT_PATH: Final = '../datasets/ui'
+        OUTPUT_PATH: Final = str(Path(__file__).resolve().parent.parent.parent / 'datasets' / 'ui')
 
         clear_folder(OUTPUT_PATH)
 
@@ -308,7 +341,7 @@ class MainWindow(QMainWindow):
         POINTS_COUNT: Final = 128
         SIZE: Final = 1
         SIGMA: Final = 5e-3
-        OUTPUT_PATH: Final = '../datasets/ui'
+        OUTPUT_PATH: Final = str(Path(__file__).resolve().parent.parent.parent / 'datasets' / 'ui')
 
         clear_folder(OUTPUT_PATH)
 
@@ -322,7 +355,7 @@ class MainWindow(QMainWindow):
         POINTS_COUNT: Final = 128
         SIZE: Final = 1
         SIGMA: Final = 5e-3
-        OUTPUT_PATH: Final = '../datasets/ui'
+        OUTPUT_PATH: Final = str(Path(__file__).resolve().parent.parent.parent / 'datasets' / 'ui')
 
         clear_folder(OUTPUT_PATH)
 
@@ -336,7 +369,7 @@ class MainWindow(QMainWindow):
         POINTS_COUNT: Final = 128
         SIZE: Final = 1
         SIGMA: Final = 5e-3
-        OUTPUT_PATH: Final = '../datasets/ui'
+        OUTPUT_PATH: Final = str(Path(__file__).resolve().parent.parent.parent / 'datasets' / 'ui')
 
         clear_folder(OUTPUT_PATH)
 
@@ -350,7 +383,7 @@ class MainWindow(QMainWindow):
         POINTS_COUNT: Final = 128
         SIZE: Final = 1
         SIGMA: Final = 5e-3
-        OUTPUT_PATH: Final = '../datasets/ui'
+        OUTPUT_PATH: Final = str(Path(__file__).resolve().parent.parent.parent / 'datasets' / 'ui')
 
         clear_folder(OUTPUT_PATH)
 
@@ -364,7 +397,7 @@ class MainWindow(QMainWindow):
         POINTS_COUNT: Final = 128
         SIZE: Final = 1
         SIGMA: Final = 5e-3
-        OUTPUT_PATH: Final = '../datasets/ui'
+        OUTPUT_PATH: Final = str(Path(__file__).resolve().parent.parent.parent / 'datasets' / 'ui')
 
         clear_folder(OUTPUT_PATH)
 

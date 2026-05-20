@@ -1,7 +1,10 @@
 import numpy as np
 import pandas as pd
 
+from pathlib import Path
 from tensorflow import keras
+
+_MODELS_DIR = Path(__file__).resolve().parent / 'models'
 
 def normalize(X):
     """
@@ -37,7 +40,7 @@ def load_cls_model(cls_model: str, ):
 	print('Загрузка модели')
 
 	if cls_model == '1d_cnn':
-		model = keras.models.load_model('/home/ilnaz/PycharmProjects/data-gen/ui/models/1d_cnn_model_classification_multiclass.keras')
+		model = keras.models.load_model(str(_MODELS_DIR / '1d_cnn_model_classification_multiclass.keras'))
 
 	print("Модель классификации успешно загружена!")
 
