@@ -1,0 +1,24 @@
+{
+  "task_type": "multilabel",
+  "class_names": [
+    "homogeneous",
+    "dual_porosity",
+    "dual_permeability",
+    "radial_composite",
+    "inf",
+    "fin",
+    "inc1",
+    "inc2",
+    "full"
+  ],
+  "output_names": [],
+  "num_outputs": null,
+  "input_shape": [
+    128,
+    2
+  ],
+  "device_used": "CPU",
+  "model_format": "all",
+  "save_time": "2026-05-18 14:53:13",
+  "multilabel_threshold": 0.5
+}

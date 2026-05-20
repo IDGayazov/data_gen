@@ -65,6 +65,25 @@ class AbstractPressureDataPreprocessor(ABC):
 
         return X_norm
 
+
+    def get_dataset_with_custom_split():
+        X, y = self.load_data()
+
+        if self.debug:
+            print('shape X =', X.shape)
+
+        if self.debug:
+            print(f"Train: {X_train.shape} ({(X_train.shape[0] / X.shape[0]) * 100:.1f}%)")
+            print(f"Val: {X_val.shape} ({(X_val.shape[0] / X.shape[0]) * 100:.1f}%)")
+            print(f"Test: {X_test.shape} ({(X_test.shape[0] / X.shape[0]) * 100:.1f}%)")
+
+        self.X_train, self.X_val, self.X_test = X_train, X_val, X_test
+        self.y_train, self.y_val, self.y_test = y_train, y_val, y_test
+        self.X_original, self.y_original = X, y
+
+        return X_train, X_val, X_test, y_train, y_val, y_test
+
+
     def get_dataset(self, task='classification'):
         X, y = self.load_data()
 

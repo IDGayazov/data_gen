@@ -6,150 +6,126 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
+    <width>900</width>
     <height>600</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>Well Test Analysis</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QRadioButton" name="homogen_inf">
-    <property name="geometry">
-     <rect>
-      <x>30</x>
-      <y>70</y>
-      <width>171</width>
-      <height>21</height>
-     </rect>
+   <layout class="QHBoxLayout" name="mainLayout">
+    <property name="spacing">
+     <number>8</number>
     </property>
-    <property name="text">
-     <string>Homogeneous infinite</string>
-    </property>
-   </widget>
-   <widget class="QRadioButton" name="homogen_fin">
-    <property name="geometry">
-     <rect>
-      <x>30</x>
-      <y>100</y>
-      <width>171</width>
-      <height>21</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Homogeneous finite</string>
-    </property>
-   </widget>
-   <widget class="QRadioButton" name="dual_por_inf">
-    <property name="geometry">
-     <rect>
-      <x>30</x>
-      <y>130</y>
-      <width>171</width>
-      <height>21</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Dual porosity infinite</string>
-    </property>
-   </widget>
-   <widget class="QRadioButton" name="dual_por_fin">
-    <property name="geometry">
-     <rect>
-      <x>30</x>
-      <y>160</y>
-      <width>171</width>
-      <height>21</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Dual porosity finite</string>
-    </property>
-   </widget>
-   <widget class="QRadioButton" name="dual_perm_inf">
-    <property name="geometry">
-     <rect>
-      <x>30</x>
-      <y>190</y>
-      <width>171</width>
-      <height>21</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Dual permeability infinite</string>
-    </property>
-   </widget>
-   <widget class="QRadioButton" name="dual_perm_fin">
-    <property name="geometry">
-     <rect>
-      <x>30</x>
-      <y>220</y>
-      <width>171</width>
-      <height>21</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Dual permeability finite</string>
-    </property>
-   </widget>
-   <widget class="QRadioButton" name="rad_comp_inf">
-    <property name="geometry">
-     <rect>
-      <x>30</x>
-      <y>250</y>
-      <width>171</width>
-      <height>21</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Radial composite infinite</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="generate">
-    <property name="geometry">
-     <rect>
-      <x>30</x>
-      <y>280</y>
-      <width>151</width>
-      <height>21</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Сгенерировать</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="predict">
-    <property name="geometry">
-     <rect>
-      <x>30</x>
-      <y>310</y>
-      <width>151</width>
-      <height>21</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Предсказать</string>
-    </property>
-   </widget>
-   <widget class="QGraphicsView" name="graphic">
-    <property name="geometry">
-     <rect>
-      <x>230</x>
-      <y>50</y>
-      <width>541</width>
-      <height>461</height>
-     </rect>
-    </property>
-   </widget>
+    <property name="leftMargin"><number>8</number></property>
+    <property name="topMargin"><number>8</number></property>
+    <property name="rightMargin"><number>8</number></property>
+    <property name="bottomMargin"><number>8</number></property>
+    <!-- Left control panel -->
+    <item>
+     <widget class="QWidget" name="leftPanel">
+      <property name="maximumWidth">
+       <number>210</number>
+      </property>
+      <property name="minimumWidth">
+       <number>170</number>
+      </property>
+      <layout class="QVBoxLayout" name="leftLayout">
+       <property name="spacing">
+        <number>6</number>
+       </property>
+       <item>
+        <widget class="QLabel" name="labelModelType">
+         <property name="text">
+          <string>Тип модели пласта</string>
+         </property>
+         <property name="font">
+          <font><bold>true</bold></font>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="homogen_inf">
+         <property name="text"><string>Homogeneous infinite</string></property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="homogen_fin">
+         <property name="text"><string>Homogeneous finite</string></property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="dual_por_inf">
+         <property name="text"><string>Dual porosity infinite</string></property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="dual_por_fin">
+         <property name="text"><string>Dual porosity finite</string></property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="dual_perm_inf">
+         <property name="text"><string>Dual permeability infinite</string></property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="dual_perm_fin">
+         <property name="text"><string>Dual permeability finite</string></property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="rad_comp_inf">
+         <property name="text"><string>Radial composite infinite</string></property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="spacer1">
+         <property name="orientation"><enum>Qt::Vertical</enum></property>
+         <property name="sizeHint" stdset="0">
+          <size><width>20</width><height>10</height></size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QPushButton" name="generate">
+         <property name="text"><string>Сгенерировать</string></property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="predict">
+         <property name="text"><string>Предсказать</string></property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="spacer2">
+         <property name="orientation"><enum>Qt::Vertical</enum></property>
+         <property name="sizeType"><enum>QSizePolicy::Expanding</enum></property>
+         <property name="sizeHint" stdset="0">
+          <size><width>20</width><height>40</height></size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <!-- Graph area — Python injects PlotWidget here -->
+    <item>
+     <widget class="QWidget" name="graphic">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+        <horstretch>1</horstretch>
+        <verstretch>1</verstretch>
+       </sizepolicy>
+      </property>
+     </widget>
+    </item>
+   </layout>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>800</width>
-     <height>20</height>
-    </rect>
+    <rect><x>0</x><y>0</y><width>900</width><height>20</height></rect>
    </property>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>

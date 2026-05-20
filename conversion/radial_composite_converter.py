@@ -20,7 +20,6 @@ class RadialCompositeConverter:
         self.p_i = p_i
         self.r_w = r_w
         self.R_i = R_i
-        self.r_e = r_e if r_e is not None else 1000
 
         # Зона 1 (внутренняя)
         self.k1 = k1

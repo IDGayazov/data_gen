@@ -1,9 +1,6 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-
-import pandas as pd
-import numpy as np
 from scipy import interpolate
 
 from abc import ABC, abstractmethod
@@ -96,9 +93,6 @@ class ReservoirModel(ABC):
 
         p_w_d_array = np.array(p_w_d_results)
 
-        # if np.any(np.isnan(p_w_d_array)):
-        #     p_w_d_array = self._interpolate_nan_values(t_D, p_w_d_array)
-
         table_data = np.column_stack((t_D, p_w_d_array))
         self.df = pd.DataFrame(table_data, columns=['t_D', 'P_wD'])
 
@@ -181,20 +175,23 @@ class ReservoirModel(ABC):
         
         return self
 
-    def gauss_noize(self, mu=0, sigma=0.1, relative=False, snr_db=None):
+    def gauss_noize(self, mu=0, sigma=0.1, relative=False, sigma_mpa=None, converter=None):
         """
-        Добавление гауссова шума к кривой ГДИС
-        
-        Parameters:
-        -----------
-        mu : float
-            Среднее значение шума (обычно 0)
-        sigma : float
-            Стандартное отклонение шума (если relative=False)
-        relative : bool
-            Если True, sigma интерпретируется как относительная ошибка (в долях)
-            Например, sigma=0.05 означает 5% шум
+        Добавление гауссова шума к кривой ГДИС.
+
+        sigma      — стандартное отклонение в безразмерных единицах.
+        relative   — если True, sigma задаётся как доля от P_wD.
+        sigma_mpa  — стандартное отклонение в МПа; требует передачи converter.
+                     Имеет приоритет над sigma.
+        converter  — объект конвертера (HomogeneousConverter и т.п.) с методом
+                     pressure_from_dim_to_dimless и атрибутом p_i.
         """
+        if sigma_mpa is not None:
+            if converter is None:
+                raise ValueError("converter обязателен при задании sigma_mpa")
+            # σ_Pa → σ_D: используем тот же масштабный множитель, что и для давления
+            sigma = converter.pressure_from_dim_to_dimless(converter.p_i - sigma_mpa * 1e6)
+
         if relative:
             noise = np.random.normal(mu, sigma, len(self.df)) * np.abs(self.df['P_wD'].values)
         else:
@@ -234,7 +231,7 @@ class ReservoirModel(ABC):
         Визуализация, зависимости давления от времени в loglog графике.
         """
         plt.figure(figsize=(10, 6))
-        plt.loglog(self.df['t_D'], self.df['P_wD_gauss'], 'g' + point_type, label='Теоретическое давление')
+        plt.loglog(self.df['t_D'], self.df['P_wD'], 'g' + point_type, label='Теоретическое давление')
         plt.loglog(self.df['t_D'], self.df['dP_wD'], 'b' + point_type, linewidth=2, label='dP_wD/dln_t_D')
 
         if 'P_wD_gauss' in self.df.columns:

@@ -1,5 +1,3 @@
-import warnings
-
 import numpy as np
 from scipy.special import k0, k1
 
@@ -32,8 +30,6 @@ class InfiniteHomogeneousReservoirModel(ReservoirModel):
         Возвращает:
             P_wD(u): значение безразмерного давления в пространстве Лапласа
         """
-        warnings.filterwarnings('ignore', category=RuntimeWarning)
-
         sqrt_u = np.sqrt(u)
         numerator = k0(sqrt_u) + S * sqrt_u * k1(sqrt_u)
         denominator = u * (sqrt_u * k1(sqrt_u) + C_D * u * (k0(sqrt_u) + S * sqrt_u * k1(sqrt_u)))

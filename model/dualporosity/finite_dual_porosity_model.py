@@ -1,15 +1,9 @@
-import warnings
-
 import numpy as np
-import pandas as pd
 
-from scipy.special import k0, k1, i0, i1
 from scipy.special import k0, k1, i0, i1, kve, ive
 
-from conversion.homogeneous_converter import HomogeneousConverter
 from inversion.shtefest_algorithm import ShtefestAlgorithm
 from model.reservoir_model import ReservoirModel
-
 
 
 class FiniteDualPorosityReservoirModel(ReservoirModel):
@@ -44,7 +38,6 @@ class FiniteDualPorosityReservoirModel(ReservoirModel):
         # Аргумент теперь включает влияние f_u
         z = np.sqrt(u * f_u)
         z_re = r_D_e * z
-        z_rd = 1.0 * z # обычно r_D на стенке скважины = 1
 
         # Ключевой момент: считаем отношение K1/I1 так, чтобы не было переполнения
         # ratio = K1(z_re) / I1(z_re)

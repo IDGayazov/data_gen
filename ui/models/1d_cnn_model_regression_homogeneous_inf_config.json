@@ -1,0 +1,17 @@
+{
+  "task_type": "regression",
+  "class_names": [],
+  "output_names": [
+    "k",
+    "C_D",
+    "S"
+  ],
+  "num_outputs": 3,
+  "input_shape": [
+    128,
+    2
+  ],
+  "device_used": "CPU",
+  "model_format": "all",
+  "save_time": "2026-05-17 17:54:52"
+}

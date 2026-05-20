@@ -1,15 +1,10 @@
-import warnings
-
 import numpy as np
-import matplotlib
 import pandas as pd
 
 from scipy.special import k0, k1
 from model.reservoir_model import ReservoirModel
 
 from inversion.shtefest_algorithm import ShtefestAlgorithm
-
-# matplotlib.use('TkAgg')
 
 class InfiniteDualPorosityReservoirModel(ReservoirModel):
     """
@@ -45,8 +40,6 @@ class InfiniteDualPorosityReservoirModel(ReservoirModel):
         Возвращает:
             P_wD(u): значение безразмерного давления в пространстве Лапласа
         """
-        warnings.filterwarnings('ignore', category=RuntimeWarning)
-
         f_sqrt_u = np.sqrt(self.f(u, self.omega, self.lam) * u)
         numerator = k0(r_D * f_sqrt_u)
         denominator = u * f_sqrt_u * k1(f_sqrt_u)

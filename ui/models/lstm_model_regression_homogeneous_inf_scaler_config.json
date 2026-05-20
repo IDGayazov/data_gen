@@ -1,0 +1,46 @@
+{
+  "model_name": "lstm_model_regression_homogeneous_inf",
+  "output_names": [
+    "k",
+    "C_D",
+    "S"
+  ],
+  "log_cols": [],
+  "k_multiplier": 1000000000000.0,
+  "k_scaler_mean": [
+    0.4513119522209896
+  ],
+  "k_scaler_scale": [
+    0.28179199017361695
+  ],
+  "log_scaler_mean": {},
+  "log_scaler_scale": {},
+  "other_cols": [
+    1,
+    2
+  ],
+  "other_scaler_mean": [
+    551.1788223514635,
+    4.520416748637936
+  ],
+  "other_scaler_scale": [
+    226.22037571388208,
+    2.829010504121553
+  ],
+  "X_mean": [
+    [
+      [
+        12.133038648181287,
+        16.7342317955813
+      ]
+    ]
+  ],
+  "X_std": [
+    [
+      [
+        0.7402042958833138,
+        2.077501763880003
+      ]
+    ]
+  ]
+}
