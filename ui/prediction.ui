@@ -6,124 +6,137 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>674</width>
-    <height>490</height>
+    <width>800</width>
+    <height>560</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Form</string>
+   <string>Предсказание</string>
   </property>
-  <widget class="QGraphicsView" name="graphicsView">
-   <property name="geometry">
-    <rect>
-     <x>210</x>
-     <y>90</y>
-     <width>431</width>
-     <height>321</height>
-    </rect>
+  <layout class="QHBoxLayout" name="mainLayout">
+   <property name="spacing">
+    <number>8</number>
    </property>
-  </widget>
-  <widget class="QLabel" name="label">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>50</y>
-     <width>141</width>
-     <height>31</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Выбор модели</string>
-   </property>
-  </widget>
-  <widget class="QRadioButton" name="cnn">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>80</y>
-     <width>88</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>1D CNN</string>
-   </property>
-  </widget>
-  <widget class="QRadioButton" name="cnn_lstm">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>110</y>
-     <width>88</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>CNN + LSTM</string>
-   </property>
-  </widget>
-  <widget class="QRadioButton" name="lstm">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>140</y>
-     <width>88</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>LSTM</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="prediction">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>170</y>
-     <width>111</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Предсказать</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_2">
-   <property name="geometry">
-    <rect>
-     <x>210</x>
-     <y>50</y>
-     <width>171</width>
-     <height>31</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Предсказанный тип пласта:</string>
-   </property>
-  </widget>
-  <widget class="QLineEdit" name="lineEdit">
-   <property name="geometry">
-    <rect>
-     <x>370</x>
-     <y>60</y>
-     <width>181</width>
-     <height>16</height>
-    </rect>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_3">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>210</y>
-     <width>161</width>
-     <height>41</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Предсказанные параметры:</string>
-   </property>
-  </widget>
+   <property name="leftMargin"><number>8</number></property>
+   <property name="topMargin"><number>8</number></property>
+   <property name="rightMargin"><number>8</number></property>
+   <property name="bottomMargin"><number>8</number></property>
+   <!-- Left control panel -->
+   <item>
+    <widget class="QWidget" name="leftPanel">
+     <property name="maximumWidth">
+      <number>200</number>
+     </property>
+     <property name="minimumWidth">
+      <number>160</number>
+     </property>
+     <layout class="QVBoxLayout" name="leftLayout">
+      <property name="spacing">
+       <number>6</number>
+      </property>
+      <item>
+       <widget class="QLabel" name="label">
+        <property name="text"><string>Выбор модели</string></property>
+        <property name="font">
+         <font><bold>true</bold></font>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="cnn">
+        <property name="text"><string>1D CNN</string></property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="cnn_lstm">
+        <property name="text"><string>CNN + LSTM</string></property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="lstm">
+        <property name="text"><string>LSTM</string></property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="prediction">
+        <property name="text"><string>Предсказать</string></property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="spacer1">
+        <property name="orientation"><enum>Qt::Vertical</enum></property>
+        <property name="sizeHint" stdset="0">
+         <size><width>20</width><height>8</height></size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QLabel" name="label_3">
+        <property name="text"><string>Предсказанные параметры:</string></property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPlainTextEdit" name="paramsEdit">
+        <property name="readOnly"><bool>true</bool></property>
+        <property name="placeholderText">
+         <string>Параметры появятся после предсказания</string>
+        </property>
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+          <horstretch>0</horstretch>
+          <verstretch>1</verstretch>
+         </sizepolicy>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <!-- Right panel: type display + graph -->
+   <item>
+    <widget class="QWidget" name="rightPanel">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+       <horstretch>1</horstretch>
+       <verstretch>1</verstretch>
+      </sizepolicy>
+     </property>
+     <layout class="QVBoxLayout" name="rightLayout">
+      <property name="spacing">
+       <number>6</number>
+      </property>
+      <property name="leftMargin"><number>0</number></property>
+      <property name="topMargin"><number>0</number></property>
+      <property name="rightMargin"><number>0</number></property>
+      <property name="bottomMargin"><number>0</number></property>
+      <!-- Predicted type row -->
+      <item>
+       <layout class="QHBoxLayout" name="typeRow">
+        <item>
+         <widget class="QLabel" name="label_2">
+          <property name="text"><string>Предсказанный тип пласта:</string></property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="lineEdit"/>
+        </item>
+       </layout>
+      </item>
+      <!-- Graph area — Python injects PlotWidget here -->
+      <item>
+       <widget class="QWidget" name="graphicsView">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+          <horstretch>1</horstretch>
+          <verstretch>1</verstretch>
+         </sizepolicy>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+  </layout>
  </widget>
  <resources/>
  <connections/>

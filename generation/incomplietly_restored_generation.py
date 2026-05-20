@@ -166,28 +166,44 @@ class ThreeGroupWellTestProcessor:
         
         return result_df
     
+    def _compute_log_cut(self, df: pd.DataFrame, fraction: Optional[float]) -> Optional[float]:
+        """
+        Вычисляет t_max_crop как fraction долю лог-диапазона кривой.
+        fraction=None → без обрезания (full).
+        """
+        if fraction is None:
+            return None
+        t_vals = df['t_D'].dropna()
+        t_vals = t_vals[t_vals > 0]
+        if len(t_vals) < 2:
+            return None
+        log_min = np.log10(t_vals.min())
+        log_max = np.log10(t_vals.max())
+        return 10 ** (log_min + fraction * (log_max - log_min))
+
     def process_single_file(self, args: Tuple) -> Dict:
         """
         Обработка одного файла в соответствии с его группой
         """
         input_file, output_dir, n_points, group_config, normalize, overwrite = args
-        
+
         try:
             # Чтение исходного файла
             df = pd.read_csv(input_file)
             base_name = os.path.basename(input_file)
             name_without_ext = os.path.splitext(base_name)[0]
-            
+
             # Определяем группу файла
             group = self.group_assignment.get(input_file, 'full')
-            
-            # Получаем параметры обрезания для группы
-            t_max_crop = group_config[group]['t_max']
+
+            # Вычисляем t_max_crop по лог-диапазону конкретной кривой
+            fraction = group_config[group].get('fraction')  # None для full
+            t_max_crop = self._compute_log_cut(df, fraction)
             suffix = group_config[group]['suffix']
-            
+
             # Обработка кривой
             df_processed = self.preprocess_curve(
-                df, 
+                df,
                 n_points=n_points,
                 t_max_crop=t_max_crop,
                 normalize=normalize
@@ -243,9 +259,9 @@ class ThreeGroupWellTestProcessor:
         # Конфигурация групп по умолчанию
         if group_config is None:
             group_config = {
-                'inc1': {'t_max': 1e3, 'suffix': 'inc1', 'description': 'короткие (0-1000)'},
-                'inc2': {'t_max': 1e6, 'suffix': 'inc2', 'description': 'средние (0-1e6)'},
-                'full': {'t_max': None, 'suffix': 'full', 'description': 'полные (без обрезания)'}
+                'inc1': {'fraction': 1/3, 'suffix': 'inc1', 'description': 'первая треть лог-диапазона'},
+                'inc2': {'fraction': 2/3, 'suffix': 'inc2', 'description': 'первые две трети лог-диапазона'},
+                'full': {'fraction': None, 'suffix': 'full', 'description': 'полные (без обрезания)'}
             }
         
         # Сканирование директории
@@ -316,12 +332,15 @@ class ThreeGroupWellTestProcessor:
                 group_stats[result['group']]['success'] += 1
             elif result['status'] == 'skipped':
                 group_stats[result['group']]['skipped'] += 1
-            else:
-                # Определяем группу по файлу
-                for group, files in self.group_assignment.items():
-                    if result['file'] == group:
-                        group_stats[group]['error'] += 1
-                        break
+            elif result['status'] == 'error':
+                # Для ошибок определяем группу через сохраненное распределение
+                file_path = result['file']
+                if file_path in self.group_assignment:
+                    group = self.group_assignment[file_path]
+                    group_stats[group]['error'] += 1
+                else:
+                    # Если файл не найден в распределении (не должно случаться)
+                    print(f"Предупреждение: файл {file_path} не найден в распределении групп")
         
         print(f"\n{'='*60}")
         print(f"ОБРАБОТКА ЗАВЕРШЕНА")
@@ -338,34 +357,25 @@ class ThreeGroupWellTestProcessor:
             print(f"    - успешно: {stats['success']}")
             print(f"    - пропущено: {stats['skipped']}")
             print(f"    - ошибок: {stats['error']}")
-    
+
     def _create_summary(self, output_dir: str, results: List, group_config: Dict):
-        """Создание сводного файла"""
+        """Сохранение CSV-сводки результатов обработки"""
         summary_data = []
-        
-        for result in results:
-            if result['status'] == 'success':
-                summary_data.append({
-                    'original_file': result['file'],
-                    'curve_name': result['name'],
-                    'group': result['group'],
-                    'group_description': group_config[result['group']]['description'],
-                    't_max_crop': result.get('t_max_crop', 'None'),
-                    'output_file': os.path.basename(result['output']),
-                    'n_points': result.get('n_points', 'N/A'),
-                    'has_gauss_column': result.get('has_gauss', False)
-                })
-        
-        if summary_data:
-            summary_df = pd.DataFrame(summary_data)
-            summary_path = os.path.join(output_dir, 'processing_summary.csv')
-            summary_df.to_csv(summary_path, index=False)
-            print(f"\nСводный файл сохранен: {summary_path}")
-            
-            # Вывод примера
-            print(f"\nПример распределения:")
-            print(summary_df.groupby('group').size())
-    
+        for r in results:
+            row = {
+                'file': os.path.basename(r['file']),
+                'group': r.get('group', ''),
+                'status': r['status'],
+                'output': r.get('output', ''),
+                'error': r.get('error', ''),
+            }
+            summary_data.append(row)
+
+        summary_df = pd.DataFrame(summary_data)
+        summary_path = os.path.join(output_dir, 'processing_summary.csv')
+        summary_df.to_csv(summary_path, index=False)
+        print(f"Сводка сохранена: {summary_path}")
+
     def save_group_assignment(self, output_dir: str):
         """Сохранение информации о распределении по группам"""
         assignment_data = []
@@ -375,7 +385,7 @@ class ThreeGroupWellTestProcessor:
                 'full_path': file,
                 'group': group
             })
-        
+
         assignment_df = pd.DataFrame(assignment_data)
         assignment_path = os.path.join(output_dir, 'group_assignment.csv')
         assignment_df.to_csv(assignment_path, index=False)
@@ -385,8 +395,8 @@ class ThreeGroupWellTestProcessor:
 def main():
     # Конфигурация
     CONFIG = {
-        'input_dir': '/home/ilnaz/PycharmProjects/datasets/models/curve',           # Папка с исходными кривыми
-        'output_dir': '/home/ilnaz/PycharmProjects/datasets/models_incs/curve/',    # Папка для обработанных кривых
+        'input_dir': '/home/ilnaz/PycharmProjects/datasets/new/cls_data/curve',           # Папка с исходными кривыми
+        'output_dir': '/home/ilnaz/PycharmProjects/datasets/new/cls_data_incs/curve/',    # Папка для обработанных кривых
         'n_points': 128,                     # Количество точек после интерполяции
         'normalize': True,                   # Нормализация данных
         'overwrite': True,                   # Перезаписывать существующие файлы
@@ -396,20 +406,20 @@ def main():
         'file_extension': '.csv'
     }
     
-    # Конфигурация групп
+    # Конфигурация групп: разрезаем по лог-диапазону каждой кривой
     GROUP_CONFIG = {
         'inc1': {
-            't_max': 1e3,                    # Обрезаем до 1000
+            'fraction': 1/3,                 # Первая треть log10(t_D)-диапазона
             'suffix': 'inc1',
-            'description': 'короткие (0-1000)'
+            'description': 'первая треть лог-диапазона'
         },
         'inc2': {
-            't_max': 1e6,                    # Обрезаем до 1,000,000
+            'fraction': 2/3,                 # Первые две трети
             'suffix': 'inc2',
-            'description': 'средние (0-1e6)'
+            'description': 'первые две трети лог-диапазона'
         },
         'full': {
-            't_max': None,                   # Без обрезания
+            'fraction': None,                # Без обрезания
             'suffix': 'full',
             'description': 'полные (без обрезания)'
         }
@@ -440,8 +450,8 @@ def main():
     print(f"ГОТОВО! Обработанные файлы сохранены в: {CONFIG['output_dir']}")
     print(f"{'='*60}")
     print(f"\nСтруктура выходных файлов:")
-    print(f"  *_inc1.csv - короткие кривые (обрезаны до t=1000)")
-    print(f"  *_inc2.csv - средние кривые (обрезаны до t=1e6)")
+    print(f"  *_inc1.csv - первая треть лог-диапазона каждой кривой")
+    print(f"  *_inc2.csv - первые две трети лог-диапазона каждой кривой")
     print(f"  *_full.csv - полные кривые (без обрезания)")
     print(f"\nКаждый файл содержит колонки:")
     print(f"  - t_D (время)")

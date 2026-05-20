@@ -1,8 +1,6 @@
-import warnings
 from functools import lru_cache
 
 import numpy as np
-import pandas as pd
 
 from scipy.special import k0, k1
 
@@ -205,20 +203,10 @@ class InfiniteDualPermeabilityReservoirModel(ReservoirModel):
             P_wD(u): значение безразмерного давления в пространстве Лапласа
         """
 
-        warnings.filterwarnings('ignore', category=RuntimeWarning)
+        sigma1 = np.sqrt(self.sigma1_squared(u))
+        sigma2 = np.sqrt(self.sigma2_squared(u))
 
-        sigma1_sq = self.sigma1_squared(u)
-        a1_val = self.a1(u)
-        sigma1 = np.sqrt(sigma1_sq)
-
-        sigma2_sq = self.sigma2_squared(u)
-        a2_val = self.a2(u)
-        sigma2 = np.sqrt(sigma2_sq)
-
-        p1 = self.a1(u) * self.B1(u) * k0(r_D * sigma1) + self.a2(u) * self.B2(u) * k0(r_D * sigma2)
-        p2 = self.B1(u) * k0(r_D * sigma1) + self.B2(u) * k0(r_D * sigma2)
-
-        return p1 + p2
+        return (1 + self.a1(u)) * self.B1(u) * k0(r_D * sigma1) + (1 + self.a2(u)) * self.B2(u) * k0(r_D * sigma2)
 
 
     def P_wD_laplace(self, u, r_D):
@@ -244,21 +232,7 @@ class InfiniteDualPermeabilityReservoirModel(ReservoirModel):
 
 
 if __name__ == "__main__":
-    params = pd.read_csv('../datasets/dataset5/params/45.csv')
-
-    print('C_D: ', params['C_D'][0])
-    print('S: ', params['S1'][0])
-    print('omega: ', params['omega'][0])
-    print('lam: ', params['lambda'][0])
-    print('kappa: ', params['kappa'][0])
-    print('alpha: ', params['alpha'][0])
-    print('r_w: ', params['r_w'][0])
-
-    model = InfiniteDualPermeabilityReservoirModel(C_D=params['C_D'][0],
-                                                   S=params['S1'][0],
-                                                   omega=params['omega'][0],
-                                                   lam=params['lambda'][0],
-                                                   kappa=params['kappa'][0])
+    model = InfiniteDualPermeabilityReservoirModel(C_D=300, S=2, omega=0.1, lam=1e-6, kappa=0.85)
 
     t_D_array = np.logspace(0, 7, 128)
     alg = ShtefestAlgorithm(N=16)

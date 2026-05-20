@@ -1,160 +1,215 @@
 import os
 import sys
+
+import numpy as np
+import onnxruntime as ort
 import pyqtgraph as pg
 from PyQt5 import uic
-from PyQt5.QtWidgets import QDialog, QWidget, QVBoxLayout, QMessageBox
+from PyQt5.QtWidgets import QDialog, QVBoxLayout, QMessageBox
 from PyQt5.QtCore import Qt
 
-from ui.load_model import load_cls_model, predict
+from ui.util import (
+    predict,
+    predict_params,
+    build_predicted_curve,
+    get_regression_model_paths,
+    format_params,
+)
+
+_MODELS_DIR = os.path.join(os.path.dirname(__file__), 'models')
+
+_CLS_MODELS = {
+    'cnn': (
+        '1d_cnn_model_classification_multiclass.onnx',
+        '1d_cnn_model_classification_multiclass_config.json',
+    ),
+    'cnn_lstm': (
+        'cnn_lstm_cls_multiclass.onnx',
+        'cnn_lstm_cls_multiclass_config.json',
+    ),
+    'lstm': (
+        'lstm_cls_mutliclass.onnx',
+        'lstm_cls_mutliclass_config.json',
+    ),
+}
 
 
 class GenerationWindow(QDialog):
     def __init__(self, dataset=None, parent=None):
         super().__init__(parent)
-        # Исправлен путь к UI файлу (без абсолютного пути)
         ui_path = os.path.join(os.path.dirname(__file__), 'prediction.ui')
         uic.loadUi(ui_path, self)
 
         self.dataset = dataset
-        self.model_name = ""  # Добавляем атрибут для имени модели
+        self.model_name = ""
+        self.k = 1
 
-        # Подключаем кнопку (убедитесь, что в prediction.ui есть кнопка с именем prediction)
         if hasattr(self, 'prediction'):
             self.prediction.clicked.connect(self.predict)
 
-        # Настраиваем график
         self.setup_loglog_plot()
 
+    # ------------------------------------------------------------------ #
+    # Plot setup
+    # ------------------------------------------------------------------ #
+
     def setup_loglog_plot(self):
-        """Настройка логарифмического графика"""
-        # Проверяем существование graphicsView
         if not hasattr(self, 'graphicsView'):
             QMessageBox.warning(self, "Ошибка", "В UI файле отсутствует graphicsView!")
             return
-            
-        # Создаем контейнер, который будет замещать graphicsView
-        container = QWidget(self)
-        container.setGeometry(self.graphicsView.geometry())
-        
-        # Layout для контейнера
-        layout = QVBoxLayout(container)
+
+        layout = QVBoxLayout(self.graphicsView)
         layout.setContentsMargins(0, 0, 0, 0)
-        
-        # Создаем PlotWidget с логарифмическим масштабом
+
         self.plot_widget = pg.PlotWidget()
         layout.addWidget(self.plot_widget)
-        
-        # Прячем старый QGraphicsView
-        self.graphicsView.setVisible(False)
-        
-        # Показываем контейнер с новым графиком
-        container.show()
-        
-        # Включаем логарифмический режим для обеих осей
+
         self.plot_widget.setLogMode(x=True, y=True)
-        
-        # Настройка внешнего вида
         self.plot_widget.setLabel('left', 'Значение', units='')
         self.plot_widget.setLabel('bottom', 'Время', units='')
         self.plot_widget.setTitle('Логарифмический график (log-log)')
         self.plot_widget.showGrid(x=True, y=True, alpha=0.3)
         self.plot_widget.setBackground('white')
         self.plot_widget.addLegend()
-        
-        # Сохраняем ссылку на контейнер для возможного использования
-        self.plot_container = container
+
+    # ------------------------------------------------------------------ #
+    # Main prediction pipeline
+    # ------------------------------------------------------------------ #
 
     def predict(self):
-        cls_model = ""
+        # --- 1. Identify which classification model is selected ----------
         if self.cnn.isChecked():
-            cls_model = '1d_cnn'
+            model_key = 'cnn'
         elif self.cnn_lstm.isChecked():
-            cls_model = 'cnn_lstm'
+            model_key = 'cnn_lstm'
         else:
-            cls_model = 'lstm'
+            model_key = 'lstm'
 
-        model = load_cls_model(cls_model)
-        cls_name = predict(model, self.dataset, self.k)
+        onnx_file, cfg_file = _CLS_MODELS[model_key]
+        cls_onnx = os.path.join(_MODELS_DIR, onnx_file)
+        cls_cfg = os.path.join(_MODELS_DIR, cfg_file)
+
+        # --- 2. Classification -------------------------------------------
+        try:
+            cls_session = ort.InferenceSession(cls_onnx)
+            cls_name = predict(cls_session, self.dataset, self.k, cls_cfg)
+        except Exception as e:
+            QMessageBox.critical(self, "Ошибка классификации", str(e))
+            return
+
         self.lineEdit.setText(cls_name)
 
-    def generate_graph(self):
-        """Генерация графика"""
-        try:
-            # Проверяем наличие датасета
-            if self.dataset is None:
-                QMessageBox.warning(self, "Предупреждение", "Нет данных для отображения!")
-                return
-            
-            # Проверяем наличие plot_widget
-            if not hasattr(self, 'plot_widget'):
-                QMessageBox.warning(self, "Ошибка", "График не инициализирован!")
-                return
-            
-            # Очищаем график
-            self.plot_widget.clear()
+        # --- 3. Regression: load model + scaler config -------------------
+        reg_onnx, reg_scaler = get_regression_model_paths(cls_name, _MODELS_DIR, model_key)
 
-            # Проверяем наличие необходимых ключей в датасете
-            required_keys = ['t_D', 'P_wD_gauss', 'dP_wD']
-            missing_keys = [key for key in required_keys if key not in self.dataset]
-            if missing_keys:
-                QMessageBox.warning(self, "Ошибка", f"В датасете отсутствуют ключи: {missing_keys}")
-                return
-            
-            # Получаем данные
-            t = self.dataset['t_D']
-            y = self.dataset['P_wD_gauss']
-            dy = self.dataset['dP_wD']
-            
-            # Определяем цвет (можно сделать параметром)
-            color = 'b'  # синий цвет по умолчанию
-            
-            # Строим график давления
-            self.plot_widget.plot(
-                t, y,
-                pen=pg.mkPen(color=color, width=3),
-                name='Pressure',
-                symbol='o',
-                symbolSize=5,
-                symbolBrush=color
+        if reg_onnx is None or not os.path.exists(reg_onnx):
+            self._show_params("Регрессионная модель не найдена для типа: " + cls_name)
+            return
+
+        if not os.path.exists(reg_scaler):
+            self._show_params(
+                "Конфиг скейлера не найден.\n"
+                "Запустите ячейки сохранения конфига в ноутбуке после обучения."
             )
-            
-            # Строим график производной
-            self.plot_widget.plot(
-                t, dy,
-                pen=pg.mkPen(color='r', width=3),
-                name='Pressure derivative',
-                symbol='o',
-                symbolSize=5,
-                symbolBrush='r'
-            )
-            
-            # Настройка графика
-            model_name = getattr(self, 'model_name', 'Предсказание')
-            self.plot_widget.setTitle(f'График: {model_name}')
-            self.plot_widget.setLabel('left', 'Значение')
-            self.plot_widget.setLabel('bottom', 'Время')
-            self.plot_widget.autoRange()
-            
-            QMessageBox.information(self, "Успех", "График успешно сгенерирован!")
-            
+            return
+
+        # --- 4. Predict parameters ---------------------------------------
+        try:
+            reg_session = ort.InferenceSession(reg_onnx)
+            params = predict_params(reg_session, self.dataset, self.k, reg_scaler)
         except Exception as e:
-            QMessageBox.critical(self, "Ошибка", f"Ошибка при генерации графика: {str(e)}")
-    
+            QMessageBox.critical(self, "Ошибка предсказания параметров", str(e))
+            return
+
+        if params is None:
+            self._show_params("Ошибка: не удалось предсказать параметры.")
+            return
+
+        # --- 5. Display parameters ---------------------------------------
+        self._show_params(format_params(params))
+
+        # --- 6. Build and plot theoretical curve -------------------------
+        t_D_array = self.dataset['t_D'].values
+        t_D_array = t_D_array[t_D_array > 0]
+
+        pred_df = build_predicted_curve(cls_name, params, t_D_array)
+        self.generate_graph(pred_df)
+
+    # ------------------------------------------------------------------ #
+    # Helpers
+    # ------------------------------------------------------------------ #
+
+    def _show_params(self, text):
+        if hasattr(self, 'paramsEdit'):
+            self.paramsEdit.setPlainText(text)
+
+    def generate_graph(self, pred_df=None):
+        if self.dataset is None:
+            QMessageBox.warning(self, "Предупреждение", "Нет данных для отображения!")
+            return
+
+        if not hasattr(self, 'plot_widget'):
+            QMessageBox.warning(self, "Ошибка", "График не инициализирован!")
+            return
+
+        self.plot_widget.clear()
+
+        required_keys = ['t_D', 'P_wD_gauss', 'dP_wD']
+        missing = [k for k in required_keys if k not in self.dataset]
+        if missing:
+            QMessageBox.warning(self, "Ошибка", f"В датасете отсутствуют ключи: {missing}")
+            return
+
+        t = self.dataset['t_D']
+        y = self.dataset['P_wD_gauss']
+        dy = self.dataset['dP_wD']
+
+        # Observed pressure (with noise)
+        self.plot_widget.plot(
+            t, y,
+            pen=None,
+            name='P_wD (наблюдение)',
+            symbol='o',
+            symbolSize=4,
+            symbolBrush=pg.mkBrush('b'),
+            symbolPen=None,
+        )
+
+        # Observed Bourdet derivative
+        self.plot_widget.plot(
+            t, dy,
+            pen=pg.mkPen(color='b', width=2),
+            name='dP/dlnt (наблюдение)',
+        )
+
+        # Predicted (theoretical) curve
+        if pred_df is not None and len(pred_df) > 0:
+            mask = (pred_df['t_D'] > 0) & (pred_df['P_wD'] > 0) & (pred_df['dP_wD'] > 0)
+            pdf = pred_df[mask]
+            if len(pdf) > 0:
+                self.plot_widget.plot(
+                    pdf['t_D'], pdf['P_wD'],
+                    pen=pg.mkPen(color='r', width=2, style=Qt.DashLine),
+                    name='P_wD (предсказание)',
+                )
+                self.plot_widget.plot(
+                    pdf['t_D'], pdf['dP_wD'],
+                    pen=pg.mkPen(color=(200, 0, 0), width=2),
+                    name='dP/dlnt (предсказание)',
+                )
+
+        model_name = getattr(self, 'model_name', 'Предсказание')
+        self.plot_widget.setTitle(f'График: {model_name}')
+        self.plot_widget.setLabel('left', 'Значение')
+        self.plot_widget.setLabel('bottom', 'Время')
+        self.plot_widget.autoRange()
+
     def set_dataset(self, dataset, k, model_name=""):
-        """Метод для установки датасета после создания окна"""
         self.dataset = dataset
         self.k = k
         self.model_name = model_name
-        # Автоматически генерируем график
+
         self.generate_graph()
-        
-        # Если есть поле lineEdit, обновляем его с типом пласта
+
         if hasattr(self, 'lineEdit') and 'formation_type' in dataset:
             self.lineEdit.setText(str(dataset['formation_type']))
-    
-    def resizeEvent(self, event):
-        """Обработка изменения размера окна"""
-        super().resizeEvent(event)
-        # Обновляем размер контейнера с графиком при изменении размера окна
-        if hasattr(self, 'plot_container') and hasattr(self, 'graphicsView'):
-            self.plot_container.setGeometry(self.graphicsView.geometry())

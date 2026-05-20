@@ -1,0 +1,16 @@
+{
+  "task_type": "classification",
+  "class_names": [
+    "dual_permeability_fin",
+    "dual_permeability_inf",
+    "dual_porosity_fin",
+    "dual_porosity_inf",
+    "homogeneous_fin",
+    "homogeneous_inf",
+    "radial_composite_inf"
+  ],
+  "input_shape": [
+    128,
+    2
+  ]
+}

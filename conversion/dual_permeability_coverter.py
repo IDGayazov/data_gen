@@ -118,7 +118,7 @@ class DualPermeabilityDimensionConverter:
         """
         if system == 'total':
             phi_c_t = self.total_storage
-            k = self.k1
+            k = self.k1 * self.h1 + self.k2 * self.h2
         elif system == '1':
             phi_c_t = self.storage1
             k = self.k1

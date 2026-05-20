@@ -1,0 +1,21 @@
+{
+  "task_type": "classification",
+  "class_names": [
+    "dual_porosity_fin",
+    "homogeneous_fin",
+    "radial_composite_inf",
+    "dual_porosity_inf",
+    "homogeneous_inf",
+    "dual_permeability_inf",
+    "dual_permeability_fin"
+  ],
+  "output_names": [],
+  "num_outputs": null,
+  "input_shape": [
+    128,
+    2
+  ],
+  "device_used": "GPU",
+  "model_format": "all",
+  "save_time": "2026-04-22 09:16:18"
+}

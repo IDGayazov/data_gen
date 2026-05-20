@@ -43,7 +43,7 @@ class HomogeneousConverter:
         return C / (2 * np.pi * self.h * self.phi * self.c_t * self.r_w ** 2)
 
     def wellbore_storage_from_dimless_to_dim(self, C_D):
-        return (2 * np.pi * self.h * self.phi * self.c_t * self.r_w ** 2) / C_D
+        return C_D * 2 * np.pi * self.h * self.phi * self.c_t * self.r_w ** 2
 
     def reservoir_radius_from_dim_to_dimless(self, r_e):
         return r_e / self.r_w

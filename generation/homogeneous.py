@@ -1,5 +1,6 @@
 from typing import Dict, List
 
+import random
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
@@ -14,56 +15,77 @@ from model.homogeneous.infinite_homogeneous_model import InfiniteHomogeneousRese
 
 class HomogeneousModelParamGenerator(ParamGenerator):
     """
-    Генерация параметров для гомогенного пласта
+    Генерация параметров для гомогенного пласта в заданных интервалах
     """
 
     def generate(self) -> List[Dict[str, float]]:
-        base_params = {
-            'k': 5e-13,
-            'h': 10,
-            'mu': 1e-3,
-            'B': 1.2,
-            'p_i': 25e6,
-            'phi': 0.18,
-            'c_t': 1.5e-9,
-            'r_w': 0.1
+        train_ranges = {
+            'k': [(0.01, 0.1), (0.2, 0.3), (0.4, 0.5), (0.6, 0.7), (0.8, 0.9)], # проницаемость, 1e-12*м^2 
+            'h': [(5.0, 30.0)],         # толщина, м
+            'phi': [(0.1, 0.3)],        # пористость, д.ед.
+            'mu': [(0.5e-3, 10e-3)],    # вязкость, Па*с
+            'B': [(1.0, 1.5)],          # объемный коэфф.
+            'p_i': [(15e6, 40e6)],      # нач. давление, Па
+            'c_t': [(1e-10, 5e-9)],     # общая сжимаемость, 1/Па
+            'q': [(10, 100)],           # дебит, м3/сут
+            'S': [(0.1, 1), (2, 3), (4, 5), (6, 7), (8, 9)], # скин-фактор
+            'C_D': [(200, 300), (400, 500), (600, 700), (800, 900)], # эффект влияния ствола скважины
+            'r_e': [(200, 300), (400, 500), (600, 700), (800, 900)] # радиус контура, м
         }
 
-        correlation_groups = [
-            ['k', 'phi'],  # проницаемость и пористость часто коррелируют
-            ['mu', 'B'],  # вязкость и объемный коэффициент
-            ['p_i', 'c_t']  # давление и сжимаемость
-        ]
+        val_ranges = {
+            'k': [(0.1, 0.2), (0.3, 0.4), (0.5, 0.6), (0.7, 0.8), (0.9, 1)], # проницаемость, 1e-12*м^2 
+            'h': [(5.0, 30.0)],         # толщина, м
+            'phi': [(0.1, 0.3)],        # пористость, д.ед.
+            'mu': [(0.5e-3, 10e-3)],    # вязкость, Па*с
+            'B': [(1.0, 1.5)],          # объемный коэфф.
+            'p_i': [(15e6, 40e6)],      # нач. давление, Па
+            'c_t': [(1e-10, 5e-9)],     # общая сжимаемость, 1/Па
+            'q': [(10, 100)],           # дебит, м3/сут
+            'S': [(1, 2), (3, 4), (5, 6), (7, 8)], # скин-фактор
+            'C_D': [(300, 400), (500, 600), (700, 800), (900, 1000)], # эффект влияния ствола скважины
+            'r_e': [(300, 400), (500, 600), (700, 800), (900, 1000)] # радиус контура, м
+        }
+
+        test_ranges = {
+            'k': [(0.1, 1)], # проницаемость, 1e-12*м^2 
+            'h': [(5.0, 30.0)],         # толщина, м
+            'phi': [(0.1, 0.3)],        # пористость, д.ед.
+            'mu': [(0.5e-3, 10e-3)],    # вязкость, Па*с
+            'B': [(1.0, 1.5)],          # объемный коэфф.
+            'p_i': [(15e6, 40e6)],      # нач. давление, Па
+            'c_t': [(1e-10, 5e-9)],     # общая сжимаемость, 1/Па
+            'q': [(10, 100)],           # дебит, м3/сут
+            'S': [(1, 8)], # скин-фактор
+            'C_D': [(200, 1000)], # эффект влияния ствола скважины
+            'r_e': [(200, 1000)] # радиус контура, м
+        }
 
         varied_params_list = []
 
-        for i in range(self.size):
-            params = base_params.copy()
+        ranges = train_ranges       
+        if self.type == 'val':
+            ranges = val_ranges
+        if self.type == 'test':
+            ranges = test_ranges
 
-            params['h'] *= np.random.uniform(0.5, 2.0)  # толщина
-            params['q'] = np.random.uniform(5, 50)  # дебит
-            params['r_e'] = np.random.uniform(100, 1000)  # радиус границ
-
-            # коэффициент влияния ствола скважины
-            params['C'] = 10 ** np.random.uniform(-9, -7)
-
-            # скин-фактор
-            params['S'] = np.random.uniform(0, 8)
-
-            for group in correlation_groups:
-                group_factor = np.random.uniform(0.5, 2.0)
-
-                for param_name in group:
-                    if param_name in params:
-                        individual_factor = np.random.uniform(0.9, 1.1)
-                        params[param_name] *= group_factor * individual_factor
-
-            params['phi'] = np.clip(params['phi'], 0.05, 0.35)  # пористость 5-35%
-            params['mu'] = np.clip(params['mu'], 0.5e-3, 50e-3)  # вязкость 0.5-50 мПа·с
-            params['k'] = np.clip(params['k'], 1e-16, 1e-11)  # проницаемость 0.1 мД - 10 Д
-            params['B'] = np.clip(params['B'], 1.0, 1.8)  # объемный коэффициент
-            params['c_t'] = np.clip(params['c_t'], 0.5e-9, 5e-9)  # сжимаемость
-
+        for _ in range(self.size):
+            params = {}
+            
+            for param, param_list in ranges.items():
+                # Выбираем случайный интервал из списка
+                low, high = random.choice(param_list)
+                
+                if param == 'k':
+                    params[param] = np.random.uniform(low, high) * 1e-12
+                else:
+                    params[param] = np.random.uniform(low, high)
+            
+            params['r_w'] = 0.1
+            denominator = (2 * np.pi * params['h'] * params['phi'] *
+                          params['c_t'] * params['r_w']**2)
+            params['C'] = params['C_D'] * denominator
+            params['data_type'] = self.type
             varied_params_list.append(pd.DataFrame([params]))
 
         return varied_params_list
@@ -75,7 +97,7 @@ class InfiniteHomogeneousGenerator(DataGenerator):
     """
     def __init__(self, params: GenerationParams):
         super().__init__('homogeneous_inf', params)
-        self.param_gen = HomogeneousModelParamGenerator(self.size)
+        self.param_gen = HomogeneousModelParamGenerator(self.size, self.type)
 
     def generate(self):
         params = self.param_gen.generate()
@@ -105,7 +127,7 @@ class InfiniteHomogeneousGenerator(DataGenerator):
             alg = ShtefestAlgorithm(N=12)
 
             curve = model.pressure(t_D_array, alg) \
-                .gauss_noize(mu=0, sigma=self.sigma) \
+                .gauss_noize(mu=0, sigma_mpa=0.00035, converter=converter) \
                 .derivative(smoothig_alg='regression', delta=0.175) \
                 .get_pressure()
 
@@ -118,7 +140,7 @@ class FiniteHomogeneousGenerator(DataGenerator):
     """
     def __init__(self, params: GenerationParams):
         super().__init__('homogeneous_fin', params)
-        self.param_gen = HomogeneousModelParamGenerator(self.size)
+        self.param_gen = HomogeneousModelParamGenerator(self.size, self.type)
 
 
     def generate(self):
@@ -150,7 +172,7 @@ class FiniteHomogeneousGenerator(DataGenerator):
             alg = ShtefestAlgorithm(N=12)
 
             curve = model.pressure(t_D_array, alg) \
-                .gauss_noize(mu=0, sigma=self.sigma) \
+                .gauss_noize(mu=0, sigma_mpa=0.00035, converter=converter) \
                 .derivative(smoothig_alg='regression', delta=0.175) \
                 .get_pressure()
 

@@ -1,5 +1,3 @@
-import warnings
-
 import numpy as np
 
 from scipy.special import k0, k1, i0, i1
@@ -53,57 +51,6 @@ class FiniteHomogeneousReservoirModel(ReservoirModel):
         den = u * sqrt_u * (k1(z) - ratio * i1(z))
         
         return num / den
-
-
-    # def P_wD_laplace_with_bound(self, u, r_D, r_D_e, eps=1e-10):
-    #     """
-    #     Вычисляет решение для забойного давления в пространстве Лапласа.
-    #     Аргументы:
-    #         u:       параметр преобразования Лапласа
-    #         r_D:     безразмерный радиус
-    #         r_D_e:   безразмерный радиус коллектора
-    #         C_D:     безразмерная емкость
-    #         S:       скин-фактор
-    #     Возвращает:
-    #         P_wD(u): значение безразмерного давления в пространстве Лапласа
-    #     """
-    #     warnings.filterwarnings('ignore', category=RuntimeWarning)
-
-    #     u = np.asarray(u, dtype=np.float64)
-    #     u_safe = np.where(np.abs(u) < eps, np.sign(u) * eps, u)
-
-    #     sqrt_u = np.sqrt(u_safe)
-
-    #     k0_rd = k0(r_D * sqrt_u)
-    #     i0_rd = i0(r_D * sqrt_u)
-    #     k1_rd_e = k1(r_D_e * sqrt_u)
-    #     i1_rd_e = i1(r_D_e * sqrt_u)
-    #     k1_sqrt = k1(sqrt_u)
-    #     i1_sqrt = i1(sqrt_u)
-
-    #     numerator = k0_rd * i1_rd_e + k1_rd_e * i0_rd
-    #     denominator = u_safe * sqrt_u * (k1_sqrt * i1_rd_e - k1_rd_e * i1_sqrt)
-
-    #     denominator_safe = np.where(
-    #         np.abs(denominator) < eps,
-    #         np.sign(denominator) * eps,
-    #         denominator
-    #     )
-
-    #     print("k0_rd = ", k0_rd)
-    #     print("i0_rd = ", i0_rd)
-    #     print("k1_rd_e = ", k1_rd_e)
-    #     print("i1_rd_e = ", i1_rd_e)
-    #     print("k1_sqrt = ", k1_sqrt)
-    #     print("i1_sqrt = ", i1_sqrt)
-    #     print("u = ", u)
-    #     print("sqrt_u = ", sqrt_u)
-    #     print("num = ", numerator)
-    #     print("denom = ", denominator_safe)
-
-    #     result = numerator / denominator_safe
-
-    #     return result
 
 
     def P_wD_laplace(self, u, r_D):

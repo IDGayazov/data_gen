@@ -11,11 +11,12 @@ class GenerationParams:
     Параметры генерации пласта
     """
 
-    def __init__(self, t_max_days: int, points_count: int, size: int, sigma: float, output_path: str):
+    def __init__(self, t_max_days: int, points_count: int, size: int, sigma: float, output_path: str, type='train'):
         self.t_max_days = t_max_days
         self.points_count = points_count
         self.size = size
         self.sigma = sigma
+        self.type = type
         self.output_path = output_path
 
     def __str__(self):
@@ -28,8 +29,9 @@ class ParamGenerator(ABC):
     Генерация параметров пласта
     """
 
-    def __init__(self, size):
+    def __init__(self, size, type='train'):
         self.size = size
+        self.type = type
 
     @abstractmethod
     def generate(self):
@@ -49,6 +51,9 @@ class DataGenerator(ABC):
         self.points_count = params.points_count
         self.reservoir_type = reservoir_type
         self.output_path = params.output_path
+        self.type = params.type
+
+        self.params = params
 
         self.curve_dir = os.path.join(self.output_path, 'curve')
         self.params_dir = os.path.join(self.output_path, 'params')
@@ -61,11 +66,14 @@ class DataGenerator(ABC):
         pass
 
     def generate_search_time(self, converter):
+        t_min_seconds = 0.3
         t_max_seconds = self.t_max_days * 24 * 3600
+
         t_D_max = converter.time_from_dim_to_dimless(t_max_seconds)
 
         t_D_max = extract_scalar(t_D_max)
-        t_D_min = 1e-1
+        
+        t_D_min = converter.time_from_dim_to_dimless(t_min_seconds)
 
         t_D_array = np.logspace(np.log10(t_D_min), np.log10(t_D_max), self.points_count)
 

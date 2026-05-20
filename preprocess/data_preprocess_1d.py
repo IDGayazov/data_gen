@@ -119,10 +119,8 @@ class PressureDataRegressionPreprocessor1D(AbstractPressureDataPreprocessor):
             return [param_df['k1'],
                     param_df['C_D'],
                     param_df['S'],
-                    param_df['M1'],
-                    param_df['M2'],
-                    param_df['omega1'],
-                    param_df['omega2'],
+                    param_df['M12'],
+                    param_df['omega12'],
                     param_df['r_fD']]
 
         return None
@@ -208,6 +206,83 @@ class PressureDataMultilabelClassificationPreprocessor1D(AbstractPressureDataCla
 
         return None
 
+
+class PressureDataRegressionPreprocessor1D(AbstractPressureDataPreprocessor):
+
+    def __init__(self, data_dir, model_type, test_size=0.2, val_size=0.1, random_state=42, debug=False):
+        super().__init__(data_dir, test_size, val_size, random_state, debug)
+
+        self.model_type = model_type
+
+    @override
+    def load_data(self):
+        """
+        Загрузка датасета
+        :return: np.array(X), np.array(y)
+        """
+        X_list = []
+        y_list = []
+
+        curve_data_dir = self.data_dir + "/curve"
+
+        pattern = r'(.+)_(\d+)\.csv$'
+
+        for item in os.listdir(curve_data_dir):
+            match = re.match(pattern, item)
+            model_type = Model(match.group(1))
+            num = int(match.group(2))
+
+            if self.model_type != model_type:
+                continue
+
+            file_path = os.path.join(curve_data_dir, item)
+
+            df = pd.read_csv(file_path)[['t_D', 'dP_wD']]
+
+            t_D = np.array(df['t_D'])
+            dP_wD = np.array(df['dP_wD'])
+
+            sample = np.column_stack([dP_wD, t_D])
+            X_list.append(sample)
+
+            y_list.append(self.get_params_from_file(num))
+
+        X = np.array(X_list)
+        y = np.array(y_list)
+
+        return X, y
+
+    def get_params_from_file(self, num):
+        file_name = f'{self.data_dir}/params/{num}.csv'
+        param_df = pd.read_csv(file_name)
+
+        if self.model_type == Model.HOMOGENEOUS_INF:
+            return [param_df['k'], param_df['C_D'], param_df['S']]
+
+        if self.model_type == Model.HOMOGENEOUS_FIN:
+            return [param_df['k'], param_df['C_D'], param_df['S'], param_df['r_D_e']]
+
+        if self.model_type == Model.DUAL_POROSITY_INF:
+            return [param_df['k_f'], param_df['C_D'], param_df['S'], param_df['omega'], param_df['lambda']]
+
+        if self.model_type == Model.DUAL_POROSITY_FIN:
+            return [param_df['k_f'], param_df['C_D'], param_df['S'], param_df['omega'], param_df['lambda'], param_df['R_eD']]
+
+        if self.model_type == Model.DUAL_PERMEABILITY_INF:
+            return [param_df['k2'], param_df['C_D'], param_df['S2'], param_df['omega'], param_df['lambda'], param_df['kappa']]
+
+        if self.model_type == Model.DUAL_PERMEABILITY_FIN:
+            return [param_df['k2'], param_df['C_D'], param_df['S2'], param_df['omega'], param_df['lambda'], param_df['kappa'], param_df['R_eD']]
+
+        if self.model_type == Model.RADIAL_COMPOSITE_INF:
+            return [param_df['k1'],
+                    param_df['C_D'],
+                    param_df['S'],
+                    param_df['M12'],
+                    param_df['omega12'],
+                    param_df['r_fD']]
+
+        return None
 
 if __name__ == "__main__":
     # data_preprocess = PressureDataClassificationPreprocessor1D(data_dir='../datasets/dataset/curve', debug=True)
