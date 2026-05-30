@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>900</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Well Test Analysis</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QHBoxLayout" name="mainLayout">
+    <property name="spacing">
+     <number>8</number>
+    </property>
+    <property name="leftMargin"><number>8</number></property>
+    <property name="topMargin"><number>8</number></property>
+    <property name="rightMargin"><number>8</number></property>
+    <property name="bottomMargin"><number>8</number></property>
+    <!-- Left control panel -->
+    <item>
+     <widget class="QWidget" name="leftPanel">
+      <property name="maximumWidth">
+       <number>210</number>
+      </property>
+      <property name="minimumWidth">
+       <number>170</number>
+      </property>
+      <layout class="QVBoxLayout" name="leftLayout">
+       <property name="spacing">
+        <number>6</number>
+       </property>
+       <item>
+        <widget class="QLabel" name="labelModelType">
+         <property name="text">
+          <string>Тип модели пласта</string>
+         </property>
+         <property name="font">
+          <font><bold>true</bold></font>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="homogen_inf">
+         <property name="text"><string>Homogeneous infinite</string></property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="homogen_fin">
+         <property name="text"><string>Homogeneous finite</string></property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="dual_por_inf">
+         <property name="text"><string>Dual porosity infinite</string></property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="dual_por_fin">
+         <property name="text"><string>Dual porosity finite</string></property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="dual_perm_inf">
+         <property name="text"><string>Dual permeability infinite</string></property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="dual_perm_fin">
+         <property name="text"><string>Dual permeability finite</string></property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="rad_comp_inf">
+         <property name="text"><string>Radial composite infinite</string></property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="spacer1">
+         <property name="orientation"><enum>Qt::Vertical</enum></property>
+         <property name="sizeHint" stdset="0">
+          <size><width>20</width><height>10</height></size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QPushButton" name="generate">
+         <property name="text"><string>Сгенерировать</string></property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="predict">
+         <property name="text"><string>Предсказать</string></property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="spacer2">
+         <property name="orientation"><enum>Qt::Vertical</enum></property>
+         <property name="sizeType"><enum>QSizePolicy::Expanding</enum></property>
+         <property name="sizeHint" stdset="0">
+          <size><width>20</width><height>40</height></size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <!-- Graph area — Python injects PlotWidget here -->
+    <item>
+     <widget class="QWidget" name="graphic">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+        <horstretch>1</horstretch>
+        <verstretch>1</verstretch>
+       </sizepolicy>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect><x>0</x><y>0</y><width>900</width><height>20</height></rect>
+   </property>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

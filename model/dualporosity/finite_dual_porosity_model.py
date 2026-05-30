@@ -1,11 +1,7 @@
-import warnings
-
 import numpy as np
-import pandas as pd
 
-from scipy.special import k0, k1, i0, i1
+from scipy.special import k0, k1, i0, i1, kve, ive
 
-from conversion.homogeneous_converter import DimensionConverter
 from inversion.shtefest_algorithm import ShtefestAlgorithm
 from model.reservoir_model import ReservoirModel
 
@@ -36,33 +32,31 @@ class FiniteDualPorosityReservoirModel(ReservoirModel):
 
 
     def P_wD_laplace_rd_bound(self, u, r_D, r_D_e, omega, lam):
-        """
-        Вычисляет решение для забойного давления в пространстве Лапласа.
-        Аргументы:
-            u:       параметр преобразования Лапласа
-            C_D:     безразмерная емкость
-            omega:   коэффициент ёмкости
-            lam:     коэффициент межпорового перетока
-        Возвращает:
-            P_wD(u): значение безразмерного давления в пространстве Лапласа
-        """
-        warnings.filterwarnings('ignore', category=RuntimeWarning)
-
+        u = np.atleast_1d(u)
         f_u = self.f(u, omega, lam)
-        sqrt_u_fu = np.sqrt(u * f_u)
-        r_sqrt_u_fu = r_D_e * sqrt_u_fu
+        
+        z = np.sqrt(u * f_u)
+        z_re = r_D_e * z
 
-        K0_sqrt = k0(sqrt_u_fu)
-        I1_r_sqrt = i1(r_sqrt_u_fu)
-        K1_r_sqrt = k1(r_sqrt_u_fu)
-        I0_sqrt = i0(sqrt_u_fu)
-        K1_sqrt = k1(sqrt_u_fu)
-        I1_sqrt = i1(sqrt_u_fu)
+        # Ключевой момент: считаем отношение K1/I1 так, чтобы не было переполнения
+        # ratio = K1(z_re) / I1(z_re)
+        # Используем формулу: (kve(1, z_re) * exp(-z_re)) / (ive(1, z_re) * exp(z_re))
+        # Это дает exp(-2 * z_re), что стремится к 0 при больших u
+        
+        exp_term = np.exp(-2 * np.clip(z_re, 0, 700))
+        ratio = (kve(1, z_re) / ive(1, z_re)) * exp_term
 
-        numerator = K0_sqrt * I1_r_sqrt + K1_r_sqrt * I0_sqrt
-        denominator = u * sqrt_u_fu * (K1_sqrt * I1_r_sqrt - K1_r_sqrt * I1_sqrt)
+        # Используем стандартные k0, i0, но теперь они защищены тем, 
+        # что мы делим всё выражение на I1(z_re)
+        # Формула превращается в:
+        # (K0(z) + ratio * I0(z)) / (u * z * (K1(z) - ratio * I1(z)))
+        
+        num = k0(z) + ratio * i0(z)
+        den = u * z * (k1(z) - ratio * i1(z))
 
-        return numerator / denominator
+        res = num / den
+        
+        return np.where(np.isfinite(res), res, 1.0 / (u * z))
 
 
     def P_wD_laplace(self, u, r_D):

@@ -1,0 +1,21 @@
+{
+  "task_type": "classification",
+  "class_names": [
+    "dual_permeability_fin",
+    "dual_permeability_inf",
+    "dual_porosity_fin",
+    "dual_porosity_inf",
+    "homogeneous_fin",
+    "homogeneous_inf",
+    "radial_composite_inf"
+  ],
+  "output_names": [],
+  "num_outputs": null,
+  "input_shape": [
+    128,
+    2
+  ],
+  "device_used": "CPU",
+  "model_format": "all",
+  "save_time": "2026-05-25 09:00:44"
+}

@@ -1,6 +1,6 @@
 import numpy as np
 
-from conversion.homogeneous_converter import DimensionConverter
+from conversion.homogeneous_converter import HomogeneousConverter
 from inversion.shtefest_algorithm import ShtefestAlgorithm
 from model.homogeneous.infinite_homogeneous_model import InfiniteHomogeneousReservoirModel
 
@@ -16,7 +16,7 @@ def main():
     c_t = 1.5e-9
     r_w = 0.1
 
-    converter = DimensionConverter(k, h, q, mu, B, p_i, phi, c_t, r_w)
+    converter = HomogeneousConverter(k, h, q, mu, B, p_i, phi, c_t, r_w)
 
     t_max_days = 30  # 30 суток
     t_max_seconds = t_max_days * 24 * 3600  # 30 дней в секундах

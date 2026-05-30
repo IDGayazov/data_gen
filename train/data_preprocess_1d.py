@@ -10,13 +10,11 @@ from sklearn.preprocessing import LabelEncoder, OneHotEncoder, StandardScaler
 class PressureDataClassificationPreprocessor1D:
     """Подготовка данных для классификации типа пласта 1D CNN из файлов кривых"""
 
-    def __init__(self, target_size=500, test_size=0.2, val_size=0.1,
-                 random_state=42, debug=False):
-        self.target_size = target_size
+    def __init__(self, data_dir, test_size=0.2, val_size=0.1, random_state=42, debug=False):
         self.test_size = test_size
         self.val_size = val_size
         self.random_state = random_state
-        self.data_dir = './dataset4/curve/'
+        self.data_dir = data_dir
 
         self.label_encoder = LabelEncoder()
         self.onehot_encoder = OneHotEncoder(sparse_output=False)
@@ -25,7 +23,6 @@ class PressureDataClassificationPreprocessor1D:
         self.class_names = []
 
         self.debug = debug
-
 
     def load_data_for_classification(self):
         """
@@ -57,7 +54,6 @@ class PressureDataClassificationPreprocessor1D:
 
         return X, y
 
-
     def normalize(self, X):
         """
         Принимает:
@@ -87,7 +83,6 @@ class PressureDataClassificationPreprocessor1D:
 
         return X_norm
 
-
     def _encode_new_sample(self, new_label):
         """
         Кодирование нового значения (строки)
@@ -98,7 +93,6 @@ class PressureDataClassificationPreprocessor1D:
         integer_encoded_reshaped = integer_encoded.reshape(-1, 1)
         one_hot_encoded = self.one_hot_encoder.transform(integer_encoded_reshaped)
         return one_hot_encoded
-
 
     def _init_target_encoders(self):
         """
@@ -129,12 +123,10 @@ class PressureDataClassificationPreprocessor1D:
         if self.debug:
             print(f"One-hot кодирование (размерность): {one_hot_encoded.shape}")
 
-
     def _get_label_from_filename(self, filename):
         parts = filename.rsplit('_', 1)
         label = parts[0]
         return label
-
 
     def get_dataset(self):
         X, y = self.load_data_for_classification()
@@ -170,7 +162,6 @@ class PressureDataClassificationPreprocessor1D:
         self.X_original, self.y_original = X, y
 
         return X_train, X_val, X_test, y_train, y_val, y_test
-
 
     def stats(self, return_dict=False):
         """
@@ -250,29 +241,14 @@ class PressureDataClassificationPreprocessor1D:
 
         if return_dict:
             return stats_dict
-
+        return None
 
     def get_class_names(self):
         return self.class_names
 
 
 if __name__ == "__main__":
-    count_phi1 = 0
-    count_phi2 = 0
-    
-    for item in os.listdir('./dataset4/params'):
-        file_path = os.path.join('./dataset4/params', item)
-        df = pd.read_csv(file_path)
-        
-        print(df['phi2'])
+    data_preprocess = PressureDataClassificationPreprocessor1D(data_dir='../datasets/dataset/curve', debug=True)
+    X_train, X_val, X_test, y_train, y_val, y_test = data_preprocess.get_dataset()
 
-        count_phi1 += df['phi1'].between(0.05, 0.35).sum()
-        count_phi1 += df['phi2'].between(0.05, 0.35).sum()
-    
-    print('count_phi1 cnt: ', count_phi1)
-    print('count_phi2 cnt: ', count_phi2)
-
-    # data_preprocess = PressureDataClassificationPreprocessor1D(debug=True)
-    # X_train, X_val, X_test, y_train, y_val, y_test = data_preprocess.get_dataset()
-
-    # data_preprocess.stats()
+    data_preprocess.stats()

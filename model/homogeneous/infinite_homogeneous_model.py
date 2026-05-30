@@ -1,7 +1,4 @@
-import warnings
-
 import numpy as np
-
 from scipy.special import k0, k1
 
 from inversion.shtefest_algorithm import ShtefestAlgorithm
@@ -33,8 +30,6 @@ class InfiniteHomogeneousReservoirModel(ReservoirModel):
         Возвращает:
             P_wD(u): значение безразмерного давления в пространстве Лапласа
         """
-        warnings.filterwarnings('ignore', category=RuntimeWarning)
-
         sqrt_u = np.sqrt(u)
         numerator = k0(sqrt_u) + S * sqrt_u * k1(sqrt_u)
         denominator = u * (sqrt_u * k1(sqrt_u) + C_D * u * (k0(sqrt_u) + S * sqrt_u * k1(sqrt_u)))
@@ -47,12 +42,12 @@ class InfiniteHomogeneousReservoirModel(ReservoirModel):
 
 
 if __name__ == "__main__":
-    model = InfiniteHomogeneousReservoirModel(C_D=100, S=1)
+    model = InfiniteHomogeneousReservoirModel(C_D=100, S=2)
 
-    t_D_array = np.logspace(0, 5, 128)
-    alg = ShtefestAlgorithm(N=4)
+    t_D_array = np.logspace(0, 7, 128)
+    alg = ShtefestAlgorithm(N=12)
 
     model.pressure(t_D_array, alg) \
-        .gauss_noize(mu=0, sigma=5e-7) \
-        .derivative(smoothig_alg='regression', delta=0.3) \
+        .gauss_noize(mu=0, sigma=1e-3, relative=True) \
+        .derivative(smoothig_alg='regression', delta=0.175) \
         .visualize('Кривые давления (однородный пласт)')

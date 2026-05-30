@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from scipy import interpolate
 
 from abc import ABC, abstractmethod
 
@@ -92,82 +93,36 @@ class ReservoirModel(ABC):
 
         p_w_d_array = np.array(p_w_d_results)
 
-        if np.any(np.isnan(p_w_d_array)):
-            p_w_d_array = self._interpolate_nan_values(t_D, p_w_d_array)
-
         table_data = np.column_stack((t_D, p_w_d_array))
         self.df = pd.DataFrame(table_data, columns=['t_D', 'P_wD'])
 
         return self
 
-    def _interpolate_nan_values(self, t, p):
+    def gauss_noize(self, mu=0, sigma=0.1, relative=False, sigma_mpa=None, converter=None):
         """
-        Интерполяция NaN значений в массиве давления.
-        Использует линейную интерполяцию в логарифмической шкале.
+        Добавление гауссова шума к кривой ГДИС.
+
+        sigma      — стандартное отклонение в безразмерных единицах.
+        relative   — если True, sigma задаётся как доля от P_wD.
+        sigma_mpa  — стандартное отклонение в МПа; требует передачи converter.
+                     Имеет приоритет над sigma.
+        converter  — объект конвертера (HomogeneousConverter и т.п.) с методом
+                     pressure_from_dim_to_dimless и атрибутом p_i.
         """
-        p_interp = p.copy()
+        if sigma_mpa is not None:
+            if converter is None:
+                raise ValueError("converter обязателен при задании sigma_mpa")
+            # σ_Pa → σ_D: используем тот же масштабный множитель, что и для давления
+            sigma = converter.pressure_from_dim_to_dimless(converter.p_i - sigma_mpa * 1e6)
 
-        nan_mask = np.isnan(p_interp)
-        valid_mask = ~nan_mask
-
-        if np.all(nan_mask) or np.sum(valid_mask) < 2:
-            print("Недостаточно валидных точек для интерполяции. Возвращаю нули.")
-            return np.zeros_like(p_interp)
-
-        # Если нет NaN - возвращаем как есть
-        if not np.any(nan_mask):
-            return p_interp
-
-        t_valid = t[valid_mask]
-        p_valid = p_interp[valid_mask]
-
-        try:
-            log_interp = np.interp(
-                np.log(t[nan_mask] + 1e-100),
-                np.log(t_valid),
-                np.log(p_valid + 1e-10)
-            )
-
-            p_interp[nan_mask] = np.exp(log_interp)
-
-        except Exception as e:
-            print(f"Ошибка при логарифмической интерполяции: {e}")
-            print("Пробую линейную интерполяцию в обычной шкале...")
-
-            linear_interp = np.interp(
-                t[nan_mask],
-                t_valid,
-                p_valid
-            )
-            p_interp[nan_mask] = linear_interp
-
-        # Проверка результата интерполяции
-        if np.any(np.isnan(p_interp)) or np.any(np.isinf(p_interp)):
-            for i in np.where(np.isnan(p_interp) | np.isinf(p_interp))[0]:
-                valid_indices = np.where(valid_mask)[0]
-                nearest_idx = valid_indices[np.argmin(np.abs(valid_indices - i))]
-                p_interp[i] = p_valid[np.where(valid_indices == nearest_idx)[0][0]]
-
-        return p_interp
-
-    def gauss_noize(self, mu=0, sigma=5e-5):
-        """
-        Функция, добавляющая гауссов шум к данным.
-        Данные с шумами добавляются в отдельный столбец P_wD_gauss в датафрейме.
-
-        Получает:
-            mu: матожидание.
-            sigma: стандартное отклонение.
-
-        Возвращает:
-            self
-        """
+        if relative:
+            noise = np.random.normal(mu, sigma, len(self.df)) * np.abs(self.df['P_wD'].values)
+        else:
+            noise = np.random.normal(mu, sigma, len(self.df))
         
-        signal_amplitude = self.df['P_wD'].max() - self.df['P_wD'].min()
-        
-        noise = np.random.normal(mu, sigma * signal_amplitude, len(self.df))
         self.df['P_wD_gauss'] = self.df['P_wD'] + noise
-        
+
+        self.df['P_wD_gauss'] = self.df['P_wD_gauss'].clip(lower=0)
         return self
 
     def derivative(self, smoothig_alg='regression', delta=1):
@@ -175,8 +130,7 @@ class ReservoirModel(ABC):
         Добавление в датафрейм столбца с логарифмической производной
         """
         
-        self.df['ln_t_D'] = np.log(self.df['t_D']) # необходимо для последующего сглаживания
-
+        self.df['ln_t_D'] = np.log(self.df['t_D'])
         
         div = BourdaisLogarithmicDerivative(self.df)
 
@@ -194,13 +148,13 @@ class ReservoirModel(ABC):
         return self
 
 
-    def visualize(self, title, horizontal_line=True):
+    def visualize(self, title, horizontal_line=False, point_type='x'):
         """
         Визуализация, зависимости давления от времени в loglog графике.
         """
         plt.figure(figsize=(10, 6))
-        plt.loglog(self.df['t_D'], self.df['P_wD'], 'g-', label='Теоретическое давление')
-        plt.loglog(self.df['t_D'], self.df['dP_wD'], 'b--', linewidth=2, label='dP_wD/dln_t_D')
+        plt.loglog(self.df['t_D'], self.df['P_wD'], 'g' + point_type, label='Теоретическое давление')
+        plt.loglog(self.df['t_D'], self.df['dP_wD'], 'b' + point_type, linewidth=2, label='dP_wD/dln_t_D')
 
         if 'P_wD_gauss' in self.df.columns:
             plt.loglog(self.df['t_D'], self.df['P_wD_gauss'], 'ro', markersize=2,
@@ -240,3 +194,10 @@ class ReservoirModel(ABC):
             Датафрейм зависимости давления/времени.
         """
         return self.df
+
+    def load_model(self, filename: str):
+        """
+        Загрузка модели из файла
+        """
+        self.df = pd.read_csv(filename)
+        return self

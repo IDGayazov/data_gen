@@ -35,14 +35,16 @@ class BourdaisLogarithmicDerivative:
                 return np.nan
             
             ln_t = np.log(t)
-            t_local_points = self.f[self.f[x_col_name].between(ln_t - delta, ln_t + delta)]
-            
+
+            ln_delta = delta * np.log(10) 
+
+            t_local_points = self.f[self.f[x_col_name].between(ln_t - ln_delta, ln_t + ln_delta)]
+
             if len(t_local_points) < 2:
-                t_local_points = self.f[self.f[x_col_name].between(ln_t - 2*delta, ln_t + 2*delta)]
-                if len(t_local_points) < 2:
-                    t_local_points = self.f
-                    if len(t_local_points) < 2:
-                        return np.nan
+                t_local_points = self.f[self.f[x_col_name].between(ln_t - 2*ln_delta, ln_t + 2*ln_delta)]
+
+            if len(t_local_points) < 2:
+                return np.nan
             
             x_data = t_local_points[x_col_name].to_numpy(dtype=float)
             y_data = t_local_points[y_col_name].to_numpy(dtype=float)
@@ -85,23 +87,40 @@ class BourdaisLogarithmicDerivative:
             Скалярное значение или вектор с вычисленными производными
         """
         if np.isscalar(t):
+            if t <= 0:
+                return np.nan
+
             ln_t = np.log(t)
-            t_local_points = self.f[self.f[x_col_name].between(ln_t - delta, ln_t + delta)]
+            ln_delta = delta * np.log(10)
+            t_local_points = self.f[self.f[x_col_name].between(ln_t - ln_delta, ln_t + ln_delta)]
+
+            if len(t_local_points) < 2:
+                return np.nan
 
             first_idx = t_local_points.index[0]
             last_idx = t_local_points.index[-1]
 
-            first_point = (t_local_points.loc[first_idx, x_col_name], t_local_points.loc[first_idx, y_col_name])
-            t_point = (ln_t, self.f[self.f[x_col_name] == ln_t][y_col_name].values[0])
-            last_point = (t_local_points.loc[last_idx, x_col_name], t_local_points.loc[last_idx, y_col_name])
+            # Ближайшая к ln_t точка как центральная (вместо float ==)
+            center_idx = (self.f[x_col_name] - ln_t).abs().idxmin()
 
-            m1 = self.slope_from_two_points(first_point, t_point)
-            m2 = self.slope_from_two_points(t_point, last_point)
+            left_point  = (t_local_points.loc[first_idx, x_col_name],  t_local_points.loc[first_idx, y_col_name])
+            center_point = (self.f.loc[center_idx, x_col_name], self.f.loc[center_idx, y_col_name])
+            right_point = (t_local_points.loc[last_idx, x_col_name],  t_local_points.loc[last_idx, y_col_name])
 
-            l1 = t_point[0] - first_point[0]
-            l2 = last_point[0] - t_point[0]
+            m_left  = self.slope_from_two_points(left_point, center_point)
+            m_right = self.slope_from_two_points(center_point, right_point)
 
-            return (l1 * m1 + l2 * m2) / (l1 + l2)
+            if np.isnan(m_left) or np.isnan(m_right):
+                return np.nan
+
+            l_left  = center_point[0] - left_point[0]
+            l_right = right_point[0] - center_point[0]
+
+            if l_left + l_right == 0:
+                return np.nan
+
+            # Формула Бурде: левый наклон взвешивается на правый интервал и наоборот
+            return (m_left * l_right + m_right * l_left) / (l_left + l_right)
         elif isinstance(t, pd.Series):
             return t.apply(lambda x: self.derivative_with_rolling_window_smoothing(x, delta, x_col_name, y_col_name))
         else:

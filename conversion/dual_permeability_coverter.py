@@ -15,8 +15,8 @@ class DualPermeabilityDimensionConverter:
        - c_t2 - сжимаемость системы 2, 1 / Па
        - h1 - толщина пласта системы 1, м
        - h2 - толщина пласта системы 2, м
-       - q1 - дебит из системы 1, м^3 / с
-       - q2 - дебит из системы 2, м^3 / с
+       - q1 - дебит из системы 1, м^3 / сут
+       - q2 - дебит из системы 2, м^3 / сут
        - mu - вязкость флюида, Па * с (одинакова для обеих систем)
        - B - объемный коэффициент, безразмерно
        - p_i - начальное давление, Па
@@ -32,13 +32,13 @@ class DualPermeabilityDimensionConverter:
         self.k1 = k1
         self.phi1 = phi1
         self.c_t1 = c_t1
-        self.q1 = q1
+        self.q1 = self.convert_debit_on_m3_by_seconds(q1)
 
         # Параметры системы 2 (обычно матрица/низкопроницаемая)
         self.k2 = k2
         self.phi2 = phi2
         self.c_t2 = c_t2
-        self.q2 = q2
+        self.q2 = self.convert_debit_on_m3_by_seconds(q2)
 
         # Общие параметры
         self.h1 = h1
@@ -66,18 +66,8 @@ class DualPermeabilityDimensionConverter:
         self.phi_total = phi1 + phi2
 
         # Вычисление безразмерных параметров
-        self.omega1 = self.calc_omega1()
-        self.omega2 = self.calc_omega2()
         self.lambda_param = self.calc_lambda()
         self.kappa = self.calc_kappa()
-
-    def calc_omega1(self):
-        """Коэффициент ёмкости системы 1"""
-        return self.storage1 / self.total_storage if self.total_storage > 0 else 0.5
-
-    def calc_omega2(self):
-        """Коэффициент ёмкости системы 2"""
-        return self.storage2 / self.total_storage if self.total_storage > 0 else 0.5
 
     def calc_omega(self):
         return self.phi1 * self.c_t1 * self.h1 / self.total_storage if self.total_storage > 0 else 0.5
@@ -93,34 +83,14 @@ class DualPermeabilityDimensionConverter:
     def pressure_from_dim_to_dimless(self, p, system=1):
         """
         Преобразование давления в безразмерное
-        system: 1 - для системы 1, 2 - для системы 2
         """
-        if system == 1:
-            k = self.k1
-            h = self.h1
-        elif system == 2:
-            k = self.k2
-            h = self.h2
-        else:
-            raise ValueError("system must be 1 or 2")
-
-        return 2 * np.pi * k * h * (self.p_i - p) / (self.mu * self.B * self.total_q)
+        return 2 * np.pi * (self.k1 * self.h1 + self.k2 * self.h2) * (self.p_i - p) / (self.mu * self.B * self.total_q)
 
     def pressure_from_dimless_to_dim(self, p_D, system=1):
         """
         Преобразование безразмерного давления в размерное
-        system: 1 - для системы 1, 2 - для системы 2
         """
-        if system == 1:
-            k = self.k1
-            h = self.h1
-        elif system == 2:
-            k = self.k2
-            h = self.h2
-        else:
-            raise ValueError("system must be 1 or 2")
-
-        return self.p_i - self.mu * self.B * self.total_q * p_D / (2 * np.pi * k * h)
+        return self.p_i - self.mu * self.B * self.total_q * p_D / (2 * np.pi * (self.k1 * self.h1 + self.k2 * self.h2))
 
     def time_from_dim_to_dimless(self, t, system='total'):
         """
@@ -148,7 +118,7 @@ class DualPermeabilityDimensionConverter:
         """
         if system == 'total':
             phi_c_t = self.total_storage
-            k = self.k1
+            k = self.k1 * self.h1 + self.k2 * self.h2
         elif system == '1':
             phi_c_t = self.storage1
             k = self.k1
@@ -190,16 +160,8 @@ class DualPermeabilityDimensionConverter:
         """Преобразование безразмерного радиуса в размерное"""
         return r_D * self.r_w
 
-    def diffusivity_system1(self):
-        """Коэффициент пьезопроводности системы 1"""
-        return self.k1 / (self.phi1 * self.mu * self.c_t1)
-
-    def diffusivity_system2(self):
-        """Коэффициент пьезопроводности системы 2"""
-        return self.k2 / (self.phi2 * self.mu * self.c_t2)
-
-    def diffusivity_ratio(self):
-        """Отношение пьезопроводностей (система 2 / система 1)"""
-        eta1 = self.diffusivity_system1()
-        eta2 = self.diffusivity_system2()
-        return eta2 / eta1 if eta1 > 0 else 0.0
+    def convert_debit_on_m3_by_seconds(self, q):
+        """
+        Перевод из м^3 / сут в м^3 / с
+        """
+        return q / 86400

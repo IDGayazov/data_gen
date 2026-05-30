@@ -1,5 +1,3 @@
-import warnings
-
 import numpy as np
 
 from scipy.special import k0, k1, i0, i1
@@ -25,43 +23,34 @@ class FiniteHomogeneousReservoirModel(ReservoirModel):
 
 
     def P_wD_laplace_with_bound(self, u, r_D, r_D_e, eps=1e-10):
-        """
-        Вычисляет решение для забойного давления в пространстве Лапласа.
-        Аргументы:
-            u:       параметр преобразования Лапласа
-            r_D:     безразмерный радиус
-            r_D_e:   безразмерный радиус коллектора
-            C_D:     безразмерная емкость
-            S:       скин-фактор
-        Возвращает:
-            P_wD(u): значение безразмерного давления в пространстве Лапласа
-        """
-        warnings.filterwarnings('ignore', category=RuntimeWarning)
+        from scipy.special import k0, k1, i0, i1, ive, kve
 
-        u = np.asarray(u, dtype=np.float64)
-        u_safe = np.where(np.abs(u) < eps, np.sign(u) * eps, u)
+        u = np.atleast_1d(u)
+        sqrt_u = np.sqrt(u)
+        
+        z = sqrt_u
+        z_rd = r_D * sqrt_u
+        z_re = r_D_e * sqrt_u
 
-        sqrt_u = np.sqrt(u_safe)
-
-        k0_rd = k0(r_D * sqrt_u)
-        i0_rd = i0(r_D * sqrt_u)
-        k1_rd_e = k1(r_D_e * sqrt_u)
-        i1_rd_e = i1(r_D_e * sqrt_u)
-        k1_sqrt = k1(sqrt_u)
-        i1_sqrt = i1(sqrt_u)
-
-        numerator = k0_rd * i1_rd_e + k1_rd_e * i0_rd
-        denominator = u_safe * sqrt_u * (k1_sqrt * i1_rd_e - k1_rd_e * i1_sqrt)
-
-        denominator_safe = np.where(
-            np.abs(denominator) < eps,
-            np.sign(denominator) * eps,
-            denominator
-        )
-
-        result = numerator / denominator_safe
-
-        return result
+        # Чтобы избежать inf, используем отношение функций или масштабированные функции
+        # Для больших z_re: K1(z_re)/I1(z_re) практически равно 0
+        # Используем ive(n, z) = i_n(z) * exp(-z)
+        
+        # Считаем отношение R = K1(z_re) / I1(z_re)
+        # kve(1, z_re) = k1 * exp(z_re), ive(1, z_re) = i1 * exp(-z_re)
+        # R = (kve * exp(-z_re)) / (ive * exp(z_re)) = (kve/ive) * exp(-2*z_re)
+        
+        # Безопасный расчет отношения:
+        ratio = (kve(1, z_re) / ive(1, z_re)) * np.exp(-2 * z_re)
+        
+        # Теперь переписываем формулу, разделив всё на I1(z_re)
+        # num = K0(z_rd) + ratio * I0(z_rd)
+        # den = u * sqrt_u * (K1(z) - ratio * I1(z))
+        
+        num = k0(z_rd) + ratio * i0(z_rd)
+        den = u * sqrt_u * (k1(z) - ratio * i1(z))
+        
+        return num / den
 
 
     def P_wD_laplace(self, u, r_D):
@@ -75,7 +64,8 @@ class FiniteHomogeneousReservoirModel(ReservoirModel):
         Возвращает:
             P_wD(u): значение безразмерного давления в пространстве Лапласа
         """
-        return self.P_wD_laplace_with_bound(u, r_D, self.R_D_E)
+        p_d = self.P_wD_laplace_with_bound(u, r_D, self.R_D_E)
+        return p_d
 
 
     def F(self, s):
@@ -85,12 +75,16 @@ class FiniteHomogeneousReservoirModel(ReservoirModel):
         return self.agarwal_filter(self.P_wD_laplace, s, 1, self.S, self.C_D)
 
 if __name__ == "__main__":
-    model = FiniteHomogeneousReservoirModel(C_D=100, S=3, R_D_E=800)
+    model = FiniteHomogeneousReservoirModel(C_D=300, S=5, R_D_E=1000)
 
-    t_D_array = np.logspace(0, 7, 128)
-    alg = ShtefestAlgorithm(N=16)
+    t_D_array = np.logspace(-2, 7, 128)
+    alg = ShtefestAlgorithm(N=12)
 
     model.pressure(t_D_array, alg)\
-         .gauss_noize(mu=0, sigma=5e-9)\
+         .gauss_noize(mu=0, sigma=5e-4)\
          .derivative(smoothig_alg='regression', delta=0.3)\
          .visualize('Кривые давления (однородный пласт c круговой границей)', False)
+
+    df = model.get_pressure()['P_wD']
+
+    print(df.isna().sum())

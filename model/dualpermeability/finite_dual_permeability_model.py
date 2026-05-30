@@ -1,9 +1,8 @@
-import warnings
 from functools import lru_cache
 
 import numpy as np
 
-from scipy.special import k0, k1, i0, i1
+from scipy.special import k0, k1, i0, i1, kve, ive
 
 from inversion.shtefest_algorithm import ShtefestAlgorithm
 from model.reservoir_model import ReservoirModel
@@ -110,6 +109,7 @@ class FiniteDualPermeabilityReservoirModel(ReservoirModel):
 
         return a1_value
 
+    @lru_cache(maxsize=1000)
     def a2(self, s):
         """
         Вычисляет функцию a₂(s) согласно уравнению.
@@ -189,6 +189,7 @@ class FiniteDualPermeabilityReservoirModel(ReservoirModel):
 
         return (1 - a1_val) * k0(sigma1) / self.b(s)
 
+
     def P_wD_laplace_rD(self, u, r_D, r_D_e, omega, lam, kappa):
         """
         Вычисляет решение для забойного давления в пространстве Лапласа.
@@ -202,20 +203,20 @@ class FiniteDualPermeabilityReservoirModel(ReservoirModel):
         Возвращает:
             P_wD(u): значение безразмерного давления в пространстве Лапласа
         """
-        warnings.filterwarnings('ignore', category=RuntimeWarning)
-
-        sigma1_sq = self.sigma1_squared(u)
+        sigma1 = np.sqrt(self.sigma1_squared(u))
+        sigma2 = np.sqrt(self.sigma2_squared(u))
         a1_val = self.a1(u)
-        sigma1 = np.sqrt(sigma1_sq)
-
-        sigma2_sq = self.sigma2_squared(u)
         a2_val = self.a2(u)
-        sigma2 = np.sqrt(sigma2_sq)
 
-        p1_1 = a1_val * self.B1(u) * (k0(r_D * sigma1) + (k1(sigma1 * r_D_e) / i1(sigma1 * r_D_e)) * i0(sigma1 * r_D))
-        p1_2 = a2_val * self.B2(u) * (k0(sigma2 * r_D) + (k1(sigma2 * r_D_e) / i1(sigma2 * r_D_e)) * i0(sigma2 * r_D))
+        z1 = sigma1 * r_D_e
+        z2 = sigma2 * r_D_e
+        ratio1 = (kve(1, z1) / ive(1, z1)) * np.exp(-2 * np.clip(z1, 0, 700))
+        ratio2 = (kve(1, z2) / ive(1, z2)) * np.exp(-2 * np.clip(z2, 0, 700))
 
-        return p1_1 + p1_2
+        term1 = k0(r_D * sigma1) + ratio1 * i0(r_D * sigma1)
+        term2 = k0(r_D * sigma2) + ratio2 * i0(r_D * sigma2)
+
+        return (1 + a1_val) * self.B1(u) * term1 + (1 + a2_val) * self.B2(u) * term2
 
     def P_wD_laplace(self, u, r_D):
         """

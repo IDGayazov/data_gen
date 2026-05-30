@@ -1,51 +1,37 @@
 import os
-import threading
-import functools
+from abc import ABC, abstractmethod
+
 import numpy as np
 
-from pandas import DataFrame
-from abc import ABC, abstractmethod
-from conversion.homogeneous_converter import DimensionConverter
+from generation.utils import extract_scalar
 
 
-def extract_scalar(value):
+class GenerationParams:
     """
-    Извлекает скалярное значение из pandas Series, numpy array или другого контейнера.
-    
-    Args:
-        value: значение, которое может быть Series, array, list, tuple или скаляром
-        
-    Returns:
-        скалярное значение
+    Параметры генерации пласта
     """
-    if hasattr(value, 'iloc'):
-        return value.iloc[0]
-    elif hasattr(value, 'item'):
-        return value.item()
-    elif isinstance(value, (list, tuple, np.ndarray)):
-        return value[0] if len(value) > 0 else value
-    else:
-        return value
 
+    def __init__(self, t_max_days: int, points_count: int, size: int, sigma: float, output_path: str, type='train'):
+        self.t_max_days = t_max_days
+        self.points_count = points_count
+        self.size = size
+        self.sigma = sigma
+        self.type = type
+        self.output_path = output_path
 
-def synchronized_method(lock_name):
-    """Декоратор для синхронизации метода"""
-    def decorator(method):
-        @functools.wraps(method)
-        def wrapper(self, *args, **kwargs):
-            lock = getattr(self.__class__, lock_name)
-            with lock:
-                return method(self, *args, **kwargs)
-        return wrapper
-    return decorator
+    def __str__(self):
+        return (f'Generation params: days: {self.t_max_days}, size: {self.size}, points_count: {self.points_count}, '
+                f'sigma: {self.sigma}, output_path: {self.output_path}')
 
 
 class ParamGenerator(ABC):
     """
     Генерация параметров пласта
     """
-    def __init__(self, size):
+
+    def __init__(self, size, type='train'):
         self.size = size
+        self.type = type
 
     @abstractmethod
     def generate(self):
@@ -56,65 +42,43 @@ class DataGenerator(ABC):
     """
     Генерация данных по параметрам
     """
-    num = 0 # сквозная нумерация всех данных в итоговом датасете
-    save_lock = threading.Lock()
+    _global_num = 0  # сквозная нумерация всех данных в итоговом датасете
 
-    def __init__(self, reservoir_type, t_max_days, points_count, size):
-        self.size = size
-        self.t_max_days = t_max_days
-        self.points_count = points_count
+    def __init__(self, reservoir_type, params: GenerationParams):
+        self.size = params.size
+        self.sigma = params.sigma
+        self.t_max_days = params.t_max_days
+        self.points_count = params.points_count
         self.reservoir_type = reservoir_type
+        self.output_path = params.output_path
+        self.type = params.type
 
+        self.params = params
+
+        self.curve_dir = os.path.join(self.output_path, 'curve')
+        self.params_dir = os.path.join(self.output_path, 'params')
+
+        os.makedirs(self.curve_dir, exist_ok=True)
+        os.makedirs(self.params_dir, exist_ok=True)
 
     @abstractmethod
     def generate(self):
         pass
 
-
     def generate_search_time(self, converter):
+        t_min_seconds = 0.3
         t_max_seconds = self.t_max_days * 24 * 3600
+
         t_D_max = converter.time_from_dim_to_dimless(t_max_seconds)
-        
-        # Извлекаем скалярное значение, если это Series
+
         t_D_max = extract_scalar(t_D_max)
         
-        t_D_min = 1e-1
-        
-        # Проверка на валидность значений
-        if t_D_max <= 0 or np.isnan(t_D_max) or np.isinf(t_D_max):
-            raise ValueError(f"Invalid t_D_max: {t_D_max}. Check converter parameters.")
-        
-        if t_D_max < t_D_min:
-            # Если максимальное время меньше минимального, расширяем диапазон
-            t_D_min = t_D_max / 100
-        
-        # Проверка на валидность логарифма
-        if t_D_max <= 0 or t_D_min <= 0:
-            raise ValueError(f"Invalid time range: t_D_min={t_D_min}, t_D_max={t_D_max}")
-        
+        t_D_min = converter.time_from_dim_to_dimless(t_min_seconds)
+
         t_D_array = np.logspace(np.log10(t_D_min), np.log10(t_D_max), self.points_count)
-        
-        # Проверка на NaN в результате
-        if np.any(np.isnan(t_D_array)) or np.any(np.isinf(t_D_array)):
-            raise ValueError(f"Generated time array contains NaN or Inf values. t_D_min={t_D_min}, t_D_max={t_D_max}")
-        
+
         return t_D_array
 
-
-    def get_converter(self, params: DataFrame):
-        return DimensionConverter(
-            extract_scalar(params['k']),
-            extract_scalar(params['h']),
-            extract_scalar(params['q']),
-            extract_scalar(params['mu']),
-            extract_scalar(params['B']),
-            extract_scalar(params['p_i']),
-            extract_scalar(params['phi']),
-            extract_scalar(params['c_t']),
-            extract_scalar(params['r_w'])
-        )
-
-    @synchronized_method('save_lock')
     def save(self, curve, params):
         """
         Сохраняет данные в файлы в формате:
@@ -125,17 +89,21 @@ class DataGenerator(ABC):
         - Файл 2: таблица с параметрами пласта
         Название: <num>.csv
         """
-        
-        curve_dir = './dataset5/curve'
-        params_dir = './dataset5/params'
+        num = self.get_next_number()
 
-        os.makedirs(curve_dir, exist_ok=True)
-        os.makedirs(params_dir, exist_ok=True)
-
-        file_name1 = f'{curve_dir}/{self.reservoir_type}_{self.num}.csv'
-        file_name2 = f'{params_dir}/{self.num}.csv'
+        file_name1 = f'{self.curve_dir}/{self.reservoir_type}_{num}.csv'
+        file_name2 = f'{self.params_dir}/{num}.csv'
 
         curve.to_csv(file_name1, index=False)
         params.to_csv(file_name2, index=False)
 
-        DataGenerator.num += 1
+    @classmethod
+    def get_next_number(cls):
+        """Получить следующий номер"""
+        DataGenerator._global_num += 1
+        return DataGenerator._global_num
+
+    @classmethod
+    def reset_global_counter(cls):
+        """Обнулить общий счетчик"""
+        DataGenerator._global_num = 0
