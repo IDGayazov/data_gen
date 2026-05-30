@@ -98,83 +98,6 @@ class ReservoirModel(ABC):
 
         return self
 
-    def _interpolate_nan_values(self, t, p):
-        """
-        Интерполяция NaN значений в массиве давления.
-        Использует линейную интерполяцию в логарифмической шкале.
-        """
-        p_interp = p.copy()
-
-        nan_mask = np.isnan(p_interp)
-        valid_mask = ~nan_mask
-
-        if np.all(nan_mask) or np.sum(valid_mask) < 2:
-            print("Недостаточно валидных точек для интерполяции. Возвращаю нули.")
-            return np.zeros_like(p_interp)
-
-        # Если нет NaN - возвращаем как есть
-        if not np.any(nan_mask):
-            return p_interp
-
-        t_valid = t[valid_mask]
-        p_valid = p_interp[valid_mask]
-
-        try:
-            log_interp = np.interp(
-                np.log(t[nan_mask] + 1e-100),
-                np.log(t_valid),
-                np.log(p_valid + 1e-10)
-            )
-
-            p_interp[nan_mask] = np.exp(log_interp)
-
-        except Exception as e:
-            print(f"Ошибка при логарифмической интерполяции: {e}")
-            print("Пробую линейную интерполяцию в обычной шкале...")
-
-            linear_interp = np.interp(
-                t[nan_mask],
-                t_valid,
-                p_valid
-            )
-            p_interp[nan_mask] = linear_interp
-
-        # Проверка результата интерполяции
-        if np.any(np.isnan(p_interp)) or np.any(np.isinf(p_interp)):
-            for i in np.where(np.isnan(p_interp) | np.isinf(p_interp))[0]:
-                valid_indices = np.where(valid_mask)[0]
-                nearest_idx = valid_indices[np.argmin(np.abs(valid_indices - i))]
-                p_interp[i] = p_valid[np.where(valid_indices == nearest_idx)[0][0]]
-
-        return p_interp
-
-    def resample_to_fixed_points(self, n_points=128):
-        """
-        Приведение кривой к фиксированному числу точек
-        с равномерным шагом по логарифму времени
-        """
-        if len(self.df) == 0:
-            return self
-        
-        # Получаем логарифмические границы
-        log_t_min = np.log10(self.df['t_D'].min())
-        log_t_max = np.log10(self.df['t_D'].max())
-        
-        # Равномерная сетка по log(t)
-        log_t_new = np.linspace(log_t_min, log_t_max, n_points)
-        t_new = 10 ** log_t_new
-        
-        # Линейная интерполяция
-        p_new = np.interp(np.log(t_new), np.log(self.df['t_D']), self.df['P_wD'])
-        
-        # Обновляем датафрейм
-        self.df = pd.DataFrame({
-            't_D': t_new,
-            'P_wD': p_new
-        })
-        
-        return self
-
     def gauss_noize(self, mu=0, sigma=0.1, relative=False, sigma_mpa=None, converter=None):
         """
         Добавление гауссова шума к кривой ГДИС.
@@ -207,8 +130,7 @@ class ReservoirModel(ABC):
         Добавление в датафрейм столбца с логарифмической производной
         """
         
-        self.df['ln_t_D'] = np.log(self.df['t_D']) # необходимо для последующего сглаживания
-
+        self.df['ln_t_D'] = np.log(self.df['t_D'])
         
         div = BourdaisLogarithmicDerivative(self.df)
 
@@ -279,88 +201,3 @@ class ReservoirModel(ABC):
         """
         self.df = pd.read_csv(filename)
         return self
-
-    def load_and_preprocess(self, filename: str, n_points: int = 128, 
-                            t_min: float = None, t_max: float = None):
-        """
-        Загрузка и предобработка кривой ГДИС
-        
-        Parameters:
-        -----------
-        filename : str
-            Путь к файлу с колонками t_D, dP_wD
-        n_points : int
-            Количество точек после интерполяции (по умолчанию 128)
-        t_min, t_max : float, optional
-            Границы для обрезания кривой (в логарифмическом масштабе)
-            Если None - берем по данным
-        """
-        # Загрузка данных
-        self.df = pd.read_csv(filename)
-        
-        # Убедимся, что данные отсортированы по времени
-        self.df = self.df.sort_values('t_D').reset_index(drop=True)
-        
-        # Логарифмическое обрезание кривой
-        self.df = self._crop_curve(t_min, t_max)
-        
-        # Логарифмическая интерполяция на n_points точек
-        self.df_interpolated = self._log_interpolate(n_points)
-        
-        return self
-
-    def _crop_curve(self, t_min: float = None, t_max: float = None):
-        """
-        Обрезание кривой по времени в логарифмическом масштабе
-        """
-        df_cropped = self.df.copy()
-        
-        if t_min is not None:
-            df_cropped = df_cropped[df_cropped['t_D'] >= t_min]
-        
-        if t_max is not None:
-            df_cropped = df_cropped[df_cropped['t_D'] <= t_max]
-        
-        # Логируем информацию об обрезании
-        print(f"Кривая обрезана: {len(self.df)} -> {len(df_cropped)} точек")
-        print(f"Диапазон t_D: [{df_cropped['t_D'].min():.2e}, {df_cropped['t_D'].max():.2e}]")
-        
-        return df_cropped.reset_index(drop=True)
-
-    def _log_interpolate(self, n_points: int = 128):
-        """
-        Логарифмическая интерполяция на равномерную сетку в log пространстве
-        """
-        # Защита от дубликатов
-        df_clean = self.df.drop_duplicates(subset=['t_D']).copy()
-        
-        # Создаем равномерную сетку в логарифмическом пространстве
-        log_t_min = np.log10(df_clean['t_D'].min())
-        log_t_max = np.log10(df_clean['t_D'].max())
-        
-        # Генерируем точки на равномерной логарифмической сетке
-        log_t_interp = np.linspace(log_t_min, log_t_max, n_points)
-        t_interp = 10 ** log_t_interp
-        
-        # Интерполяция производной давления
-        # Используем кубический сплайн для гладкости
-        f_interp = interpolate.interp1d(
-            df_clean['t_D'], 
-            df_clean['dP_wD'],
-            kind='cubic',      # Кубическая интерполяция
-            bounds_error=False,
-            fill_value='extrapolate'  # Экстраполяция на краях (если нужно)
-        )
-        
-        dP_interp = f_interp(t_interp)
-        
-        # Создаем DataFrame с интерполированными данными
-        df_result = pd.DataFrame({
-            't_D': t_interp,
-            'dP_wD': dP_interp,
-            'log_t_D': log_t_interp  # Сохраняем логарифм для удобства
-        })
-        
-        print(f"Интерполяция завершена: {n_points} точек в логарифмическом масштабе")
-        
-        return df_result

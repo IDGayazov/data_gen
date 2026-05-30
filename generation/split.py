@@ -1,6 +1,5 @@
 import numpy as np
 
-
 def make_param_train_val_lists(start, end, n_steps, split_type='log'):
     if split_type == 'lin':
         points = np.linspace(start, end, n_steps + 1)

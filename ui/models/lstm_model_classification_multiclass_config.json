@@ -9,8 +9,13 @@
     "homogeneous_inf",
     "radial_composite_inf"
   ],
+  "output_names": [],
+  "num_outputs": null,
   "input_shape": [
     128,
     2
-  ]
+  ],
+  "device_used": "GPU",
+  "model_format": "all",
+  "save_time": "2026-05-25 10:10:37"
 }

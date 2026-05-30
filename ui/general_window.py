@@ -67,10 +67,7 @@ class MainWindow(QMainWindow):
         if not os.path.exists(ui_path):
             QMessageBox.critical(self, "Ошибка", f"UI файл не найден: {ui_path}")
             return
-            
-        import os
-        ui_path = os.path.join(os.path.dirname(__file__), 'main.ui')
-        
+
         # Загрузка UI
         uic.loadUi(ui_path, self)
         
@@ -194,141 +191,6 @@ class MainWindow(QMainWindow):
                     self.k = float(params_df[_k_col].iloc[0]) if _k_col else 1
                 except:
                     self.k = 1
-            if self.homogen_inf.isChecked():
-                model_name = "Homogeneous infinite"
-
-                self._make_homogeneous_inf_model()
-
-                file_name = self.get_single_file(str(Path(__file__).resolve().parent.parent.parent / 'datasets' / 'ui' / 'curve'))
-                file_name_params = self.get_single_file(str(Path(__file__).resolve().parent.parent.parent / 'datasets' / 'ui' / 'params'))
-
-                params_df = pd.read_csv(file_name_params)
-                self.k = params_df['k']
-
-                model = CommonReservoirModel()
-                df = model.load_model(file_name) \
-                          .get_pressure()
-                
-                t = df['t_D']
-                y = df['P_wD_gauss']
-                dy = df['dP_wD']
-
-                self.df = df
-
-                color = 'b'
-            elif self.homogen_fin.isChecked():
-                model_name = "Homogeneous finite"
-
-                self._make_homogeneous_fin_model()
-
-                file_name = self.get_single_file(str(Path(__file__).resolve().parent.parent.parent / 'datasets' / 'ui' / 'curve'))
-
-                model = CommonReservoirModel()
-                df = model.load_model(file_name) \
-                          .get_pressure()
-                
-                t = df['t_D']
-                y = df['P_wD_gauss']
-                dy = df['dP_wD']
-
-                self.df = df
-
-                color = 'g'
-            elif self.dual_por_inf.isChecked():
-                model_name = "Dual porosity infinite"
-
-                self._make_dual_porosity_inf_model()
-
-                file_name = self.get_single_file(str(Path(__file__).resolve().parent.parent.parent / 'datasets' / 'ui' / 'curve'))
-
-                model = CommonReservoirModel()
-                df = model.load_model(file_name) \
-                          .get_pressure()
-                
-                t = df['t_D']
-                y = df['P_wD_gauss']
-                dy = df['dP_wD']
-
-                self.df = df
-
-                color = 'r'
-            elif self.dual_por_fin.isChecked():
-                model_name = "Dual porosity finite"
-
-                self._make_dual_porosity_fin_model()
-                
-                file_name = self.get_single_file(str(Path(__file__).resolve().parent.parent.parent / 'datasets' / 'ui' / 'curve'))
-
-                model = CommonReservoirModel()
-                df = model.load_model(file_name) \
-                          .get_pressure()
-
-                
-                t = df['t_D']
-                y = df['P_wD_gauss']
-                dy = df['dP_wD']
-
-                self.df = df
-
-                color = 'c'
-            elif self.dual_perm_inf.isChecked():
-                model_name = "Dual permeability infinite"
-
-                self._make_dual_permeability_inf_model()
-
-                file_name = self.get_single_file(str(Path(__file__).resolve().parent.parent.parent / 'datasets' / 'ui' / 'curve'))
-
-                model = CommonReservoirModel()
-                df = model.load_model(file_name) \
-                          .get_pressure()
-                
-                t = df['t_D']
-                y = df['P_wD_gauss']
-                dy = df['dP_wD']
-
-                self.df = df
-
-                color = 'm'
-            elif self.dual_perm_fin.isChecked():
-                model_name = "Dual permeability finite"
-
-                self._make_dual_permeability_fin_model()
-
-                file_name = self.get_single_file(str(Path(__file__).resolve().parent.parent.parent / 'datasets' / 'ui' / 'curve'))
-
-                model = CommonReservoirModel()
-                df = model.load_model(file_name) \
-                          .get_pressure()
-                
-                t = df['t_D']
-                y = df['P_wD_gauss']
-                dy = df['dP_wD']
-
-                self.df = df
-
-                color = 'y'
-            elif self.rad_comp_inf.isChecked():
-                model_name = "Radial composite infinite"
-
-                self._make_radial_composite_inf_model()
-
-                file_name = self.get_single_file(str(Path(__file__).resolve().parent.parent.parent / 'datasets' / 'ui' / 'curve'))
-
-                model = CommonReservoirModel()
-                df = model.load_model(file_name) \
-                          .get_pressure()
-                
-                t = df['t_D']
-                y = df['P_wD_gauss']
-                dy = df['dP_wD']
-
-                self.df = df
-
-                color = '#FF6B6B'
-            else:
-                QMessageBox.warning(self, "Предупреждение", "Пожалуйста, выберите тип модели!")
-                return
-            
             # Очищаем график
             self.plot_widget.clear()
             
@@ -385,7 +247,7 @@ class MainWindow(QMainWindow):
         OUTPUT_PATH: Final = os.path.join(os.path.dirname(__file__), '../datasets/ui')
         
         SIGMA: Final = 5e-5
-        OUTPUT_PATH: Final = str(Path(__file__).resolve().parent.parent.parent / 'datasets' / 'ui')
+        OUTPUT_PATH: Final = str(Path(__file__).resolve().parent.parent / 'datasets' / 'ui')
 
         clear_folder(OUTPUT_PATH)
         params = GenerationParams(T_MAX_DAYS, POINTS_COUNT, SIZE, SIGMA, OUTPUT_PATH)
@@ -400,7 +262,7 @@ class MainWindow(QMainWindow):
         OUTPUT_PATH: Final = os.path.join(os.path.dirname(__file__), '../datasets/ui')
         
         SIGMA: Final = 5e-3
-        OUTPUT_PATH: Final = str(Path(__file__).resolve().parent.parent.parent / 'datasets' / 'ui')
+        OUTPUT_PATH: Final = str(Path(__file__).resolve().parent.parent / 'datasets' / 'ui')
 
         clear_folder(OUTPUT_PATH)
         params = GenerationParams(T_MAX_DAYS, POINTS_COUNT, SIZE, SIGMA, OUTPUT_PATH)
@@ -415,7 +277,7 @@ class MainWindow(QMainWindow):
         OUTPUT_PATH: Final = os.path.join(os.path.dirname(__file__), '../datasets/ui')
         
         SIGMA: Final = 5e-3
-        OUTPUT_PATH: Final = str(Path(__file__).resolve().parent.parent.parent / 'datasets' / 'ui')
+        OUTPUT_PATH: Final = str(Path(__file__).resolve().parent.parent / 'datasets' / 'ui')
 
         clear_folder(OUTPUT_PATH)
         params = GenerationParams(T_MAX_DAYS, POINTS_COUNT, SIZE, SIGMA, OUTPUT_PATH)
@@ -430,7 +292,7 @@ class MainWindow(QMainWindow):
         OUTPUT_PATH: Final = os.path.join(os.path.dirname(__file__), '../datasets/ui')
         
         SIGMA: Final = 5e-3
-        OUTPUT_PATH: Final = str(Path(__file__).resolve().parent.parent.parent / 'datasets' / 'ui')
+        OUTPUT_PATH: Final = str(Path(__file__).resolve().parent.parent / 'datasets' / 'ui')
 
         clear_folder(OUTPUT_PATH)
         params = GenerationParams(T_MAX_DAYS, POINTS_COUNT, SIZE, SIGMA, OUTPUT_PATH)
@@ -445,7 +307,7 @@ class MainWindow(QMainWindow):
         OUTPUT_PATH: Final = os.path.join(os.path.dirname(__file__), '../datasets/ui')
         
         SIGMA: Final = 5e-3
-        OUTPUT_PATH: Final = str(Path(__file__).resolve().parent.parent.parent / 'datasets' / 'ui')
+        OUTPUT_PATH: Final = str(Path(__file__).resolve().parent.parent / 'datasets' / 'ui')
 
         clear_folder(OUTPUT_PATH)
         params = GenerationParams(T_MAX_DAYS, POINTS_COUNT, SIZE, SIGMA, OUTPUT_PATH)
@@ -460,7 +322,7 @@ class MainWindow(QMainWindow):
         OUTPUT_PATH: Final = os.path.join(os.path.dirname(__file__), '../datasets/ui')
         
         SIGMA: Final = 5e-3
-        OUTPUT_PATH: Final = str(Path(__file__).resolve().parent.parent.parent / 'datasets' / 'ui')
+        OUTPUT_PATH: Final = str(Path(__file__).resolve().parent.parent / 'datasets' / 'ui')
 
         clear_folder(OUTPUT_PATH)
         params = GenerationParams(T_MAX_DAYS, POINTS_COUNT, SIZE, SIGMA, OUTPUT_PATH)
@@ -475,7 +337,7 @@ class MainWindow(QMainWindow):
         OUTPUT_PATH: Final = os.path.join(os.path.dirname(__file__), '../datasets/ui')
         
         SIGMA: Final = 5e-3
-        OUTPUT_PATH: Final = str(Path(__file__).resolve().parent.parent.parent / 'datasets' / 'ui')
+        OUTPUT_PATH: Final = str(Path(__file__).resolve().parent.parent / 'datasets' / 'ui')
 
         clear_folder(OUTPUT_PATH)
         params = GenerationParams(T_MAX_DAYS, POINTS_COUNT, SIZE, SIGMA, OUTPUT_PATH)

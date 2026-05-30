@@ -32,7 +32,6 @@ class ShtefestAlgorithm(LaplasInversionMethod):
         N_half = self.N // 2
         V = np.zeros(self.N)
 
-        # Предвычисляем факториалы для часто используемых значений
         max_fact = 2 * N_half
         for i in range(max_fact + 1):
             self._factorial(i)

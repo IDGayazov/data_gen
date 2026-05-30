@@ -104,7 +104,6 @@ class DualPermeabilityParamGenerator(ParamGenerator):
             'kappa': [(0.7, 0.99)]
         }
         
-        # Выбираем диапазоны
         if self.type == 'val':
             ranges = val_ranges
         elif self.type == 'test':
@@ -234,7 +233,7 @@ class InfiniteDualPermeabilityModelGenerator(DataGenerator):
             alg = ShtefestAlgorithm(N=12)
 
             curve = model.pressure(t_D_array, alg) \
-                .gauss_noize(mu=0, sigma_mpa=0.00035, converter=converter) \
+                .gauss_noize(mu=0, sigma_mpa=self.sigma, converter=converter) \
                 .derivative(smoothig_alg='regression', delta=0.175) \
                 .get_pressure()
 
@@ -288,7 +287,7 @@ class FiniteDualPermeabilityGenerator(DataGenerator):
             alg = ShtefestAlgorithm(N=12)
 
             curve = model.pressure(t_D_array, alg) \
-                .gauss_noize(mu=0, sigma_mpa=0.00035, converter=converter) \
+                .gauss_noize(mu=0, sigma_mpa=self.sigma, converter=converter) \
                 .derivative(smoothig_alg='regression', delta=0.175) \
                 .get_pressure()
 

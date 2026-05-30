@@ -11,7 +11,7 @@ from generation.utils import clear_folder
 def single_generation_homogeneous_inf():
     T_MAX_DAYS: Final = 30
     POINTS_COUNT: Final = 128
-    SIGMA: Final = 5e-3
+    SIGMA: Final = 0.00035
     OUTPUT_PATH: Final = '../datasets/new/homogeneous_inf'
 
     params_train = GenerationParams(T_MAX_DAYS, POINTS_COUNT, 14000, SIGMA, OUTPUT_PATH, 'train')
@@ -35,7 +35,7 @@ def single_generation_homogeneous_inf():
 def single_generation_homogeneous_fin():
     T_MAX_DAYS: Final = 30
     POINTS_COUNT: Final = 128
-    SIGMA: Final = 5e-3
+    SIGMA: Final = 0.00035
     OUTPUT_PATH: Final = '../datasets/new/homogeneous_fin'
 
     params_train = GenerationParams(T_MAX_DAYS, POINTS_COUNT, 14000, SIGMA, OUTPUT_PATH, 'train')
@@ -59,7 +59,7 @@ def single_generation_homogeneous_fin():
 def single_generation_dual_porosity_inf():
     T_MAX_DAYS: Final = 30
     POINTS_COUNT: Final = 128
-    SIGMA: Final = 5e-3
+    SIGMA: Final = 0.00035
     OUTPUT_PATH: Final = '../datasets/new/dual_porosity_inf'
 
     params_train = GenerationParams(T_MAX_DAYS, POINTS_COUNT, 14000, SIGMA, OUTPUT_PATH, 'train')
@@ -83,7 +83,7 @@ def single_generation_dual_porosity_inf():
 def single_generation_dual_porosity_fin():
     T_MAX_DAYS: Final = 30
     POINTS_COUNT: Final = 128
-    SIGMA: Final = 5e-3
+    SIGMA: Final = 0.00035
     OUTPUT_PATH: Final = '../datasets/new/dual_porosity_fin'
 
     params_train = GenerationParams(T_MAX_DAYS, POINTS_COUNT, 14000, SIGMA, OUTPUT_PATH, 'train')
@@ -107,7 +107,7 @@ def single_generation_dual_porosity_fin():
 def single_generation_dual_permeability_inf():
     T_MAX_DAYS: Final = 30
     POINTS_COUNT: Final = 128
-    SIGMA: Final = 5e-3
+    SIGMA: Final = 0.00035
     OUTPUT_PATH: Final = '../datasets/new/dual_permeability_inf'
 
     params_train = GenerationParams(T_MAX_DAYS, POINTS_COUNT, 14000, SIGMA, OUTPUT_PATH, 'train')
@@ -131,7 +131,7 @@ def single_generation_dual_permeability_inf():
 def single_generation_dual_permeability_fin():
     T_MAX_DAYS: Final = 30
     POINTS_COUNT: Final = 128
-    SIGMA: Final = 5e-3
+    SIGMA: Final = 0.00035
     OUTPUT_PATH: Final = '../datasets/new/dual_permeability_fin'
 
     params_train = GenerationParams(T_MAX_DAYS, POINTS_COUNT, 14000, SIGMA, OUTPUT_PATH, 'train')
@@ -154,7 +154,7 @@ def single_generation_dual_permeability_fin():
 def single_generation_radial_composite_inf():
     T_MAX_DAYS: Final = 30
     POINTS_COUNT: Final = 128
-    SIGMA: Final = 5e-3
+    SIGMA: Final = 0.00035
     OUTPUT_PATH: Final = '../datasets/new/radial_composite_inf'
 
     params_train = GenerationParams(T_MAX_DAYS, POINTS_COUNT, 14000, SIGMA, OUTPUT_PATH, 'train')
@@ -177,7 +177,7 @@ def single_generation_radial_composite_inf():
 def generation_for_classification():
     T_MAX_DAYS: Final = 30
     POINTS_COUNT: Final = 128
-    SIGMA: Final = 5e-3
+    SIGMA: Final = 0.01 # МПа 
     OUTPUT_PATH: Final = '../datasets/new/class_dataset'
 
     params_train = GenerationParams(T_MAX_DAYS, POINTS_COUNT, 3500, SIGMA, OUTPUT_PATH, 'train')

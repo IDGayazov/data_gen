@@ -211,7 +211,7 @@ class InfiniteDualPorosityGenerator(DataGenerator):
             alg = ShtefestAlgorithm(N=12)
 
             curve = model.pressure(t_D_array, alg) \
-                .gauss_noize(mu=0, sigma_mpa=0.00035, converter=converter) \
+                .gauss_noize(mu=0, sigma_mpa=self.sigma, converter=converter) \
                 .derivative(smoothig_alg='regression', delta=0.175) \
                 .get_pressure()
 
@@ -260,7 +260,7 @@ class FiniteDualPorosityGenerator(DataGenerator):
             alg = ShtefestAlgorithm(N=12)
 
             curve = model.pressure(t_D_array, alg) \
-                .gauss_noize(mu=0, sigma_mpa=0.00035, converter=converter) \
+                .gauss_noize(mu=0, sigma_mpa=self.sigma, converter=converter) \
                 .derivative(smoothig_alg='regression', delta=0.175) \
                 .get_pressure()
 

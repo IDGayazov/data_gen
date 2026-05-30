@@ -84,7 +84,6 @@ class RadialCompositeParamGenerator(ParamGenerator):
             'R_i' : [(10, 100)]
         }
 
-        # Выбираем диапазоны
         if self.type == 'val':
             ranges = val_ranges
         elif self.type == 'test':
@@ -110,10 +109,9 @@ class RadialCompositeParamGenerator(ParamGenerator):
             # 2. Фиксируем базовые параметры
             params['r_w'] = 0.1  # радиус скважины, м
 
-            # 2. Определение зависимых физических параметров (согласно стр. 20 PDF)
+            # 2. Определение зависимых физических параметров
             # M12 = (k/mu)1 / (k/mu)2 => k2 = k1 / (M12 * (mu2/mu1))
             # Для упрощения часто mu1 = mu2, тогда k2 = k1 / M12
-            # В вашем коде M2 — это Mobility Ratio
             params['k2'] = params['k1'] / params['M2']
             
             # omega12 = (phi*ct)1 / (phi*ct)2
@@ -121,13 +119,12 @@ class RadialCompositeParamGenerator(ParamGenerator):
             stor_zone1 = params['phi1'] * params['c_t1']
             params['phi2'] = params['phi1'] # упрощение
             # Согласно формуле 57: omega12 = stor1 / stor2
-            # Если использовать вашу логику omega1 как долю:
+            # Если использовать логику omega1 как долю:
             # total_stor = stor1 + stor2; omega1 = stor1 / total_stor
             # Тогда stor2 = stor1 * (1 - omega1) / omega1
             params['c_t2'] = params['c_t1'] * (1 - params['omega1']) / params['omega1']
 
             # 3. Расчет размерного Wellbore Storage (C)
-            # Нормировка через зону 2 (как tD и обратная конвертация): C_D = C / (2π*h*φ2*ct2*rw²)
             phi_ct2 = params['phi2'] * params['c_t2']
             params['C'] = params['C_D'] * 2 * np.pi * phi_ct2 * params['h'] * params['r_w']**2
 
@@ -254,7 +251,7 @@ class InfiniteRadialCompositeGenerator(DataGenerator):
             alg = ShtefestAlgorithm(N=12)
 
             curve = model.pressure(t_D_array, alg) \
-                .gauss_noize(mu=0, sigma_mpa=0.00035, converter=converter) \
+                .gauss_noize(mu=0, sigma_mpa=self.sigma, converter=converter) \
                 .derivative(smoothig_alg='regression', delta=0.175) \
                 .get_pressure()
 

@@ -30,10 +30,8 @@ def clear_folder(folder_path: str):
         print(f'Path: {folder_path} not exists')
         return
 
-    for item in path.iterdir():
+    for item in path.rglob('*'):
         if item.is_file() or item.is_symlink():
             item.unlink()
-        elif item.is_dir():
-            shutil.rmtree(item)
 
     print(f'Directory {folder_path} cleared')

@@ -24,12 +24,12 @@ _CLS_MODELS = {
         '1d_cnn_model_classification_multiclass_config.json',
     ),
     'cnn_lstm': (
-        'cnn_lstm_cls_multiclass.onnx',
-        'cnn_lstm_cls_multiclass_config.json',
+        'cnn_lstm_cls_mutliclass.onnx',
+        'cnn_lstm_cls_mutliclass_config.json',
     ),
     'lstm': (
-        'lstm_cls_mutliclass.onnx',
-        'lstm_cls_mutliclass_config.json',
+        'lstm_model_classification_multiclass.onnx',
+        'lstm_model_classification_multiclass_config.json',
     ),
 }
 

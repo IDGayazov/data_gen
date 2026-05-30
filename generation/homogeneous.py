@@ -73,7 +73,6 @@ class HomogeneousModelParamGenerator(ParamGenerator):
             params = {}
             
             for param, param_list in ranges.items():
-                # Выбираем случайный интервал из списка
                 low, high = random.choice(param_list)
                 
                 if param == 'k':
@@ -127,7 +126,7 @@ class InfiniteHomogeneousGenerator(DataGenerator):
             alg = ShtefestAlgorithm(N=12)
 
             curve = model.pressure(t_D_array, alg) \
-                .gauss_noize(mu=0, sigma_mpa=0.00035, converter=converter) \
+                .gauss_noize(mu=0, sigma_mpa=self.sigma, converter=converter) \
                 .derivative(smoothig_alg='regression', delta=0.175) \
                 .get_pressure()
 
@@ -172,7 +171,7 @@ class FiniteHomogeneousGenerator(DataGenerator):
             alg = ShtefestAlgorithm(N=12)
 
             curve = model.pressure(t_D_array, alg) \
-                .gauss_noize(mu=0, sigma_mpa=0.00035, converter=converter) \
+                .gauss_noize(mu=0, sigma_mpa=self.sigma, converter=converter) \
                 .derivative(smoothig_alg='regression', delta=0.175) \
                 .get_pressure()
 

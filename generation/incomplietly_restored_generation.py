@@ -69,33 +69,27 @@ class ThreeGroupWellTestProcessor:
                         t_max_crop: Optional[float] = None,
                         normalize: bool = True) -> pd.DataFrame:
         """
-        Предобработка кривой с обрезанием по t_max_crop
-        Обрабатывает оба столбца: dP_wD и P_wD_gauss
+        Модифицированная предобработка кривой с обрезанием и 
+        БЕЗОПАСНОЙ линейной интерполяцией в лог-пространстве.
         """
-        # Проверка наличия необходимых колонок
         required_cols = ['t_D', 'dP_wD']
         for col in required_cols:
             if col not in df.columns:
                 raise ValueError(f"DataFrame должен содержать колонку '{col}'")
         
-        # Проверка наличия P_wD_gauss (если нет - создаем заглушку)
         has_gauss = 'P_wD_gauss' in df.columns
-        
-        # Сортировка по времени
+
         df = df.sort_values('t_D').reset_index(drop=True)
+        df = df[(df['t_D'] > 0) & (df['dP_wD'] > 0)].reset_index(drop=True)
         
-        # Обрезание кривой по максимальному времени
         if t_max_crop is not None:
             df = df[df['t_D'] <= t_max_crop].reset_index(drop=True)
         
-        # Удаление дубликатов
         df = df.drop_duplicates(subset=['t_D']).reset_index(drop=True)
         
-        # Защита от пустого DataFrame
         if len(df) == 0:
-            raise ValueError(f"После обрезания не осталось данных (t_max_crop={t_max_crop})")
+            raise ValueError(f"После обрезания и фильтрации не осталось данных (t_max_crop={t_max_crop})")
         
-        # Логарифмическая интерполяция для t_D и dP_wD
         if len(df) > 1:
             log_t_min = np.log10(df['t_D'].min())
             log_t_max = np.log10(df['t_D'].max())
@@ -103,23 +97,31 @@ class ThreeGroupWellTestProcessor:
             if log_t_max > log_t_min:
                 log_t_interp = np.linspace(log_t_min, log_t_max, n_points)
                 t_interp = 10 ** log_t_interp
+                                log_dP_values = np.log10(df['dP_wD'].values)
                 
-                # Интерполяция dP_wD
-                f_dP = interpolate.interp1d(df['t_D'].values, 
-                                           df['dP_wD'].values,
-                                           kind='cubic',
-                                           bounds_error=False,
-                                           fill_value='extrapolate')
-                dP_interp = f_dP(t_interp)
+                f_dP_log = interpolate.interp1d(np.log10(df['t_D'].values), 
+                                               log_dP_values,
+                                               kind='linear',
+                                               bounds_error=False,
+                                               fill_value='extrapolate')
                 
-                # Интерполяция P_wD_gauss (если есть)
+                dP_interp = 10 ** f_dP_log(log_t_interp)
+                
                 if has_gauss:
-                    f_gauss = interpolate.interp1d(df['t_D'].values, 
-                                                  df['P_wD_gauss'].values,
-                                                  kind='cubic',
-                                                  bounds_error=False,
-                                                  fill_value='extrapolate')
-                    gauss_interp = f_gauss(t_interp)
+                    if (df['P_wD_gauss'] > 0).all():
+                        f_gauss_log = interpolate.interp1d(np.log10(df['t_D'].values), 
+                                                           np.log10(df['P_wD_gauss'].values),
+                                                           kind='linear',
+                                                           bounds_error=False,
+                                                           fill_value='extrapolate')
+                        gauss_interp = 10 ** f_gauss_log(log_t_interp)
+                    else:
+                        f_gauss = interpolate.interp1d(df['t_D'].values, 
+                                                      df['P_wD_gauss'].values,
+                                                      kind='linear',
+                                                      bounds_error=False,
+                                                      fill_value='extrapolate')
+                        gauss_interp = f_gauss(t_interp)
                 else:
                     gauss_interp = np.zeros(n_points)
             else:
@@ -131,7 +133,6 @@ class ThreeGroupWellTestProcessor:
             dP_interp = np.full(n_points, df['dP_wD'].iloc[0])
             gauss_interp = np.full(n_points, df['P_wD_gauss'].iloc[0]) if has_gauss else np.zeros(n_points)
         
-        # Создание результата
         result_df = pd.DataFrame({
             't_D': t_interp,
             'dP_wD': dP_interp
@@ -140,23 +141,19 @@ class ThreeGroupWellTestProcessor:
         if has_gauss:
             result_df['P_wD_gauss'] = gauss_interp
         
-        # Нормализация
         if normalize:
-            # Нормализация времени
             t_min, t_max = result_df['t_D'].min(), result_df['t_D'].max()
             if t_max > t_min:
                 result_df['t_D_norm'] = (result_df['t_D'] - t_min) / (t_max - t_min)
             else:
                 result_df['t_D_norm'] = 0.5
             
-            # Нормализация dP_wD
             p_min, p_max = result_df['dP_wD'].min(), result_df['dP_wD'].max()
             if p_max > p_min:
                 result_df['dP_wD_norm'] = (result_df['dP_wD'] - p_min) / (p_max - p_min)
             else:
                 result_df['dP_wD_norm'] = 0.5
             
-            # Нормализация P_wD_gauss (если есть)
             if has_gauss:
                 g_min, g_max = result_df['P_wD_gauss'].min(), result_df['P_wD_gauss'].max()
                 if g_max > g_min:
@@ -188,20 +185,17 @@ class ThreeGroupWellTestProcessor:
         input_file, output_dir, n_points, group_config, normalize, overwrite = args
 
         try:
-            # Чтение исходного файла
             df = pd.read_csv(input_file)
             base_name = os.path.basename(input_file)
             name_without_ext = os.path.splitext(base_name)[0]
 
-            # Определяем группу файла
+
             group = self.group_assignment.get(input_file, 'full')
 
-            # Вычисляем t_max_crop по лог-диапазону конкретной кривой
-            fraction = group_config[group].get('fraction')  # None для full
+            fraction = group_config[group].get('fraction')  
             t_max_crop = self._compute_log_cut(df, fraction)
             suffix = group_config[group]['suffix']
 
-            # Обработка кривой
             df_processed = self.preprocess_curve(
                 df,
                 n_points=n_points,
@@ -209,11 +203,9 @@ class ThreeGroupWellTestProcessor:
                 normalize=normalize
             )
             
-            # Формирование имени файла
             output_filename = f"{name_without_ext}_{suffix}.csv"
             output_path = os.path.join(output_dir, output_filename)
             
-            # Проверка существования
             if os.path.exists(output_path) and not overwrite:
                 return {
                     'file': input_file,
@@ -223,7 +215,6 @@ class ThreeGroupWellTestProcessor:
                     'output': output_path
                 }
             
-            # Сохранение
             df_processed.to_csv(output_path, index=False)
             
             return {
@@ -256,7 +247,6 @@ class ThreeGroupWellTestProcessor:
         """
         Обработка всех файлов с распределением по трем группам
         """
-        # Конфигурация групп по умолчанию
         if group_config is None:
             group_config = {
                 'inc1': {'fraction': 1/3, 'suffix': 'inc1', 'description': 'первая треть лог-диапазона'},
@@ -264,33 +254,26 @@ class ThreeGroupWellTestProcessor:
                 'full': {'fraction': None, 'suffix': 'full', 'description': 'полные (без обрезания)'}
             }
         
-        # Сканирование директории
         all_files = self.scan_directory(input_dir, extension=file_extension)
         
         if len(all_files) == 0:
             print(f"Не найдено файлов в {input_dir}")
             return
         
-        # Распределение по группам
         groups = self.assign_groups(all_files, seed=random_seed)
         
-        # Создание выходной директории
         os.makedirs(output_dir, exist_ok=True)
         
-        # Подготовка аргументов для обработки
         args_list = [(f, output_dir, n_points, group_config, normalize, overwrite) 
                      for f in all_files]
         
-        # Обработка
         if parallel:
             results = self._process_parallel(args_list, n_workers)
         else:
             results = self._process_sequential(args_list)
         
-        # Анализ результатов
         self._analyze_results(results, group_config)
         
-        # Создание summary
         self._create_summary(output_dir, results, group_config)
         
         return results
@@ -323,7 +306,6 @@ class ThreeGroupWellTestProcessor:
         error_count = sum(1 for r in results if r['status'] == 'error')
         skipped_count = sum(1 for r in results if r['status'] == 'skipped')
         
-        # Статистика по группам
         group_stats = {group: {'success': 0, 'skipped': 0, 'error': 0} 
                       for group in group_config.keys()}
         
@@ -333,13 +315,11 @@ class ThreeGroupWellTestProcessor:
             elif result['status'] == 'skipped':
                 group_stats[result['group']]['skipped'] += 1
             elif result['status'] == 'error':
-                # Для ошибок определяем группу через сохраненное распределение
                 file_path = result['file']
                 if file_path in self.group_assignment:
                     group = self.group_assignment[file_path]
                     group_stats[group]['error'] += 1
                 else:
-                    # Если файл не найден в распределении (не должно случаться)
                     print(f"Предупреждение: файл {file_path} не найден в распределении групп")
         
         print(f"\n{'='*60}")
@@ -395,8 +375,8 @@ class ThreeGroupWellTestProcessor:
 def main():
     # Конфигурация
     CONFIG = {
-        'input_dir': '/home/ilnaz/PycharmProjects/datasets/new/cls_data/curve',           # Папка с исходными кривыми
-        'output_dir': '/home/ilnaz/PycharmProjects/datasets/new/cls_data_incs/curve/',    # Папка для обработанных кривых
+        'input_dir': r'C:\Users\gayaz\OneDrive\Рабочий стол\Code\диплом\datasets\cls_data\cls_data\curve',           # Папка с исходными кривыми
+        'output_dir': r'C:\Users\gayaz\OneDrive\Рабочий стол\Code\диплом\datasets\cls_incs_data\curve',    # Папка для обработанных кривых
         'n_points': 128,                     # Количество точек после интерполяции
         'normalize': True,                   # Нормализация данных
         'overwrite': True,                   # Перезаписывать существующие файлы
@@ -406,20 +386,19 @@ def main():
         'file_extension': '.csv'
     }
     
-    # Конфигурация групп: разрезаем по лог-диапазону каждой кривой
     GROUP_CONFIG = {
         'inc1': {
-            'fraction': 1/3,                 # Первая треть log10(t_D)-диапазона
+            'fraction': 1/3,               
             'suffix': 'inc1',
             'description': 'первая треть лог-диапазона'
         },
         'inc2': {
-            'fraction': 2/3,                 # Первые две трети
+            'fraction': 2/3,             
             'suffix': 'inc2',
             'description': 'первые две трети лог-диапазона'
         },
         'full': {
-            'fraction': None,                # Без обрезания
+            'fraction': None,             
             'suffix': 'full',
             'description': 'полные (без обрезания)'
         }

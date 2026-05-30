@@ -28,7 +28,7 @@ class InfiniteRadialCompositeReservoirModel(ReservoirModel):
         self.M12 = self.M1 / self.M2
         self.omega12 = self.omega1 / self.omega2
         self.M21 = 1.0 / self.M12
-        self.x21 = self.M12 / self.omega12   # η1/η2 — отношение диффузивностей
+        self.x21 = self.M12 / self.omega12 
 
     def a(self, s):
         return self.r_fD * np.sqrt(s)
@@ -108,7 +108,6 @@ class InfiniteRadialCompositeReservoirModelV2(InfiniteRadialCompositeReservoirMo
     """
 
     def __init__(self, C_D, S, M12, omega12, r_fD):
-        # Bypass parent __init__; set attributes directly.
         self.C_D = C_D
         self.S = S
         self.r_fD = r_fD

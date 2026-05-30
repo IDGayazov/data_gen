@@ -35,7 +35,6 @@ class FiniteDualPorosityReservoirModel(ReservoirModel):
         u = np.atleast_1d(u)
         f_u = self.f(u, omega, lam)
         
-        # Аргумент теперь включает влияние f_u
         z = np.sqrt(u * f_u)
         z_re = r_D_e * z
 
@@ -44,7 +43,6 @@ class FiniteDualPorosityReservoirModel(ReservoirModel):
         # Используем формулу: (kve(1, z_re) * exp(-z_re)) / (ive(1, z_re) * exp(z_re))
         # Это дает exp(-2 * z_re), что стремится к 0 при больших u
         
-        # Ограничиваем аргумент экспоненты, чтобы не получить overflow в саму другую сторону
         exp_term = np.exp(-2 * np.clip(z_re, 0, 700))
         ratio = (kve(1, z_re) / ive(1, z_re)) * exp_term
 
@@ -58,8 +56,6 @@ class FiniteDualPorosityReservoirModel(ReservoirModel):
 
         res = num / den
         
-        # Если z слишком велик (очень малые времена), ratio станет 0, 
-        # и формула выродится в решение для бесконечного пласта: k0(z) / (u * z * k1(z))
         return np.where(np.isfinite(res), res, 1.0 / (u * z))
 
 
